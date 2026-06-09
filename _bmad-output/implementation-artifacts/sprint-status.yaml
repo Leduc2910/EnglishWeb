@@ -1,0 +1,89 @@
+# generated: 2026-06-09
+# last_updated: 2026-06-10
+# project: EnglishTestWeb
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: E:\Code\EnglishTestWeb\_bmad-output\implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog -> in-progress: Automatically when first story is created (via create-story)
+#   - in-progress -> done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review
+
+generated: 2026-06-09
+last_updated: 2026-06-10
+project: EnglishTestWeb
+project_key: NOKEY
+tracking_system: file-system
+story_location: E:\Code\EnglishTestWeb\_bmad-output\implementation-artifacts
+
+development_status:
+  epic-1: in-progress
+  1-1-setup-baseline-net-10-web-api-angular-22-sql-server-identity-protected-storage: review
+  1-2-teacher-login-and-teacher-app-shell: backlog
+  1-3-class-roster-class-code-lookup-and-student-login: backlog
+  1-4-base-authorization-pattern-and-class-scope-guards: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-thu-vien-de-list-search-filter-and-template-inspection: backlog
+  2-2-create-edit-and-save-draft-template-setup: backlog
+  2-3-protected-testmaterial-upload-and-preview: backlog
+  2-4-answerkey-and-scoring-configuration: backlog
+  2-5-review-template-mark-ready-and-next-actions: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-create-homeworkassignment-from-a-ready-template: backlog
+  3-2-create-and-control-liveexamsession: backlog
+  3-3-usage-mode-contract-across-delivery-surfaces: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-student-assigned-tests-list: backlog
+  4-2-reading-listening-attempt-workspace: backlog
+  4-3-draft-answer-autosave-and-restore: backlog
+  4-4-final-submission-and-reading-listening-auto-grading: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-student-speaking-prompt-and-upload-draft: backlog
+  5-2-final-speaking-submission-lock-and-confirmation: backlog
+  5-3-teacher-speaking-playback-and-manual-grading: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-results-filtering-table: backlog
+  6-2-master-detail-results-and-grading-workspace: backlog
+  6-3-teacher-dashboard-summary-and-recent-work-routing: backlog
+  6-4-stitch-informed-visual-and-accessibility-hardening: backlog
+  6-5-api-security-and-contract-test-coverage: backlog
+  6-6-playwright-happy-path-e2e-coverage: backlog
+  6-7-blocking-error-and-edge-case-test-coverage: backlog
+  6-8-accessibility-and-visual-qa-pass: backlog
+  6-9-final-fr-and-ts-evidence-matrix: backlog
+  epic-6-retrospective: optional

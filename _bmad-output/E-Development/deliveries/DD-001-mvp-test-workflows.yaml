@@ -1,0 +1,221 @@
+delivery:
+  id: "DD-001"
+  name: "MVP Test Workflows"
+  type: "user_flow"
+  status: "ready_for_handoff"
+  priority: "high"
+  created_by: "wds-ux-design"
+  created_at: "2026-06-08T21:12:30+07:00"
+  updated_at: "2026-06-08T21:12:30+07:00"
+  version: "1.0"
+  designer: "Đức + Freya"
+
+description: |
+  This delivery packages the complete MVP workflow for EnglishTestWeb:
+  1. Teacher creates a reusable test template in the Question/Test Library from a PDF with answer key.
+  2. Teacher uses that template either as Homework with a deadline or as an in-class Live Exam session.
+  3. Student enters class by class code, logs in, completes homework or live exam work, and submits Speaking files.
+  4. Teacher reviews results and grades Speaking in one focused results workspace.
+
+  The delivery is intended to be handed to BMad architecture/development as the first implementation slice for the product.
+
+user_value:
+  problem: "Teachers need a faster, centralized way to create tests, collect submissions, auto-grade Reading/Listening, and manually grade Speaking without scattered files or manual score tracking."
+  solution: "A role-based web workflow using class codes, reusable PDF/audio-based test templates, separate homework assignments and live exam sessions, answer forms, structured submissions, autosave, and a master-detail results/grading workspace."
+  success_criteria:
+    - "Teacher can create a reusable Reading template from PDF with answer key in under 10 minutes."
+    - "Teacher can use a template to create either homework with a due date or an in-class live exam session."
+    - "Student can enter the correct class, distinguish homework from live exam, complete work, and see clear submission confirmation without teacher guidance."
+    - "Reading/Listening submissions are structured for auto-grading from teacher answer keys."
+    - "Teacher can open a Speaking submission, play the file, enter score and feedback, and save grading in one screen."
+
+design_artifacts:
+  visual_prototype:
+    type: "HTML Prototype"
+    path: "_bmad-output/D-Design-System/01-Visual-Design/design-concepts/dd-001-mvp-test-workflows-prototype.html"
+    note: "Interactive one-file prototype for stakeholder/user review. Page specifications remain the source of truth for exact behavior, validation, and content."
+
+  stitch_visual_mapping:
+    type: "Stitch UI Mapping"
+    path: "docs/stitch_h_th_ng_kh_o_th_englishtestweb/STITCH_MAPPING.md"
+    source_folder: "docs/stitch_h_th_ng_kh_o_th_englishtestweb"
+    note: "Supplemental visual/layout reference for implementation and architecture. BMad/WDS page specs and this DD-001 delivery remain the source of truth for behavior, validation, access control, and domain model."
+
+  scenarios:
+    - id: "01-giao-vien-ban-ron-tao-bai-test-tu-pdf-audio"
+      path: "_bmad-output/C-UX-Scenarios/01-giao-vien-ban-ron-tao-bai-test-tu-pdf-audio/"
+      screens:
+        - "01.1 Teacher Login / Account Access"
+        - "01.2 Teacher Dashboard"
+        - "01.3 Question/Test Library"
+        - "01.4 Create Template: Setup"
+        - "01.5 Create Template: Upload Materials"
+        - "01.6 Create Template: Answer Key & Scoring"
+        - "01.7 Review Template & Next Action"
+    - id: "02-hoc-sinh-lam-bai-duoc-giao-trong-dung-lop"
+      path: "_bmad-output/C-UX-Scenarios/02-hoc-sinh-lam-bai-duoc-giao-trong-dung-lop/"
+      screens:
+        - "02.1 Student Class Code Entry"
+        - "02.2 Student Login / Account Access"
+        - "02.3 Student Assigned Tests"
+        - "02.4 Student Exam Taking: Reading/Listening"
+        - "02.5 Student Speaking Submission"
+    - id: "03-giao-vien-ban-ron-xem-ket-qua-va-cham-speaking"
+      path: "_bmad-output/C-UX-Scenarios/03-giao-vien-ban-ron-xem-ket-qua-va-cham-speaking/"
+      screens:
+        - "03.1 Teacher Login / Account Access"
+        - "03.2 Teacher Dashboard"
+        - "03.3 Results & Grading"
+
+  user_flows:
+    - name: "Teacher creates reusable template and chooses use mode"
+      entry: "Teacher Login / Account Access"
+      exit: "Review Template & Next Action success"
+      scenario_id: "01-giao-vien-ban-ron-tao-bai-test-tu-pdf-audio"
+    - name: "Student completes homework or live exam"
+      entry: "Student Class Code Entry"
+      exit: "Reading/Listening or Speaking submission success"
+      scenario_id: "02-hoc-sinh-lam-bai-duoc-giao-trong-dung-lop"
+    - name: "Teacher reviews results and grades Speaking"
+      entry: "Teacher Login / Account Access"
+      exit: "Speaking score and feedback saved"
+      scenario_id: "03-giao-vien-ban-ron-xem-ket-qua-va-cham-speaking"
+
+  design_system:
+    mode: "none"
+    note: "No separate design system artifact is required for this project configuration. Component/object specifications are embedded in each page specification with stable OBJECT IDs."
+    components_embedded_in_specs:
+      - "Auth forms"
+      - "Teacher app navigation"
+      - "Wizard stepper"
+      - "File upload/dropzone"
+      - "Answer key grid"
+      - "Student class-code form"
+      - "Assigned test cards"
+      - "PDF viewer workspace"
+      - "Audio player"
+      - "Submission confirmation"
+      - "Results table"
+      - "Grading detail panel"
+
+technical_requirements:
+  platform:
+    frontend: "web app, desktop/laptop-first"
+    backend: "not yet specified"
+    database: "not yet specified"
+
+  integrations:
+    - name: "File storage"
+      purpose: "Store uploaded PDFs, Listening audio, and Speaking submissions."
+      required: true
+    - name: "Authentication"
+      purpose: "Support teacher and student accounts with role-based access."
+      required: true
+    - name: "PDF rendering"
+      purpose: "Show uploaded test PDFs by page inside student exam workspace."
+      required: true
+    - name: "Audio playback"
+      purpose: "Play Listening audio for students and Speaking submissions for teachers."
+      required: true
+
+  data_models:
+    - name: "User"
+      fields: ["id", "role", "name", "email_or_username", "password_hash", "status"]
+    - name: "Class"
+      fields: ["id", "name", "class_code", "teacher_id", "status"]
+    - name: "ClassMembership"
+      fields: ["id", "class_id", "student_id", "status"]
+    - name: "TestTemplate"
+      fields: ["id", "teacher_id", "title", "skill", "description", "status"]
+    - name: "TestMaterial"
+      fields: ["id", "template_id", "type", "file_id", "filename", "status"]
+    - name: "AnswerKey"
+      fields: ["id", "template_id", "question_count", "scoring_mode", "total_score"]
+    - name: "AnswerKeyRow"
+      fields: ["id", "answer_key_id", "question_number", "correct_answer", "score"]
+    - name: "HomeworkAssignment"
+      fields: ["id", "template_id", "class_id", "assigned_by", "deadline", "time_limit_minutes", "status"]
+    - name: "LiveExamSession"
+      fields: ["id", "template_id", "class_id", "started_by", "scheduled_start", "scheduled_end", "opened_at", "closed_at", "status"]
+    - name: "Submission"
+      fields: ["id", "template_id", "homework_assignment_id", "live_exam_session_id", "student_id", "attempt_number", "mode", "status", "submitted_at", "auto_score"]
+    - name: "SubmissionAnswer"
+      fields: ["id", "submission_id", "question_number", "answer_value", "is_correct", "score"]
+    - name: "SpeakingSubmission"
+      fields: ["id", "submission_id", "file_id", "filename", "teacher_score", "teacher_feedback", "graded_at"]
+
+  performance:
+    - "Dashboard, test list, assigned tests, and results list should load initial content in under 2 seconds on normal broadband."
+    - "Autosave answer changes should visibly acknowledge within 1 second when online."
+    - "Large file upload must show progress and never leave the user guessing whether upload is active."
+
+acceptance_criteria:
+  functional:
+    - "Teacher can log in, open Thư viện đề, create a reusable template, upload PDF, enter answer key/scoring, review, and mark the template ready."
+    - "Teacher can create homework with a due date from a ready template."
+    - "Teacher can create/open/close an in-class live exam session from a ready template."
+    - "Homework and live exam sessions are visible only to assigned class/student context and allowed session state."
+    - "Student must enter valid class code before student login."
+    - "Student login preserves selected class context and verifies membership."
+    - "Student can see homework and live exam items with clear type, Not started, In progress, Submitted, Not open, and Open now states."
+    - "Student Reading/Listening workspace shows PDF, optional audio, answer form, progress, autosave state, and submit confirmation."
+    - "Student Speaking workspace distinguishes uploaded draft from final submitted file."
+    - "Teacher Results module filters by class, template, mode, student, skill, and status."
+    - "Teacher can play Speaking file, enter score/feedback, save, and see row status update."
+
+  non_functional:
+    - "All core flows are keyboard accessible."
+    - "Text contrast meets WCAG AA."
+    - "Role-based access prevents teachers/students from viewing data outside their scope."
+    - "Submission, mark-ready, homework creation, and live-session creation actions are protected against duplicate clicks."
+    - "Answer drafts survive normal reload/network interruption scenarios where technically feasible."
+
+  edge_cases:
+    - "Invalid or expired class code -> show clear error and let student retry."
+    - "Student account not in selected class -> block login to that class and explain next step."
+    - "No assigned tests -> show calm empty state tied to active class."
+    - "Live exam not opened yet -> show not-open state and block attempt start."
+    - "Homework deadline passed -> show closed state and block new attempt."
+    - "PDF upload fails -> keep draft and allow retry/replace."
+    - "Answer key has missing answers -> block template-ready action until fixed."
+    - "Student submits with missing answers -> show confirmation warning before final submit."
+    - "Speaking file uploaded but not submitted -> keep status as draft, not submitted."
+    - "Teacher opens missing Speaking file -> show recoverable error, do not lose grading context."
+
+testing_guidance:
+  user_testing:
+    - "Time a teacher creating a reusable Reading template from prepared PDF and answer key; target under 10 minutes."
+    - "Observe a student entering class code, logging in, finding homework/live exam work, entering answers, and submitting without verbal guidance."
+    - "Observe a teacher filtering results and grading one Speaking submission end-to-end."
+
+  qa_testing:
+    - "Test teacher and student auth guards for direct route access."
+    - "Test file upload success/failure/replacement for PDF and Speaking files."
+    - "Test autosave, reload, offline/degraded warning, and final submission locking."
+    - "Test result filters and master-detail grading save behavior."
+    - "Test keyboard navigation and visible focus states across all forms and tables."
+
+  design_validation:
+    - "Match page-level object IDs and section hierarchy from the page specs."
+    - "Preserve business distinction: Thư viện đề stores templates; Homework and Live Exam are separate usage modes."
+    - "Preserve student safety cues: class confirmation, active class context, autosave state, and explicit submission success."
+
+estimated_complexity:
+  size: "large"
+  effort: "4-6 weeks for MVP implementation depending on existing stack and auth/file infrastructure"
+  risk: "medium"
+  dependencies:
+    - "Authentication and role model"
+    - "Class and membership model"
+    - "File storage and secure file access"
+    - "PDF viewer implementation"
+    - "Audio player implementation"
+    - "Autosave/submission state model"
+
+notes: |
+  Scope boundaries are important:
+  - MVP does not parse PDF into questions.
+  - MVP does not auto-grade Speaking with AI.
+  - MVP uses teacher-defined answer keys for Reading/Listening.
+  - Export to Excel/PDF is deferred.
+  - Design system mode is none, so implementation should extract reusable UI components pragmatically from repeated patterns rather than waiting on a formal component library.

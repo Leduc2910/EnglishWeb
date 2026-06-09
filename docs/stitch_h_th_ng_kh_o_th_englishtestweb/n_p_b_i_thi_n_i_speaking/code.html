@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Student Speaking Upload - EnglishTestWeb</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#00367a",
+                        "surface-container-highest": "#d3e4fe",
+                        "secondary-container": "#fea619",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-surface-variant": "#3c4a42",
+                        "surface-tint": "#006c49",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#71a1ff",
+                        "primary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed": "#001a42",
+                        "on-secondary-fixed": "#2a1700",
+                        "surface-dim": "#cbdbf5",
+                        "on-primary-container": "#00422b",
+                        "on-primary-fixed": "#002113",
+                        "on-error-container": "#93000a",
+                        "background": "#f8f9ff",
+                        "primary-container": "#10b981",
+                        "inverse-primary": "#4edea3",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#0b1c30",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#bbcabf",
+                        "surface-variant": "#d3e4fe",
+                        "surface-bright": "#f8f9ff",
+                        "outline": "#6c7a71",
+                        "surface-container": "#e5eeff",
+                        "on-secondary-container": "#684000",
+                        "secondary": "#855300",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#4edea3",
+                        "on-primary-fixed-variant": "#005236",
+                        "tertiary": "#005ac2",
+                        "tertiary-fixed": "#d8e2ff",
+                        "surface": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "inverse-surface": "#213145",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-low": "#eff4ff",
+                        "secondary-fixed": "#ffddb8",
+                        "primary": "#006c49",
+                        "on-background": "#0b1c30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "gutter": "20px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "title-lg": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .filled-icon { font-variation-settings: 'FILL' 1; }
+        
+        .pulse-ring {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .upload-dashed {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%236c7a71' stroke-width='2' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col antialiased">
+<!-- Top Navigation Placeholder (Simplified for Student View) -->
+<header class="bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center w-full px-lg py-sm top-0 sticky z-50">
+<div class="flex items-center gap-md">
+<h1 class="font-headline-sm text-headline-sm font-black text-on-surface">EnglishTestWeb</h1>
+<span class="text-on-surface-variant text-body-sm bg-surface-container-high px-sm py-xs rounded-full">Kỳ thi Mùa Xuân 2024</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="hover:text-primary transition-colors scale-95 active:scale-90 text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-md text-label-md hidden md:inline">Trợ giúp</span>
+</button>
+<div class="flex items-center gap-xs ml-sm">
+<img alt="Student Profile" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A close-up portrait of a young Vietnamese female student looking slightly off-camera with a confident yet calm expression. The lighting is soft and natural, suggesting a well-lit study environment. She wears a simple, neat white collared shirt. The background is a gently blurred, light blue and white academic setting, reinforcing a clean, modern, and professional aesthetic aligned with an educational platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlUrnrcsolSqjf_6a9msh-R8SFIPGbn_Vy6zcxc-U_oFGOmOS_pYFMhqCsaQ669nNCRO6-GQw_Qvfd8mQKI2cZaE21GmUusL7P9QADo_E8KFwaGLeyAbjhnHykVbIUtdLwQ4biyvd1ijKjmCgShRwD4WkgCT2mMV37YhayxVUgGJVf8ov0sjEl7U6EDkWFfIro4K8nTpiCCdDYS7rKfKI1EcncD5kZRDOWOQ6zqr5eMWIsvtCsSCPRXOvBB4WBh7KQz4qhBMmf-ogI"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-grow container mx-auto px-md py-lg max-w-4xl flex flex-col gap-lg">
+<!-- Page Header -->
+<div class="flex flex-col gap-xs mb-md">
+<div class="flex items-center gap-sm text-on-surface-variant mb-xs">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
+<a class="font-label-md text-label-md hover:underline" href="#">Quay lại danh sách câu hỏi</a>
+</div>
+<h2 class="font-display-lg text-display-lg text-on-surface">Câu hỏi 3: Miêu tả bức tranh</h2>
+<div class="flex gap-sm items-center mt-sm">
+<span class="bg-amber-100 text-amber-600 font-label-md text-label-md px-sm py-xs rounded-full flex items-center gap-xs border border-amber-200">
+<span class="material-symbols-outlined text-sm" data-icon="timer">timer</span>
+                    Thời gian chuẩn bị: 45s
+                </span>
+<span class="bg-blue-100 text-blue-600 font-label-md text-label-md px-sm py-xs rounded-full flex items-center gap-xs border border-blue-200">
+<span class="material-symbols-outlined text-sm" data-icon="mic">mic</span>
+                    Thời gian nói: 60s
+                </span>
+</div>
+</div>
+<!-- Two Column Layout: Instruction & Tools -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+<!-- Left Column: Question & Instructions -->
+<div class="md:col-span-7 flex flex-col gap-md">
+<!-- Question Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-lg shadow-sm relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-sm">Yêu cầu đề bài</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md leading-relaxed">
+                        Hãy miêu tả chi tiết bức tranh dưới đây. Bạn nên nói về những người trong tranh đang làm gì, bối cảnh ở đâu, và cảm nhận chung của bạn về không khí trong bức tranh.
+                    </p>
+<div class="w-full aspect-video bg-surface-container-high rounded-md overflow-hidden border border-outline-variant relative">
+<!-- Placeholder for image -->
+<img alt="Prompt Image" class="w-full h-full object-cover" data-alt="A vivid, bustling scene of an outdoor farmers market on a sunny morning. Several people are browsing stalls filled with fresh, colorful vegetables and fruits. The lighting is bright and cheerful, casting soft shadows. The overall mood is lively and community-focused. The aesthetic is clean and modern, matching a light-mode interface with clear contrasts and high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbgc_VADRIRA00Rpj2qkEWxRdXplSw6AU1zVBSrQAAFjkfWlvLJJSAzTgvDFinN3RcnhhURxrFN_tPhWZqvNt6xo957XfPVD7SuuoOagmD25EA-GOGha_DE8Hp4btw9PjXutoFWKkXEGiljRT8uxkZZMbrDWJmEA3_Wgvh0FGuysI9ydOD-37dpe3NklrAfPqkZOnRbDVFSJMPqfeMT1eZym3nF9SOY6tuT5jZowDcJ47PkSug0fdE9aCRTcrM2vwuRxbsplXQ_xp1"/>
+</div>
+</div>
+<!-- Instructions Card -->
+<div class="bg-surface-container-low rounded-lg p-md flex flex-col gap-sm border border-surface-container-high">
+<h4 class="font-label-md text-label-md text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm filled-icon" data-icon="info">info</span>
+                        Hướng dẫn làm bài
+                    </h4>
+<ul class="list-none flex flex-col gap-xs font-body-sm text-body-sm text-on-surface-variant pl-sm">
+<li class="flex gap-sm items-start">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5" data-icon="check_circle">check_circle</span>
+                            Đảm bảo microphone của bạn đã được kết nối và hoạt động tốt.
+                        </li>
+<li class="flex gap-sm items-start">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5" data-icon="check_circle">check_circle</span>
+                            Nhấn nút <b>Bắt đầu thu âm</b> để ghi giọng nói trực tiếp.
+                        </li>
+<li class="flex gap-sm items-start">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5" data-icon="check_circle">check_circle</span>
+                            Hoặc bạn có thể tải lên tệp âm thanh (mp3, wav) có sẵn từ máy tính.
+                        </li>
+<li class="flex gap-sm items-start">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5" data-icon="check_circle">check_circle</span>
+                            Bạn có thể nghe lại và ghi âm lại nhiều lần trước khi nộp.
+                        </li>
+</ul>
+</div>
+</div>
+<!-- Right Column: Recording & Upload Tools -->
+<div class="md:col-span-5 flex flex-col gap-md">
+<!-- Main Action Area -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm flex flex-col overflow-hidden">
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant bg-surface-container-lowest">
+<button class="flex-1 py-sm font-label-md text-label-md text-primary border-b-2 border-primary bg-surface-container-low transition-colors">
+                            Thu âm trực tiếp
+                        </button>
+<button class="flex-1 py-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors">
+                            Tải lên tệp
+                        </button>
+</div>
+<!-- Direct Record Content -->
+<div class="p-lg flex flex-col items-center justify-center gap-md min-h-[300px]">
+<!-- Status indicator -->
+<div class="flex items-center gap-xs bg-slate-100 text-slate-500 px-sm py-xs rounded-full font-label-sm text-label-sm" id="recordStatus">
+<span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            Sẵn sàng
+                        </div>
+<!-- Timer -->
+<div class="font-headline-md text-headline-md text-on-surface tracking-widest tabular-nums">
+                            00:00 / 01:00
+                        </div>
+<!-- Visualizer Placeholder (Static for design) -->
+<div class="w-full h-16 flex items-center justify-center gap-1 opacity-30">
+<div class="w-1.5 h-2 bg-on-surface-variant rounded-full"></div>
+<div class="w-1.5 h-4 bg-on-surface-variant rounded-full"></div>
+<div class="w-1.5 h-8 bg-on-surface-variant rounded-full"></div>
+<div class="w-1.5 h-5 bg-on-surface-variant rounded-full"></div>
+<div class="w-1.5 h-3 bg-on-surface-variant rounded-full"></div>
+<div class="w-1.5 h-10 bg-on-surface-variant rounded-full"></div>
+<div class="w-1.5 h-6 bg-on-surface-variant rounded-full"></div>
+<div class="w-1.5 h-4 bg-on-surface-variant rounded-full"></div>
+<div class="w-1.5 h-2 bg-on-surface-variant rounded-full"></div>
+</div>
+<!-- Controls -->
+<div class="flex items-center justify-center gap-lg mt-sm">
+<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-2xl" data-icon="play_arrow">play_arrow</span>
+</button>
+<!-- Record Button -->
+<button class="w-16 h-16 rounded-full bg-error text-on-error flex items-center justify-center shadow-md hover:bg-red-700 transition-all pulse-ring group relative" id="recordBtn" onclick="toggleRecord()">
+<span class="material-symbols-outlined text-3xl filled-icon group-hover:scale-110 transition-transform" data-icon="mic" id="recordIcon">mic</span>
+</button>
+<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-2xl" data-icon="stop">stop</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-sm text-center">Nhấn để bắt đầu thu âm</span>
+</div>
+<!-- Upload Tab Content (Hidden by default in this demo, just structure) -->
+<div class="hidden p-lg flex-col items-center justify-center gap-md min-h-[300px]">
+<div class="w-full h-full min-h-[200px] upload-dashed rounded-lg flex flex-col items-center justify-center p-md bg-surface-bright hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mb-sm group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-primary-container transition-colors" data-icon="cloud_upload">cloud_upload</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface mb-xs text-center">Kéo thả tệp hoặc nhấp để chọn</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center">Hỗ trợ MP3, WAV (Tối đa 10MB)</p>
+</div>
+</div>
+</div>
+<!-- Submission Actions -->
+<div class="flex flex-col gap-sm mt-auto pt-md border-t border-outline-variant">
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center mb-xs">
+                        Hãy kiểm tra lại bản ghi âm trước khi nộp. Bạn không thể thay đổi sau khi đã nộp.
+                    </p>
+<button class="w-full py-md bg-primary text-on-primary font-label-md text-label-md rounded-lg shadow-sm hover:bg-opacity-90 transition-all flex items-center justify-center gap-sm disabled:opacity-50 disabled:cursor-not-allowed">
+<span class="material-symbols-outlined text-sm" data-icon="send">send</span>
+                        Nộp bài Speaking
+                    </button>
+<button class="w-full py-sm bg-transparent text-primary border border-outline-variant font-label-md text-label-md rounded-lg hover:bg-surface-container transition-all">
+                        Lưu nháp
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple mock interaction for the record button
+        let isRecording = false;
+        function toggleRecord() {
+            const btn = document.getElementById('recordBtn');
+            const icon = document.getElementById('recordIcon');
+            const status = document.getElementById('recordStatus');
+            
+            isRecording = !isRecording;
+            
+            if (isRecording) {
+                // Change to Stop state
+                icon.innerText = 'stop';
+                btn.classList.add('pulse-ring');
+                status.className = 'flex items-center gap-xs bg-red-100 text-red-600 px-sm py-xs rounded-full font-label-sm text-label-sm';
+                status.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Đang thu âm';
+            } else {
+                // Change to Ready state
+                icon.innerText = 'mic';
+                btn.classList.remove('pulse-ring');
+                status.className = 'flex items-center gap-xs bg-teal-100 text-teal-600 px-sm py-xs rounded-full font-label-sm text-label-sm';
+                status.innerHTML = '<span class="material-symbols-outlined text-sm" style="font-size: 14px" data-icon="check">check</span> Đã ghi âm';
+                
+                // Enable playback buttons (mock visual only)
+                const playBtn = btn.previousElementSibling;
+                const stopBtn = btn.nextElementSibling;
+                playBtn.removeAttribute('disabled');
+                stopBtn.removeAttribute('disabled');
+            }
+        }
+    </script>
+</body></html>

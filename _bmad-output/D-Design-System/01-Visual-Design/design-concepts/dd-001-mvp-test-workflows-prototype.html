@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EnglishTestWeb - DD-001 MVP Prototype</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --surface: #ffffff;
+      --surface-2: #f1f5f2;
+      --ink: #20251f;
+      --muted: #637064;
+      --line: #dce4dc;
+      --primary: #147b63;
+      --primary-2: #0e5f4c;
+      --accent: #d88b2d;
+      --danger: #b63737;
+      --success: #26734d;
+      --info: #276a8c;
+      --shadow: 0 18px 45px rgba(32, 37, 31, 0.12);
+      --radius: 8px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      letter-spacing: 0;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 292px 1fr;
+    }
+
+    .sidebar {
+      background: #fbfcfa;
+      border-right: 1px solid var(--line);
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .brand h1 {
+      font-size: 18px;
+      line-height: 1.2;
+      margin: 0;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border-radius: 999px;
+      padding: 0 10px;
+      background: #e7f1eb;
+      color: var(--primary-2);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .flow-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin: 22px 0 8px;
+    }
+    .nav-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 42px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+      font-size: 13px;
+      line-height: 1.25;
+    }
+    .nav-button:hover { background: var(--surface-2); }
+    .nav-button.active {
+      border-color: #b7d8c8;
+      background: #e8f4ee;
+      color: var(--primary-2);
+      font-weight: 750;
+    }
+    .screen-no {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 28px;
+    }
+    .prototype-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .prototype-bar h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+    .prototype-bar p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .frame {
+      background: var(--surface);
+      min-height: calc(100vh - 112px);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      min-height: 64px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      background: #ffffff;
+    }
+    .topbar strong { font-size: 16px; }
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav span {
+      padding: 9px 12px;
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .nav span.active {
+      background: #e8f4ee;
+      color: var(--primary-2);
+    }
+
+    .page {
+      padding: 24px;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 24px;
+      align-items: start;
+    }
+    .auth-layout {
+      min-height: 560px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 420px;
+      gap: 36px;
+      align-items: center;
+      padding: 48px;
+    }
+
+    .panel, .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .panel { padding: 20px; }
+    .card { padding: 16px; }
+    .section-stack { display: grid; gap: 16px; }
+    .compact-stack { display: grid; gap: 10px; }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+    h4 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+    p { line-height: 1.5; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+    .metric {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 800;
+      margin-top: 8px;
+    }
+
+    .field { display: grid; gap: 6px; margin-bottom: 14px; }
+    label {
+      font-size: 13px;
+      font-weight: 750;
+      color: #344036;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #cdd8ce;
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: #ffffff;
+      color: var(--ink);
+      min-height: 42px;
+    }
+    textarea { min-height: 118px; resize: vertical; }
+    input:focus, select:focus, textarea:focus, button:focus {
+      outline: 3px solid rgba(20, 123, 99, 0.22);
+      outline-offset: 2px;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      min-height: 42px;
+      padding: 0 14px;
+      font-weight: 750;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .btn.primary { background: var(--primary); color: white; }
+    .btn.primary:hover { background: var(--primary-2); }
+    .btn.secondary { background: #eef3ef; color: #263329; border-color: #d5dfd6; }
+    .btn.ghost { background: transparent; color: var(--primary-2); border-color: transparent; }
+    .btn.full { width: 100%; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #edf1ed;
+      color: #425044;
+      white-space: nowrap;
+    }
+    .badge.green { background: #e5f3eb; color: var(--success); }
+    .badge.orange { background: #fbefdf; color: #935313; }
+    .badge.blue { background: #e6f0f4; color: var(--info); }
+    .badge.red { background: #fae8e8; color: var(--danger); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    tr.selectable { cursor: pointer; }
+    tr.selectable:hover { background: #f7faf7; }
+    tr.selected { background: #eaf5ef; }
+
+    .stepper {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: #eef3ef;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .step.active { background: #dff0e8; color: var(--primary-2); }
+    .step.done { background: #e8f4ee; color: var(--success); }
+
+    .dropzone {
+      border: 2px dashed #acc8b8;
+      border-radius: var(--radius);
+      min-height: 190px;
+      padding: 28px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background: #f8fbf8;
+    }
+    .file-card {
+      border: 1px solid #cbdccc;
+      border-radius: var(--radius);
+      padding: 12px;
+      background: #f8fbf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .progress {
+      height: 8px;
+      border-radius: 999px;
+      background: #dce6dd;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress > span { display: block; height: 100%; background: var(--primary); width: 72%; }
+
+    .pdf-viewer {
+      min-height: 570px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(#ffffff, #ffffff) padding-box,
+        repeating-linear-gradient(0deg, #eef1ee 0 1px, transparent 1px 38px);
+      padding: 22px;
+      overflow: hidden;
+    }
+    .pdf-page {
+      width: min(100%, 620px);
+      min-height: 520px;
+      margin: 0 auto;
+      border: 1px solid #cfd9d0;
+      border-radius: 4px;
+      background: white;
+      padding: 26px;
+      box-shadow: 0 12px 26px rgba(0,0,0,0.08);
+    }
+    .pdf-line { height: 10px; background: #d9e0da; border-radius: 99px; margin: 12px 0; }
+    .pdf-line.short { width: 58%; }
+    .pdf-line.med { width: 76%; }
+
+    .answer-row {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .qno {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #edf3ef;
+      color: #344036;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .audio {
+      height: 54px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f5f8f5;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+    }
+    .play {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--primary);
+      color: white;
+      font-weight: 900;
+    }
+    .wave {
+      flex: 1;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--primary) 38%, #cbd8ce 38%);
+    }
+
+    .empty-state {
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed #cbd8ce;
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
+      .main { padding: 16px; }
+      .auth-layout, .split { grid-template-columns: 1fr; padding: 22px; }
+      .grid-3, .grid-2 { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; padding: 16px; }
+      .nav { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>EnglishTestWeb</h1>
+        <span class="chip">DD-001</span>
+      </div>
+      <p class="small muted">MVP Test Workflows visual prototype. Specs remain the source of truth.</p>
+      <div id="nav"></div>
+    </aside>
+
+    <main class="main">
+      <div class="prototype-bar">
+        <div>
+          <h2 id="screenTitle">Prototype</h2>
+          <p id="screenMeta">Choose a screen from the sidebar.</p>
+        </div>
+        <span class="badge green">Interactive HTML</span>
+      </div>
+      <section class="frame" id="frame"></section>
+    </main>
+  </div>
+
+  <script>
+    const flows = [
+      {
+        label: "01 Teacher creates template",
+        screens: [
+          ["1.1", "Teacher Login", teacherLogin],
+          ["1.2", "Teacher Dashboard", teacherDashboardCreate],
+          ["1.3", "Question Library", testLibrary],
+          ["1.4", "Template Setup", createSetup],
+          ["1.5", "Create: Upload", createUpload],
+          ["1.6", "Answer Key", answerKey],
+          ["1.7", "Review & Next Action", reviewPublish]
+        ]
+      },
+      {
+        label: "02 Student completes homework/live exam",
+        screens: [
+          ["2.1", "Class Code", classCode],
+          ["2.2", "Student Login", studentLogin],
+          ["2.3", "Assigned Tests", assignedTests],
+          ["2.4", "Exam Workspace", examWorkspace],
+          ["2.5", "Speaking Upload", speakingSubmission]
+        ]
+      },
+      {
+        label: "03 Teacher grades results",
+        screens: [
+          ["3.1", "Teacher Login", teacherResultsLogin],
+          ["3.2", "Results Dashboard", teacherDashboardResults],
+          ["3.3", "Results & Grading", resultsGrading]
+        ]
+      }
+    ];
+
+    let current = "1.1";
+    let selectedSubmission = 0;
+
+    function el(id) { return document.getElementById(id); }
+    function go(id) {
+      current = id;
+      render();
+    }
+
+    function renderNav() {
+      const nav = el("nav");
+      nav.innerHTML = flows.map(flow => `
+        <div class="flow-title">${flow.label}</div>
+        ${flow.screens.map(([id, name]) => `
+          <button class="nav-button ${current === id ? "active" : ""}" onclick="go('${id}')">
+            <span>${name}</span><span class="screen-no">${id}</span>
+          </button>
+        `).join("")}
+      `).join("");
+    }
+
+    function render() {
+      renderNav();
+      for (const flow of flows) {
+        for (const [id, name, view] of flow.screens) {
+          if (id === current) {
+            el("screenTitle").textContent = name;
+            el("screenMeta").textContent = `${flow.label} / Screen ${id}`;
+            el("frame").innerHTML = view();
+            return;
+          }
+        }
+      }
+    }
+
+    function topbar(active = "Dashboard", role = "Giáo viên") {
+      return `
+        <div class="topbar">
+          <strong>EnglishTestWeb</strong>
+          <nav class="nav">
+            ${["Dashboard", "Thư viện đề", "Lớp học", "Kết quả"].map(item => `<span class="${item === active ? "active" : ""}">${item}</span>`).join("")}
+          </nav>
+          <span class="chip">${role}</span>
+        </div>
+      `;
+    }
+
+    function teacherLogin() {
+      return `
+        <div class="auth-layout">
+          <div>
+            <span class="chip">Dành cho giáo viên</span>
+            <h3 style="margin-top:18px">Tạo bài test từ PDF nhanh hơn cách thủ công.</h3>
+            <p class="muted">Upload PDF, khai báo answer key, lưu thành đề gốc rồi dùng để giao homework hoặc mở bài thi trực tiếp trên lớp.</p>
+            <div class="grid-3" style="margin-top:24px">
+              <div class="card"><strong>PDF first</strong><p class="small muted">Đề gốc vẫn là tài liệu giáo viên đã có.</p></div>
+              <div class="card"><strong>Answer key</strong><p class="small muted">Tách đáp án để hệ thống tự chấm.</p></div>
+              <div class="card"><strong>2 cách dùng</strong><p class="small muted">Giao homework có hạn nộp hoặc mở bài thi trực tiếp.</p></div>
+            </div>
+          </div>
+          ${loginCard("Đăng nhập giáo viên", "Vào tài khoản để tạo, giao và xem kết quả bài test.", "Đăng nhập", "go('1.2')")}
+        </div>
+      `;
+    }
+
+    function teacherResultsLogin() {
+      return `
+        <div class="auth-layout">
+          <div>
+            <span class="chip">Dành cho giáo viên</span>
+            <h3 style="margin-top:18px">Xem kết quả và chấm Speaking trong một nơi.</h3>
+            <p class="muted">Kết quả theo lớp, file Speaking, điểm và feedback nằm chung một bề mặt làm việc.</p>
+          </div>
+          ${loginCard("Đăng nhập giáo viên", "Vào tài khoản để xem kết quả và chấm Speaking.", "Đăng nhập", "go('3.2')")}
+        </div>
+      `;
+    }
+
+    function loginCard(title, subtitle, action, onclick) {
+      return `
+        <div class="panel">
+          <h3>${title}</h3>
+          <p class="muted">${subtitle}</p>
+          <div class="field"><label>Email hoặc tên đăng nhập</label><input value="teacher@example.com"></div>
+          <div class="field"><label>Mật khẩu</label><input type="password" value="password"></div>
+          <button class="btn primary full" onclick="${onclick}">${action}</button>
+          <div class="row" style="margin-top:12px"><span class="small muted">Giữ đăng nhập</span><button class="btn ghost">Quên mật khẩu?</button></div>
+        </div>
+      `;
+    }
+
+    function teacherDashboardCreate() {
+      return `${topbar("Dashboard")}
+        <div class="page section-stack">
+          <div class="row"><div><h3>Tổng quan giáo viên</h3><p class="muted">Các số liệu chính trước khi vào module Thư viện đề.</p></div><select style="max-width:220px"><option>IELTS 7A</option></select></div>
+          <div class="grid-3">
+            ${metric("Đề gốc", "12", "4 nháp")}
+            ${metric("Lượt nộp gần đây", "86", "Trong 7 ngày")}
+            ${metric("Speaking cần chấm", "9", "Chuyển qua Kết quả")}
+          </div>
+          <div class="panel">
+            <div class="row"><h4>Hoạt động gần đây</h4><button class="btn secondary" onclick="go('1.3')">Mở Thư viện đề</button></div>
+            ${table(["Đề gốc", "Kỹ năng", "Trạng thái"], [["Reading Mock 01", "Reading", badge("Sẵn sàng", "green")], ["Listening Notes", "Listening", badge("Nháp", "orange")]])}
+          </div>
+        </div>`;
+    }
+
+    function teacherDashboardResults() {
+      return `${topbar("Dashboard")}
+        <div class="page section-stack">
+          <div class="row"><div><h3>Tổng quan giáo viên</h3><p class="muted">Tình hình nộp bài và Speaking chờ chấm.</p></div><button class="btn primary" onclick="go('3.3')">Mở Kết quả</button></div>
+          <div class="grid-3">
+            ${metric("Bài đã nộp", "124", "Tất cả lớp")}
+            ${metric("Đã tự chấm", "98", "Reading/Listening")}
+            ${metric("Speaking chờ chấm", "11", "Cần xử lý")}
+          </div>
+          <div class="panel">
+            <h4>Hàng đợi gần đây</h4>
+            ${table(["Học sinh", "Bài", "Trạng thái"], [["Minh Anh", "Speaking Part 2", badge("Cần chấm", "orange")], ["Quốc Huy", "Reading Mock 01", badge("Đã tự chấm", "green")]])}
+          </div>
+        </div>`;
+    }
+
+    function metric(label, value, note) {
+      return `<div class="card"><span class="muted small">${label}</span><span class="metric">${value}</span><p class="small muted">${note}</p></div>`;
+    }
+
+    function badge(text, color) { return `<span class="badge ${color || ""}">${text}</span>`; }
+
+    function table(headers, rows) {
+      return `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+    }
+
+    function testLibrary() {
+      return `${topbar("Thư viện đề")}
+        <div class="page section-stack">
+          <div class="row"><div><h3>Thư viện đề</h3><p class="muted">Kho đề gốc/template. Từ mỗi đề, giáo viên có thể giao homework hoặc tạo phiên thi trực tiếp.</p></div><button class="btn primary" onclick="go('1.4')">Tạo đề mới</button></div>
+          <div class="panel row">
+            <input placeholder="Tìm theo tên đề" style="max-width:320px">
+            <select><option>Tất cả kỹ năng</option></select><select><option>Tất cả trạng thái</option></select>
+          </div>
+          <div class="panel">${table(["Tên đề", "Kỹ năng", "Trạng thái", "Dùng tiếp"], [["Reading Mock 01", "Reading", badge("Sẵn sàng", "green"), "Giao homework / Tạo thi trực tiếp"], ["Listening Notes", "Listening", badge("Nháp", "orange"), "Hoàn tất answer key"], ["Speaking Part 2", "Speaking", badge("Sẵn sàng", "green"), "Giao homework / Tạo thi trực tiếp"]])}</div>
+        </div>`;
+    }
+
+    function wizardHeader(active) {
+      const steps = ["Setup", "Upload", "Answer key", "Review"];
+      return `<div class="panel"><h3>Tạo đề gốc</h3><div class="stepper">${steps.map((s, i) => `<span class="step ${i < active ? "done" : i === active ? "active" : ""}">${i + 1}. ${s}</span>`).join("")}</div></div>`;
+    }
+
+    function createSetup() {
+      return `${topbar("Thư viện đề")}<div class="page section-stack">${wizardHeader(0)}
+        <div class="split">
+          <div class="panel"><h4>Thông tin đề gốc</h4>
+            <div class="field"><label>Tên đề</label><input value="Reading Mock 01"></div>
+            <div class="field"><label>Kỹ năng</label><select><option>Reading</option><option>Listening</option><option>Speaking</option></select></div>
+            <div class="field"><label>Mô tả / ghi chú</label><textarea>Mock test dùng lại cho lớp IELTS 7A và 8B.</textarea></div>
+            <div class="field"><label>Tag</label><input value="IELTS, Reading, Mock"></div>
+            <div class="row"><button class="btn secondary" onclick="go('1.3')">Quay lại</button><button class="btn primary" onclick="go('1.5')">Tiếp tục upload</button></div>
+          </div>
+          <div class="panel"><h4>Tóm tắt nháp</h4><p>${badge("Tên đề đã có", "green")}</p><p>${badge("Đã chọn Reading", "green")}</p><p>${badge("Chưa gắn lớp/hạn nộp", "blue")}</p><p class="small muted">Lớp, hạn nộp và thời gian thi sẽ chọn ở bước Giao homework hoặc Tạo thi trực tiếp.</p></div>
+        </div></div>`;
+    }
+
+    function createUpload() {
+      return `${topbar("Thư viện đề")}<div class="page section-stack">${wizardHeader(1)}
+        <div class="split">
+          <div class="panel">
+            <h4>Upload đề Reading</h4>
+            <div class="dropzone"><div><strong>Kéo thả PDF vào đây</strong><p class="muted">Hoặc chọn file từ máy. Không cần parse nội dung PDF.</p><button class="btn secondary">Chọn file PDF</button></div></div>
+            <div style="height:14px"></div>
+            <div class="file-card"><div><strong>READING_TEMP.pdf</strong><div class="small muted">2.4 MB · 8 trang</div><div class="progress"><span></span></div></div>${badge("Đã upload", "green")}</div>
+          </div>
+          <div class="panel"><h4>Điều kiện tiếp tục</h4><p>${badge("PDF hợp lệ", "green")}</p><p class="small muted">Reading cần một file PDF đề bài.</p><button class="btn primary full" onclick="go('1.6')">Tiếp tục nhập answer key</button></div>
+        </div></div>`;
+    }
+
+    function answerKey() {
+      const rows = Array.from({length: 10}, (_, i) => [i + 1, ["B", "A", "C", "D"][i % 4], "1.0"]);
+      return `${topbar("Thư viện đề")}<div class="page section-stack">${wizardHeader(2)}
+        <div class="split">
+          <div class="panel">
+            <div class="row"><h4>Answer key & điểm</h4><span class="badge green">10/10 câu</span></div>
+            <div class="grid-2"><div class="field"><label>Số câu hỏi</label><input value="10"></div><div class="field"><label>Tổng điểm</label><input value="10"></div></div>
+            ${table(["Câu", "Đáp án đúng", "Điểm"], rows.map(r => [`<strong>${r[0]}</strong>`, `<input value="${r[1]}">`, `<input value="${r[2]}">`]))}
+          </div>
+          <div class="panel"><h4>Validation</h4><p>${badge("Không thiếu đáp án", "green")}</p><p>${badge("Tổng điểm hợp lệ", "green")}</p><button class="btn primary full" onclick="go('1.7')">Tiếp tục review</button></div>
+        </div></div>`;
+    }
+
+    function reviewPublish() {
+      return `${topbar("Thư viện đề")}<div class="page section-stack">${wizardHeader(3)}
+        <div class="split">
+          <div class="section-stack">
+            ${summaryCard("Thông tin đề gốc", "Reading Mock 01 · Reading · reusable template")}
+            ${summaryCard("Tài liệu", "READING_TEMP.pdf · 8 trang · đã upload")}
+            ${summaryCard("Answer key & điểm", "10 câu · điểm đều · tổng 10")}
+          </div>
+          <div class="panel"><h4>Sẵn sàng sử dụng</h4><p>${badge("PDF hợp lệ", "green")}</p><p>${badge("Answer key đầy đủ", "green")}</p><p>${badge("Đề gốc sẵn sàng", "green")}</p><button class="btn primary full">Giao homework</button><button class="btn secondary full" style="margin-top:8px">Tạo phiên thi trực tiếp</button><button class="btn secondary full" style="margin-top:8px">Lưu đề gốc</button></div>
+        </div></div>`;
+    }
+
+    function summaryCard(title, text) { return `<div class="panel"><div class="row"><div><h4>${title}</h4><p class="muted">${text}</p></div><button class="btn secondary">Sửa</button></div></div>`; }
+
+    function classCode() {
+      return `<div class="auth-layout">
+        <div><span class="chip">Học sinh</span><h3 style="margin-top:18px">Vào đúng lớp trước khi làm bài.</h3><p class="muted">Mã lớp giúp hệ thống chỉ hiển thị bài được giao cho lớp đó.</p></div>
+        <div class="panel"><h3>Nhập mã lớp</h3><p class="muted">Dùng mã lớp giáo viên đã gửi.</p><div class="field"><label>Mã lớp</label><input value="ENG7A"></div><button class="btn secondary full">Kiểm tra mã lớp</button><div style="height:14px"></div><div class="card"><strong>IELTS 7A</strong><p class="small muted">Giáo viên: Ms. Linh</p><button class="btn primary full" onclick="go('2.2')">Đúng lớp này, tiếp tục</button></div></div>
+      </div>`;
+    }
+
+    function studentLogin() {
+      return `<div class="auth-layout">
+        <div class="panel"><h4>Bạn đang vào lớp</h4><h3>IELTS 7A</h3><p class="muted">Giáo viên: Ms. Linh</p><button class="btn secondary">Đổi mã lớp</button></div>
+        <div class="panel"><h3>Đăng nhập học sinh</h3><p class="muted">Đăng nhập để xem bài test của lớp này.</p><div class="field"><label>Tài khoản học sinh</label><input value="minhanh"></div><div class="field"><label>Mật khẩu</label><input type="password" value="password"></div><button class="btn primary full" onclick="go('2.3')">Đăng nhập</button></div>
+      </div>`;
+    }
+
+    function assignedTests() {
+      return `<div class="topbar"><strong>EnglishTestWeb</strong><span class="chip">IELTS 7A</span><span class="chip">Minh Anh</span></div>
+        <div class="page section-stack">
+          <div class="row"><div><h3>Bài được giao</h3><p class="muted">Lớp hiện tại: IELTS 7A. Tách rõ Homework và Thi trực tiếp.</p></div><div class="row"><select style="max-width:180px"><option>Tất cả loại bài</option><option>Homework</option><option>Thi trực tiếp</option></select><select style="max-width:180px"><option>Tất cả kỹ năng</option></select></div></div>
+          <div class="grid-3">
+            ${testCard("Reading Mock 01", "Homework", "Reading", "Chưa làm", "green", "Hạn 12/06", "Bắt đầu", "go('2.4')")}
+            ${testCard("Listening Notes", "Thi trực tiếp", "Listening", "Đang mở", "blue", "Mở bởi giáo viên", "Vào thi", "go('2.4')")}
+            ${testCard("Speaking Part 2", "Homework", "Speaking", "Chưa nộp", "orange", "Hạn 15/06", "Upload file", "go('2.5')")}
+          </div>
+        </div>`;
+    }
+
+    function testCard(title, mode, skill, status, color, note, action, onclick) {
+      return `<div class="card"><div class="row"><span class="badge ${color}">${mode}</span><span class="small muted">${note}</span></div><h4 style="margin-top:14px">${title}</h4><p class="small muted">${skill}</p><p>${badge(status, color)}</p><button class="btn primary full" onclick="${onclick}">${action}</button></div>`;
+    }
+
+    function examWorkspace() {
+      return `<div class="topbar"><strong>Reading Mock 01</strong><span class="badge green">Homework</span><span class="badge blue">Đang lưu...</span><span class="chip">Còn 48:12</span></div>
+        <div class="page split">
+          <div class="section-stack">
+            <div class="audio"><button class="play">▶</button><div class="wave"></div><span class="small muted">Listening audio nếu có</span></div>
+            <div class="pdf-viewer"><div class="pdf-page"><h4>Reading Passage 1</h4>${Array.from({length: 17}, (_, i) => `<div class="pdf-line ${i % 3 === 0 ? "short" : i % 2 === 0 ? "med" : ""}"></div>`).join("")}</div></div>
+          </div>
+          <div class="panel"><div class="row"><h4>Answer form</h4><span class="badge green">8/10 câu</span></div><p class="small muted">Đáp án được autosave khi nhập.</p>${Array.from({length: 10}, (_, i) => `<div class="answer-row"><span class="qno">${i+1}</span><input value="${i < 8 ? ["B","A","C","D"][i%4] : ""}" placeholder="Đáp án"></div>`).join("")}<button class="btn secondary full">Tới câu còn thiếu</button><button class="btn primary full" style="margin-top:8px">Nộp bài</button></div>
+        </div>`;
+    }
+
+    function speakingSubmission() {
+      return `<div class="topbar"><strong>Speaking Part 2</strong><span class="chip">IELTS 7A</span><span class="badge orange">Uploaded draft</span></div>
+        <div class="page split">
+          <div class="panel"><h3>Đề Speaking</h3><p>Describe a book that you enjoyed reading. You should say what the book was, when you read it, what it was about, and explain why you enjoyed it.</p><p class="muted">Chuẩn bị câu trả lời và upload file ghi âm của bạn.</p></div>
+          <div class="panel"><h4>Upload file nói</h4><div class="dropzone"><div><strong>Kéo thả file nói</strong><p class="muted">Audio hoặc video theo định dạng được hỗ trợ.</p><button class="btn secondary">Chọn file nói</button></div></div><div style="height:14px"></div><div class="file-card"><div><strong>speaking-minh-anh.mp3</strong><div class="small muted">4.8 MB · đã upload</div></div>${badge("Chưa nộp", "orange")}</div><button class="btn primary full" style="margin-top:14px">Nộp bài Speaking</button></div>
+        </div>`;
+    }
+
+    function resultsGrading() {
+      const submissions = [
+        ["Minh Anh", "Speaking Part 2", "Homework", "Speaking", badge("Cần chấm", "orange")],
+        ["Quốc Huy", "Reading Mock 01", "Thi trực tiếp", "Reading", badge("Đã tự chấm", "green")],
+        ["Lan Chi", "Speaking Part 2", "Homework", "Speaking", badge("Đã chấm", "green")]
+      ];
+      return `${topbar("Kết quả")}<div class="page section-stack">
+        <div class="row"><div><h3>Kết quả</h3><p class="muted">Lọc kết quả và chấm Speaking trong cùng một màn hình.</p></div><span class="badge orange">11 Speaking chờ chấm</span></div>
+        <div class="panel row"><select><option>IELTS 7A</option></select><select><option>Homework</option><option>Thi trực tiếp</option></select><select><option>Speaking Part 2</option></select><input placeholder="Tìm học sinh" style="max-width:260px"><select><option>Cần chấm</option></select></div>
+        <div class="split">
+          <div class="panel"><table><thead><tr><th>Học sinh</th><th>Đề</th><th>Loại</th><th>Kỹ năng</th><th>Trạng thái</th></tr></thead><tbody>${submissions.map((r, i) => `<tr class="selectable ${i === selectedSubmission ? "selected" : ""}" onclick="selectedSubmission=${i}; render()">${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+          <div class="panel"><h4>${submissions[selectedSubmission][0]} · ${submissions[selectedSubmission][1]}</h4><div class="audio"><button class="play">▶</button><div class="wave"></div><span class="small muted">speaking-file.mp3</span></div><div style="height:14px"></div><div class="field"><label>Điểm Speaking</label><input value="${selectedSubmission === 2 ? "7.0" : ""}" placeholder="Nhập điểm"></div><div class="field"><label>Feedback cho học sinh</label><textarea>${selectedSubmission === 2 ? "Good fluency. Improve examples in the second part." : ""}</textarea></div><button class="btn primary full">Lưu điểm & feedback</button><button class="btn secondary full" style="margin-top:8px">Bài Speaking tiếp theo</button></div>
+        </div>
+      </div>`;
+    }
+
+    render();
+  </script>
+</body>
+</html>

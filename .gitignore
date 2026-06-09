@@ -1,0 +1,47 @@
+﻿# Build outputs
+bin/
+obj/
+dist/
+.angular/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# .NET / IDE
+.vs/
+.vscode/
+*.user
+*.user.toml
+*.rsuser
+*.suo
+
+# Runtime/local config
+*.db
+*.db-shm
+*.db-wal
+appsettings.Local.json
+.env
+.env.*
+
+# Protected/runtime storage
+/storage/
+/uploads/
+/App_Data/
+/DataProtection-Keys/
+
+# Logs/temp
+*.log
+tmp/
+temp/
+
+# Local agent/tooling state
+.agent/
+.agents/
+.claude/
+.codegraph/
+.codex/
+.cursor/
+.gemini/

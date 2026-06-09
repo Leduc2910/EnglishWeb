@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tạo đề mới - Tải lên - EnglishTestWeb</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#00367a",
+                        "surface-container-highest": "#d3e4fe",
+                        "secondary-container": "#fea619",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-surface-variant": "#3c4a42",
+                        "surface-tint": "#006c49",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#71a1ff",
+                        "primary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed": "#001a42",
+                        "on-secondary-fixed": "#2a1700",
+                        "surface-dim": "#cbdbf5",
+                        "on-primary-container": "#00422b",
+                        "on-primary-fixed": "#002113",
+                        "on-error-container": "#93000a",
+                        "background": "#f8f9ff",
+                        "primary-container": "#10b981",
+                        "inverse-primary": "#4edea3",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#0b1c30",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#bbcabf",
+                        "surface-variant": "#d3e4fe",
+                        "surface-bright": "#f8f9ff",
+                        "outline": "#6c7a71",
+                        "surface-container": "#e5eeff",
+                        "on-secondary-container": "#684000",
+                        "secondary": "#855300",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#4edea3",
+                        "on-primary-fixed-variant": "#005236",
+                        "tertiary": "#005ac2",
+                        "tertiary-fixed": "#d8e2ff",
+                        "surface": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "inverse-surface": "#213145",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-low": "#eff4ff",
+                        "secondary-fixed": "#ffddb8",
+                        "primary": "#006c49",
+                        "on-background": "#0b1c30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "gutter": "20px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "title-lg": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="w-64 h-full fixed left-0 top-0 bg-surface dark:bg-inverse-surface flex flex-col py-lg px-md z-40 border-r border-outline-variant">
+<div class="mb-lg px-sm">
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">EnglishTestWeb</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Admin Portal</p>
+</div>
+<button class="bg-primary text-on-primary w-full py-sm rounded-lg font-label-md text-label-md mb-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-sm shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            Tạo đề mới
+        </button>
+<div class="flex-1 space-y-sm">
+<a class="flex items-center gap-md px-sm py-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-sm py-sm rounded-lg font-body-md text-body-md text-primary dark:text-inverse-primary font-bold border-r-4 border-primary bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="library_books" style="font-variation-settings: 'FILL' 1;">library_books</span>
+<span>Thư viện đề</span>
+</a>
+<a class="flex items-center gap-md px-sm py-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span>Lớp học</span>
+</a>
+<a class="flex items-center gap-md px-sm py-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_turned_in">assignment_turned_in</span>
+<span>Kết quả</span>
+</a>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-sm">
+<a class="flex items-center gap-md px-sm py-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Cài đặt</span>
+</a>
+<a class="flex items-center gap-md px-sm py-sm rounded-lg font-body-md text-body-md text-error hover:bg-error-container hover:text-on-error-container transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Đăng xuất</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col h-screen relative">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim docked full-width top-0 sticky z-50 border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-lg py-sm">
+<div class="flex items-center gap-md w-1/3">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-xl pr-sm py-sm rounded-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary font-body-sm text-body-sm text-on-surface" placeholder="Tìm kiếm đề thi..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="font-label-md text-label-md text-primary font-medium hover:bg-primary-container/10 px-sm py-xs rounded-md transition-colors border border-primary">
+                    Đổi vai trò
+                </button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant ml-sm">
+<img alt="Giáo viên Admin" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoUOW9WNdc2_GYVNqqK4o0ZkmOKIW7I4_5_i_zrs-sFYYAodSoYqRY50ZFWfu73pZfgND6_1oMOz8ikDTDkJjZoRvZ_r_iZl610hehvwTTS94u3Zn-_FKBWvRqC7pAO27pG2-LpEpbqZ9rSf8llWSznK10zqJFWbSXBt3LrfWB6hg3pfCRLP6EGkrRWwjela8KWTWoQHmOn0rWJEGUyEveEx0TCcB7o-V8H34SGLV9K6c4GfsHVM6U8lCPxsA7DPDhdcMh6QZzqqH6"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col overflow-hidden bg-background">
+<!-- Wizard Header -->
+<div class="bg-surface border-b border-outline-variant py-md px-xl flex justify-center items-center shadow-[0_4px_12px_rgba(0,0,0,0.02)] z-10">
+<div class="flex items-center max-w-3xl w-full justify-between relative">
+<!-- Line behind steps -->
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-outline-variant/30 -z-10"></div>
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-[33%] h-[2px] bg-primary -z-10"></div>
+<!-- Step 1 -->
+<div class="flex flex-col items-center gap-xs bg-surface px-sm">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface">Thiết lập</span>
+</div>
+<!-- Step 2 (Active) -->
+<div class="flex flex-col items-center gap-xs bg-surface px-sm">
+<div class="w-8 h-8 rounded-full bg-surface border-2 border-primary text-primary flex items-center justify-center font-label-md text-label-md shadow-[0_0_0_4px_rgba(0,108,73,0.1)]">
+                            2
+                        </div>
+<span class="font-label-sm text-label-sm text-primary font-bold">Tải lên</span>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center gap-xs bg-surface px-sm">
+<div class="w-8 h-8 rounded-full bg-surface border-2 border-outline-variant text-on-surface-variant flex items-center justify-center font-label-md text-label-md">
+                            3
+                        </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Đáp án</span>
+</div>
+<!-- Step 4 -->
+<div class="flex flex-col items-center gap-xs bg-surface px-sm">
+<div class="w-8 h-8 rounded-full bg-surface border-2 border-outline-variant text-on-surface-variant flex items-center justify-center font-label-md text-label-md">
+                            4
+                        </div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Kiểm tra</span>
+</div>
+</div>
+</div>
+<!-- Workspace: Split Panel -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Panel: Upload Area -->
+<div class="w-1/2 p-xl overflow-y-auto border-r border-outline-variant bg-surface-container-lowest">
+<h2 class="font-title-lg text-title-lg text-on-surface mb-sm">Tài liệu đề thi</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-xl">Tải lên file PDF chứa nội dung đề thi và các file âm thanh (nếu có phần Listening).</p>
+<!-- PDF Upload Card -->
+<div class="mb-lg">
+<label class="font-label-md text-label-md text-on-surface block mb-sm">Đề thi chính (PDF)</label>
+<div class="border-2 border-dashed border-primary/40 rounded-xl bg-surface-container-low p-lg flex flex-col items-center justify-center text-center hover:bg-surface-container hover:border-primary transition-colors cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary mb-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[28px]">picture_as_pdf</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface mb-xs">Kéo thả file PDF vào đây</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">hoặc click để chọn file từ máy tính</p>
+<button class="bg-surface border border-outline-variant px-md py-sm rounded-lg font-label-md text-label-md text-on-surface shadow-sm hover:bg-surface-container-low transition-colors">
+                                Chọn file
+                            </button>
+</div>
+</div>
+<!-- Audio Upload Card -->
+<div>
+<div class="flex justify-between items-center mb-sm">
+<label class="font-label-md text-label-md text-on-surface">File âm thanh (Audio - Không bắt buộc)</label>
+<span class="bg-surface-variant text-on-surface-variant px-sm py-[2px] rounded font-label-sm text-label-sm text-[10px]">MP3, WAV</span>
+</div>
+<div class="border border-outline-variant rounded-xl bg-surface p-md">
+<!-- Uploaded Audio Item 1 -->
+<div class="flex items-center justify-between p-sm bg-surface-container-low rounded-lg mb-sm border border-outline-variant/50">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded bg-tertiary-container/30 text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">audio_file</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface truncate w-48">Listening_Part1_Test3.mp3</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">3.2 MB • Đã tải lên</p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">play_circle</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Upload Button -->
+<button class="w-full py-md border-2 border-dashed border-outline-variant rounded-lg text-on-surface-variant font-label-sm text-label-sm flex items-center justify-center gap-sm hover:bg-surface-container-low hover:border-primary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                                Thêm file âm thanh
+                            </button>
+</div>
+</div>
+</div>
+<!-- Right Panel: Preview -->
+<div class="w-1/2 bg-surface-container-low flex flex-col relative">
+<!-- Toolbar -->
+<div class="h-12 bg-surface border-b border-outline-variant flex items-center justify-between px-md shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+<div class="flex items-center gap-sm">
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Bản xem trước</span>
+<span class="bg-surface-variant text-on-surface-variant px-sm py-[2px] rounded font-label-sm text-label-sm text-[10px]">Chưa có dữ liệu</span>
+</div>
+<div class="flex items-center gap-xs">
+<button class="p-xs text-on-surface-variant hover:bg-surface-container rounded opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined text-[20px]">zoom_out</span>
+</button>
+<span class="font-label-sm text-label-sm text-on-surface-variant w-12 text-center">100%</span>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container rounded opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined text-[20px]">zoom_in</span>
+</button>
+</div>
+</div>
+<!-- Empty State / Placeholder Preview -->
+<div class="flex-1 m-md rounded-lg border border-outline-variant bg-surface flex flex-col items-center justify-center text-center shadow-sm overflow-hidden">
+<div class="w-24 h-24 mb-md opacity-20 relative">
+<svg class="w-full h-full text-on-surface" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+<path d="M14 4v5h5" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+<path d="M9 13h6M9 17h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+</svg>
+<div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent"></div>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Chưa tải lên file PDF</p>
+<p class="font-body-sm text-body-sm text-outline max-w-[250px]">Bản xem trước của đề thi sẽ hiển thị tại đây sau khi bạn tải file lên.</p>
+</div>
+<!-- Footer / Actions (Sticky in right panel) -->
+<div class="bg-surface border-t border-outline-variant p-md flex justify-between items-center z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+<button class="px-lg py-sm rounded-lg font-label-md text-label-md text-on-surface border border-outline-variant hover:bg-surface-container-low transition-colors">
+                            Quay lại
+                        </button>
+<button class="px-lg py-sm rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 shadow-sm transition-colors opacity-60 cursor-not-allowed flex items-center gap-xs">
+                            Tiếp theo
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

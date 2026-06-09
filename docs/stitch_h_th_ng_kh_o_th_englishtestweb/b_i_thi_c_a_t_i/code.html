@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bài tập được giao - EnglishTestWeb</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#00367a",
+                        "surface-container-highest": "#d3e4fe",
+                        "secondary-container": "#fea619",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-surface-variant": "#3c4a42",
+                        "surface-tint": "#006c49",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#71a1ff",
+                        "primary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed": "#001a42",
+                        "on-secondary-fixed": "#2a1700",
+                        "surface-dim": "#cbdbf5",
+                        "on-primary-container": "#00422b",
+                        "on-primary-fixed": "#002113",
+                        "on-error-container": "#93000a",
+                        "background": "#f8f9ff",
+                        "primary-container": "#10b981",
+                        "inverse-primary": "#4edea3",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#0b1c30",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#bbcabf",
+                        "surface-variant": "#d3e4fe",
+                        "surface-bright": "#f8f9ff",
+                        "outline": "#6c7a71",
+                        "surface-container": "#e5eeff",
+                        "on-secondary-container": "#684000",
+                        "secondary": "#855300",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#4edea3",
+                        "on-primary-fixed-variant": "#005236",
+                        "tertiary": "#005ac2",
+                        "tertiary-fixed": "#d8e2ff",
+                        "surface": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "inverse-surface": "#213145",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-low": "#eff4ff",
+                        "secondary-fixed": "#ffddb8",
+                        "primary": "#006c49",
+                        "on-background": "#0b1c30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "gutter": "20px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "title-lg": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8f9ff; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #bbcabf; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6c7a71; 
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="bg-surface dark:bg-inverse-surface w-64 h-full fixed left-0 top-0 flex flex-col py-lg px-md bg-surface-container dark:bg-surface-dim flat no shadows z-40 border-r border-outline-variant/30">
+<!-- Brand -->
+<div class="flex items-center gap-sm mb-xl px-sm">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-xl" data-weight="fill">school</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">EnglishTestWeb</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Student Portal</p>
+</div>
+</div>
+<!-- Main Navigation -->
+<div class="flex-1 space-y-xs">
+<a class="flex items-center gap-md px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors text-on-surface-variant dark:text-outline-variant font-body-md text-body-md Active: opacity-80 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors text-primary dark:text-inverse-primary font-bold border-r-4 border-primary bg-primary/5 font-body-md text-body-md Active: opacity-80 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="assignment" data-weight="fill">assignment</span>
+<span>Bài tập</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors text-on-surface-variant dark:text-outline-variant font-body-md text-body-md Active: opacity-80 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span>Lịch sử thi</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors text-on-surface-variant dark:text-outline-variant font-body-md text-body-md Active: opacity-80 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span>Kết quả</span>
+</a>
+</div>
+<!-- Footer Navigation -->
+<div class="pt-md mt-md border-t border-outline-variant/30 space-y-xs">
+<a class="flex items-center gap-md px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors text-on-surface-variant dark:text-outline-variant font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Cài đặt</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg hover:bg-error/10 transition-colors text-error font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Đăng xuất</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 flex flex-col min-h-screen relative">
+<!-- TopNavBar (Simplified for Student) -->
+<header class="bg-surface dark:bg-surface-dim docked full-width top-0 sticky z-30 border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center w-full px-lg py-sm h-[72px]">
+<div class="flex items-center gap-md">
+<h2 class="font-headline-sm text-headline-sm font-black text-on-surface">Bài tập được giao</h2>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 rounded-full text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container transition-colors scale-95 active:scale-90 relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-surface"></span>
+</button>
+<div class="flex items-center gap-sm pl-md border-l border-outline-variant/50 cursor-pointer group">
+<div class="text-right hidden md:block">
+<p class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Nguyễn Văn A</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">Học viên</p>
+</div>
+<img alt="Student Profile" class="w-10 h-10 rounded-full border-2 border-surface shadow-sm object-cover" data-alt="A realistic profile picture of an Asian male student in his late teens or early twenties, smiling warmly. He has short, neat black hair and is wearing a casual, light blue button-down shirt. The lighting is soft and natural, suggesting a brightly lit indoor environment. The background is a blurred, neutral light gray, keeping the focus entirely on the subject. The overall aesthetic is professional, approachable, and high-quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmu8KOqxPcD9gU65zBUuWW1eZi58Tn388-TUwnIEZTOLyqquanPZRV-9-xb7LpPkTkHU0j5kiWYW2X1xh8sTH0jhDrRGBo23yw1b1aFklWHgCwlFv_fvYC4d-xOE5cGqnxHC0ebrG5--vy5z4JAKS8sygCwg_edjWQMnIj1e0utRelbf04L_9OTk0rUERPGKm--QLtZsDm0Fon2z349mXPKFmFr0OP25ChThR1VraRLVN3BfIoKJ0m8aUQ5A3U0EoWq4YnCfzLmIVs"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="flex-1 p-lg max-w-container-max mx-auto w-full">
+<!-- Tabs Navigation -->
+<div class="mb-lg border-b border-outline-variant/30 flex gap-xl">
+<button class="pb-sm font-title-lg text-title-lg font-bold text-primary border-b-2 border-primary relative">
+                    Bài tập về nhà
+                    <span class="absolute -top-1 -right-4 bg-error text-on-error text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+</button>
+<button class="pb-sm font-title-lg text-title-lg text-on-surface-variant hover:text-on-surface transition-colors">
+                    Thi trực tiếp
+                </button>
+</div>
+<!-- Bento Grid Layout for Assignments -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-md lg:gap-lg">
+<!-- Priority Assignment (Full width on mobile, 2/3 on desktop) -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col md:flex-row hover:border-primary/50 transition-colors group">
+<div class="w-full md:w-1/3 bg-surface-container relative p-md flex flex-col justify-center items-center text-center border-b md:border-b-0 md:border-r border-outline-variant/50">
+<div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-sm">
+<span class="material-symbols-outlined text-amber-600 text-3xl" data-weight="fill">assignment_late</span>
+</div>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-600 border border-amber-200 mb-2">
+                            Homework
+                        </span>
+<p class="font-label-sm text-label-sm text-error flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                            Hết hạn trong 2 giờ
+                        </p>
+</div>
+<div class="p-lg flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-sm">
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface group-hover:text-primary transition-colors">Unit 5: Reading Comprehension Practice</h3>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md line-clamp-2">Bài tập tổng hợp kỹ năng đọc hiểu Unit 5. Bao gồm 3 đoạn văn và 25 câu hỏi trắc nghiệm. Vui lòng hoàn thành trước thời hạn.</p>
+<div class="grid grid-cols-2 gap-sm mb-lg">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">event</span>
+<span class="font-body-sm text-body-sm">Hạn chót: 23:59, Hôm nay</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">timer</span>
+<span class="font-body-sm text-body-sm">Thời lượng: Không giới hạn</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">format_list_bulleted</span>
+<span class="font-body-sm text-body-sm">Số câu: 25</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">school</span>
+<span class="font-body-sm text-body-sm">Lớp: IELTS Foundation</span>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-sm">
+<button class="px-lg py-sm rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 shadow-sm">
+                                Vào làm bài
+                                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Live Exam Banner (Right Column on Desktop) -->
+<div class="lg:col-span-1 bg-tertiary-fixed rounded-xl border border-tertiary-fixed-dim shadow-sm overflow-hidden p-lg flex flex-col justify-between relative">
+<div class="absolute top-0 right-0 w-32 h-32 bg-tertiary-container/30 rounded-bl-full -z-10"></div>
+<div>
+<div class="flex justify-between items-center mb-md">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm animate-pulse">
+<span class="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span>
+                                Thi trực tiếp
+                            </span>
+<span class="material-symbols-outlined text-tertiary text-2xl">campaign</span>
+</div>
+<h3 class="font-title-lg text-title-lg font-bold text-on-tertiary-fixed mb-sm">Mid-term Mock Test Listening &amp; Reading</h3>
+<p class="font-body-sm text-body-sm text-on-tertiary-fixed-variant mb-md">Bài thi giữa kỳ mô phỏng định dạng chuẩn. Cần webcam và microphone.</p>
+<div class="bg-surface-container-lowest/80 backdrop-blur-sm rounded-lg p-sm mb-lg border border-white/50">
+<div class="flex items-center gap-2 text-on-surface mb-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">calendar_today</span>
+<span class="font-label-sm text-label-sm font-semibold">15:00 - 17:00, Ngày mai</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-tertiary">timer</span>
+<span class="font-label-sm text-label-sm">Thời lượng: 120 phút</span>
+</div>
+</div>
+</div>
+<button class="w-full px-md py-sm rounded-lg bg-tertiary text-on-tertiary font-label-md text-label-md hover:bg-on-tertiary-fixed-variant transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+                        Chưa đến giờ thi
+                    </button>
+</div>
+<!-- Standard Assignment Card: Not Opened -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow p-lg flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                            Chưa mở
+                        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                            Mở vào 08:00 mai
+                        </span>
+</div>
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface mb-xs">Vocabulary Test: Work &amp; Education</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md flex-1">Kiểm tra từ vựng chuyên ngành Unit 6.</p>
+<div class="bg-surface-container/50 rounded-lg p-sm mb-md flex justify-between">
+<div class="text-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Thời gian</p>
+<p class="font-label-md text-label-md text-on-surface font-semibold">30 phút</p>
+</div>
+<div class="w-px bg-outline-variant/50"></div>
+<div class="text-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Câu hỏi</p>
+<p class="font-label-md text-label-md text-on-surface font-semibold">40 câu</p>
+</div>
+<div class="w-px bg-outline-variant/50"></div>
+<div class="text-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Hạn chót</p>
+<p class="font-label-md text-label-md text-on-surface font-semibold">20/11</p>
+</div>
+</div>
+<button class="w-full px-md py-sm rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md bg-surface-container-lowest cursor-not-allowed flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+                        Xem chi tiết
+                    </button>
+</div>
+<!-- Standard Assignment Card: Submitted -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow p-lg flex flex-col relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
+<div class="flex justify-between items-start mb-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-600 border border-teal-200">
+                            Đã nộp
+                        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-teal-600">check_circle</span>
+                            Nộp đúng hạn
+                        </span>
+</div>
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface mb-xs">Grammar Quiz: Past Tenses</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md flex-1">Ôn tập thì quá khứ đơn, quá khứ tiếp diễn và quá khứ hoàn thành.</p>
+<div class="bg-surface-container/50 rounded-lg p-sm mb-md flex justify-between items-center">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Điểm số</p>
+<p class="font-headline-md text-headline-md text-primary font-black">8.5<span class="text-sm font-normal text-on-surface-variant">/10</span></p>
+</div>
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Đã nộp lúc</p>
+<p class="font-label-md text-label-md text-on-surface">14:20, Hôm qua</p>
+</div>
+</div>
+<button class="w-full px-md py-sm rounded-lg border border-primary text-primary hover:bg-primary/5 font-label-md text-label-md transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                        Xem lại kết quả
+                    </button>
+</div>
+<!-- Standard Assignment Card: Grading (Needs Grading) -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow p-lg flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-600 border border-orange-300 border-dashed">
+                            Chờ chấm điểm
+                        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">hourglass_empty</span>
+</span>
+</div>
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface mb-xs">Writing Task 1: Bar Chart Description</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md flex-1">Bài viết miêu tả biểu đồ cột. Yêu cầu tối thiểu 150 từ.</p>
+<div class="bg-surface-container/50 rounded-lg p-sm mb-md flex justify-between">
+<div class="text-left w-full">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Trạng thái</p>
+<p class="font-label-md text-label-md text-on-surface flex items-center gap-2 mt-1">
+<span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                                Giáo viên đang chấm
+                            </p>
+</div>
+</div>
+<button class="w-full px-md py-sm rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container transition-colors font-label-md text-label-md flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">description</span>
+                        Xem bài đã nộp
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</body></html>
