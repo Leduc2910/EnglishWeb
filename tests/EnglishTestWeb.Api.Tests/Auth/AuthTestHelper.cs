@@ -65,15 +65,28 @@ internal static class AuthTestHelper
         }
     }
 
-    internal static async Task SignInUserAsync(HttpClient client, string email, string password)
+    internal static async Task SignInUserAsync(
+        HttpClient client,
+        string email,
+        string password,
+        Guid? activeClassId = null)
     {
         await EnsureXsrfAsync(client);
 
-        var payload = JsonSerializer.Serialize(new { email, password });
+        var payload = JsonSerializer.Serialize(new { email, password, activeClassId });
         using var content = new StringContent(payload, Encoding.UTF8, "application/json");
         var response = await client.PostAsync("/api/auth/testing/sign-in", content);
         response.EnsureSuccessStatusCode();
     }
+
+    internal static Task SignInTeacherAsync(HttpClient client) =>
+        SignInUserAsync(client, TeacherEmail, TeacherPassword);
+
+    internal static Task SignInStudentAsync(HttpClient client) =>
+        SignInUserAsync(client, StudentEmail, StudentPassword);
+
+    internal static Task SignInStudentWithClassAsync(HttpClient client, Guid activeClassId) =>
+        SignInUserAsync(client, StudentEmail, StudentPassword, activeClassId);
 
     internal static async Task<HttpResponseMessage> LoginAsync(
         HttpClient client,

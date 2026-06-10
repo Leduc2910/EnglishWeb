@@ -26,7 +26,7 @@ _Chunk 1 — API core only._
 
 ## Deferred from: code review of 1-3-class-roster-class-code-lookup-and-student-login (2026-06-10)
 
-- Post-login membership revalidation trên mỗi student API call — Story 1.4 policy framework.
+- ~~Post-login membership revalidation trên mỗi student API call~~ — **Resolved Story 1.4** (`/me`, `/classes/current` live membership check).
 - Rate limiting cho `POST /api/auth/student/login` và `GET /api/classes/by-code/{code}` — cùng lý do defer 1.2.
 - Teacher roster chỉ load chi tiết lớp đầu tiên khi teacher sở hữu nhiều lớp — MVP demo một lớp; mở rộng khi multi-class UX có spec.
 
@@ -34,3 +34,13 @@ _Chunk 1 — API core only._
 
 - Deploy doc registry keys không ghi Windows-only caveat — acceptable MVP doc.
 - `quality.ps1` dùng `npm install` thay `npm ci` — acceptable local smoke gate.
+
+## Deferred from: code review of 1-4-base-authorization-pattern-and-class-scope-guards (2026-06-10)
+
+- `GetClassContextByIdAsync` không có auth riêng — caller phải guard trước; document khi thêm caller mới.
+- Triple authorization trên `GET /api/classes/{id}` — redundant DB round-trips; defense-in-depth acceptable MVP.
+- Stale `active_class_id` cookie không bị xóa khi deny — live revalidation on read là design lock.
+- `CanViewClassAsStudent` policy chưa gắn endpoint — inline check tương đương; handler foundation cho Epic 2+.
+- Audit MVP chỉ `ILogger` — không DB persistence; per spec AC 4 scope.
+- Correlation ID chỉ đọc client header — per spec E2 MVP.
+- `/me` `activeClass` không có `status`; `/classes/current` có — summary vs detail intentional.

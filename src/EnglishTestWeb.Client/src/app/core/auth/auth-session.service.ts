@@ -6,15 +6,12 @@ import { readProblemCode } from '../http/problem-details';
 import { HttpErrorResponse } from '@angular/common/http';
 import { API_CLASS_ERROR_MESSAGES, STUDENT_LOGIN_ERROR_MESSAGES } from '../classes/classes.models';
 import { ClassContextService } from '../classes/class-context.service';
-import { ClassesApiService } from '../classes/classes-api.service';
-import { normalizeClassCode } from '../classes/class-code';
 import { XsrfTokenStore } from '../http/xsrf-token.store';
 
 @Injectable({ providedIn: 'root' })
 export class AuthSessionService {
   private readonly authApi = inject(AuthApiService);
   private readonly classContext = inject(ClassContextService);
-  private readonly classesApi = inject(ClassesApiService);
   private readonly xsrfTokenStore = inject(XsrfTokenStore);
   private readonly currentUserSignal = signal<CurrentUser | null>(null);
   private sessionLoaded = false;
@@ -134,37 +131,26 @@ export class AuthSessionService {
       const user = await this.authApi.getCurrentUser();
       this.currentUserSignal.set(user);
       if (user?.roles.includes('Student')) {
-        await this.restoreStudentClassContext();
+        this.syncStudentClassContextFromServer(user);
+      } else if (user) {
+        this.classContext.clearClassContext();
       }
       return user;
     } catch {
       this.currentUserSignal.set(null);
+      this.classContext.clearClassContext();
       return null;
     } finally {
       this.sessionLoaded = true;
     }
   }
 
-  private async restoreStudentClassContext(): Promise<void> {
-    if (this.classContext.activeClass()) {
+  private syncStudentClassContextFromServer(user: CurrentUser): void {
+    if (user.activeClass) {
+      this.classContext.setActiveClass(user.activeClass);
       return;
     }
 
-    const code = this.classContext.readPersistedClassCode();
-    if (!code) {
-      return;
-    }
-
-    const normalized = normalizeClassCode(code) ?? code;
-    try {
-      const preview = await this.classesApi.lookupByCode(normalized);
-      this.classContext.setActiveClass({
-        classId: preview.classId,
-        className: preview.className,
-        classCode: preview.classCode,
-      });
-    } catch {
-      this.classContext.clearClassContext();
-    }
+    this.classContext.clearClassContext();
   }
 }

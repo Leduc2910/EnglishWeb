@@ -1,5 +1,8 @@
 using EnglishTestWeb.Api.Application.Auth;
+using EnglishTestWeb.Api.Application.Security;
 using EnglishTestWeb.Api.Contracts.Auth;
+using EnglishTestWeb.Api.Infrastructure.Audit;
+using EnglishTestWeb.Api.Infrastructure.Authorization;
 using EnglishTestWeb.Api.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +11,12 @@ namespace EnglishTestWeb.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public sealed class AuthController(IAuthService authService, IWebHostEnvironment environment) : ControllerBase
+public sealed class AuthController(
+    IAuthService authService,
+    IHiddenResourceResponseFactory hiddenResourceResponseFactory,
+    ICurrentUserContext currentUserContext,
+    AuthorizationDenialAuditor denialAuditor,
+    IWebHostEnvironment environment) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("login")]
@@ -19,7 +27,7 @@ public sealed class AuthController(IAuthService authService, IWebHostEnvironment
         var result = await authService.LoginTeacherAsync(request, cancellationToken);
         if (!result.Succeeded || result.User is null)
         {
-            return AuthProblem(
+            return hiddenResourceResponseFactory.FromCode(
                 StatusCodes.Status401Unauthorized,
                 "auth.loginInvalid",
                 "Login failed.",
@@ -44,7 +52,7 @@ public sealed class AuthController(IAuthService authService, IWebHostEnvironment
                 _ => StatusCodes.Status401Unauthorized
             };
 
-            return AuthProblem(
+            return hiddenResourceResponseFactory.FromCode(
                 statusCode,
                 result.ErrorCode ?? "auth.loginInvalid",
                 "Login failed.",
@@ -69,7 +77,7 @@ public sealed class AuthController(IAuthService authService, IWebHostEnvironment
         var user = await authService.GetCurrentUserAsync(User, cancellationToken);
         if (user is null)
         {
-            return AuthProblem(
+            return hiddenResourceResponseFactory.FromCode(
                 StatusCodes.Status401Unauthorized,
                 "auth.unauthorized",
                 "Unauthorized.",
@@ -93,7 +101,7 @@ public sealed class AuthController(IAuthService authService, IWebHostEnvironment
         var result = await authService.SignInForTestingAsync(request, cancellationToken);
         if (!result.Succeeded || result.User is null)
         {
-            return AuthProblem(
+            return hiddenResourceResponseFactory.FromCode(
                 StatusCodes.Status401Unauthorized,
                 "auth.loginInvalid",
                 "Login failed.",
@@ -107,33 +115,15 @@ public sealed class AuthController(IAuthService authService, IWebHostEnvironment
     [HttpGet("teacher/ping")]
     public IActionResult TeacherPing()
     {
-        if (!User.IsInRole(IdentityRoleNames.Teacher))
+        if (!currentUserContext.IsInRole(IdentityRoleNames.Teacher))
         {
-            return AuthProblem(
-                StatusCodes.Status403Forbidden,
+            var decision = AuthorizationDecision.Forbidden(
                 "auth.forbidden",
-                "Forbidden.",
-                "The authenticated user does not have permission to access this resource.");
+                AuthorizationDenialReason.WrongRole);
+            denialAuditor.AuditDenied(decision, "auth", "teacher/ping");
+            return hiddenResourceResponseFactory.FromDecision(decision);
         }
 
         return Ok(new TeacherPingResponse("ok"));
-    }
-
-    private ActionResult AuthProblem(int statusCode, string code, string title, string detail)
-    {
-        var problem = new ProblemDetails
-        {
-            Status = statusCode,
-            Title = title,
-            Type = $"https://englishtestweb.local/problems/{code}",
-            Detail = detail
-        };
-        problem.Extensions["code"] = code;
-
-        return new ObjectResult(problem)
-        {
-            StatusCode = statusCode,
-            ContentTypes = { "application/problem+json" }
-        };
     }
 }

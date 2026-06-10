@@ -1,8 +1,15 @@
+export interface ActiveClass {
+  classId: string;
+  className: string;
+  classCode: string;
+}
+
 export interface CurrentUser {
   userId: string;
   email: string | null;
   userName: string | null;
   roles: string[];
+  activeClass?: ActiveClass | null;
 }
 
 export interface LoginRequest {

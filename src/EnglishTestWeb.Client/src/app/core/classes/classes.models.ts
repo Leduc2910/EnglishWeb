@@ -1,3 +1,7 @@
+import type { ActiveClass } from '../auth/auth.models';
+
+export type { ActiveClass };
+
 export interface ClassLookupPreview {
   classId: string;
   className: string;
@@ -6,10 +10,11 @@ export interface ClassLookupPreview {
   status: string;
 }
 
-export interface ActiveClass {
+export interface ClassCurrent {
   classId: string;
   className: string;
   classCode: string;
+  status: string;
 }
 
 export interface ClassSummary {

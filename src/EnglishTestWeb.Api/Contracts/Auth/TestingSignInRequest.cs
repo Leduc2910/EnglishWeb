@@ -1,3 +1,3 @@
 namespace EnglishTestWeb.Api.Contracts.Auth;
 
-public sealed record TestingSignInRequest(string Email, string Password);
+public sealed record TestingSignInRequest(string Email, string Password, Guid? ActiveClassId = null);

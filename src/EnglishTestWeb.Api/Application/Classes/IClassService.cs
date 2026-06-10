@@ -27,6 +27,10 @@ public interface IClassService
     Task<SchoolClassContext?> GetActiveClassByCodeAsync(
         string rawCode,
         CancellationToken cancellationToken = default);
+
+    Task<SchoolClassContext?> GetClassContextByIdAsync(
+        Guid classId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record SchoolClassContext(Guid ClassId, string ClassName, string ClassCode, string Status);

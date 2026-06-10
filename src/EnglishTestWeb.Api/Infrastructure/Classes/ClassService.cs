@@ -1,4 +1,5 @@
 using EnglishTestWeb.Api.Application.Classes;
+using EnglishTestWeb.Api.Application.Security;
 using EnglishTestWeb.Api.Contracts.Classes;
 using EnglishTestWeb.Api.Domain.Classes;
 using EnglishTestWeb.Api.Infrastructure.Persistence;
@@ -6,7 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EnglishTestWeb.Api.Infrastructure.Classes;
 
-public sealed class ClassService(EnglishTestWebDbContext dbContext) : IClassService
+public sealed class ClassService(
+    EnglishTestWebDbContext dbContext,
+    IClassAuthorizationService classAuthorizationService) : IClassService
 {
     public async Task<ClassLookupResult> LookupByCodeAsync(
         string rawCode,
@@ -81,14 +84,24 @@ public sealed class ClassService(EnglishTestWebDbContext dbContext) : IClassServ
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        var decision = await classAuthorizationService.RequireTeacherClassAccessAsync(
+            classId,
+            teacherId,
+            cancellationToken);
+
+        if (!decision.IsAllowed)
+        {
+            return new ClassAccessResult(false, null, decision.ErrorCode ?? "classes.notFound");
+        }
+
         var schoolClass = await dbContext.Classes
             .AsNoTracking()
             .Include(entity => entity.Memberships)
             .FirstOrDefaultAsync(entity => entity.Id == classId, cancellationToken);
 
-        if (schoolClass is null || schoolClass.TeacherId != teacherId)
+        if (schoolClass is null)
         {
-            return new ClassAccessResult(false, null, "classes.forbidden");
+            return new ClassAccessResult(false, null, "classes.notFound");
         }
 
         var studentIds = schoolClass.Memberships
@@ -166,10 +179,26 @@ public sealed class ClassService(EnglishTestWebDbContext dbContext) : IClassServ
             return null;
         }
 
-        return new SchoolClassContext(
+        return MapContext(schoolClass);
+    }
+
+    public async Task<SchoolClassContext?> GetClassContextByIdAsync(
+        Guid classId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var schoolClass = await dbContext.Classes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(entity => entity.Id == classId, cancellationToken);
+
+        return schoolClass is null ? null : MapContext(schoolClass);
+    }
+
+    private static SchoolClassContext MapContext(SchoolClass schoolClass) =>
+        new(
             schoolClass.Id,
             schoolClass.Name,
             schoolClass.ClassCode,
             schoolClass.Status);
-    }
 }

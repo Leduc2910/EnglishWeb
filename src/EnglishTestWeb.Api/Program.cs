@@ -5,6 +5,10 @@ using EnglishTestWeb.Api.Application.Files;
 using EnglishTestWeb.Api.Application.Identity;
 using EnglishTestWeb.Api.Application.Security;
 using EnglishTestWeb.Api.Domain.Identity;
+using EnglishTestWeb.Api.Infrastructure.Audit;
+using EnglishTestWeb.Api.Infrastructure.Authorization;
+using EnglishTestWeb.Api.Infrastructure.Authorization.Handlers;
+using EnglishTestWeb.Api.Infrastructure.Authorization.Policies;
 using EnglishTestWeb.Api.Infrastructure.Classes;
 using EnglishTestWeb.Api.Infrastructure.Health;
 using EnglishTestWeb.Api.Infrastructure.Identity;
@@ -12,6 +16,7 @@ using EnglishTestWeb.Api.Infrastructure.Persistence;
 using EnglishTestWeb.Api.Infrastructure.Security;
 using EnglishTestWeb.Api.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -74,8 +79,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     {
         if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return Task.CompletedTask;
+            return ApiAuthChallengeWriter.WriteUnauthorizedAsync(context.HttpContext);
         }
 
         context.Response.Redirect(context.RedirectUri);
@@ -85,8 +89,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     {
         if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
         {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            return Task.CompletedTask;
+            return ApiAuthChallengeWriter.WriteForbiddenAsync(context.HttpContext);
         }
 
         context.Response.Redirect(context.RedirectUri);
@@ -120,6 +123,27 @@ builder.Services.AddScoped<IHealthProbe, HealthProbe>();
 builder.Services.AddScoped<IIdentityRoleSeeder, IdentityRoleSeeder>();
 builder.Services.AddScoped<IIdentityDevUserSeeder, IdentityDevUserSeeder>();
 builder.Services.AddScoped<IMvpDemoDataSeeder, MvpDemoDataSeeder>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
+builder.Services.AddScoped<IClassAuthorizationService, ClassAuthorizationService>();
+builder.Services.AddScoped<IHiddenResourceResponseFactory, HiddenResourceResponseFactory>();
+builder.Services.AddScoped<IAuthorizationAuditLogger, AuthorizationAuditLogger>();
+builder.Services.AddScoped<AuthorizationDenialAuditor>();
+builder.Services.AddScoped<IAuthorizationHandler, ClassTeacherAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ClassStudentAuthorizationHandler>();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthorizationPolicies.CanViewClassAsTeacher, policy =>
+    {
+        policy.RequireRole(IdentityRoleNames.Teacher);
+        policy.AddRequirements(new ClassTeacherViewRequirement());
+    });
+    options.AddPolicy(AuthorizationPolicies.CanViewClassAsStudent, policy =>
+    {
+        policy.RequireRole(IdentityRoleNames.Student);
+        policy.AddRequirements(new ClassStudentViewRequirement());
+    });
+});
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();

@@ -1,0 +1,346 @@
+using System.Net;
+using System.Text.Json;
+using EnglishTestWeb.Api.Infrastructure.Persistence;
+using EnglishTestWeb.Api.Tests.Auth;
+using EnglishTestWeb.Api.Tests.Classes;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace EnglishTestWeb.Api.Tests.Security;
+
+public sealed class AuthorizationMatrixTests
+{
+    [Fact]
+    public async Task Unauthenticated_GetClasses_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/classes");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Unauthenticated_GetClassDetail_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/classes/{classId}");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task TeacherOwner_GetClassDetail_ReturnsRoster()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        var response = await client.GetAsync($"/api/classes/{classId}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_GetClassDetail_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        var response = await client.GetAsync($"/api/classes/{classId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("classes.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Teacher_GetCurrentClass_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await client.GetAsync("/api/classes/current");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task StudentMember_GetCurrentClass_ReturnsSummary()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        var response = await client.GetAsync("/api/classes/current");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var body = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(body);
+        Assert.Equal("ENG7A", document.RootElement.GetProperty("classCode").GetString());
+    }
+
+    [Fact]
+    public async Task StudentMember_GetMe_ReturnsActiveClass()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        var response = await client.GetAsync("/api/auth/me");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var body = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(body);
+        Assert.True(document.RootElement.TryGetProperty("activeClass", out var activeClass));
+        Assert.Equal("ENG7A", activeClass.GetProperty("classCode").GetString());
+    }
+
+    [Fact]
+    public async Task StudentWithoutClaim_GetCurrentClass_ReturnsNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var response = await client.GetAsync("/api/classes/current");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("classes.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Unauthenticated_LookupByCode_ReturnsPreview()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/classes/by-code/{ClassesTestHelper.ClassCode}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task StudentStaleClaim_GetCurrentClass_ReturnsNotFoundAndMeOmitsActiveClass()
+    {
+        await using var factory = new AuditingTestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        var classBId = await ClassesTestHelper.SeedSecondClassWithoutMembershipAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classBId);
+
+        var currentResponse = await client.GetAsync("/api/classes/current");
+        Assert.Equal(HttpStatusCode.NotFound, currentResponse.StatusCode);
+        Assert.Equal("classes.notFound", await AuthTestHelper.ReadProblemCodeAsync(currentResponse));
+        Assert.Contains(
+            factory.AuditLogger.Records,
+            record =>
+                record.ReasonCategory == EnglishTestWeb.Api.Application.Security.AuthorizationDenialReason.ClassMembership
+                && record.ResourceType == "class");
+
+        var meResponse = await client.GetAsync("/api/auth/me");
+        await using var body = await meResponse.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(body);
+        Assert.False(document.RootElement.TryGetProperty("activeClass", out _));
+    }
+
+    [Fact]
+    public async Task StudentStaleClaim_GetClassDetail_ReturnsForbiddenWithoutRoster()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        var classBId = await ClassesTestHelper.SeedSecondClassWithoutMembershipAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classBId);
+
+        var response = await client.GetAsync($"/api/classes/{classBId}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+        var bodyText = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("students", bodyText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task StudentMember_GetTeacherClassList_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        var response = await client.GetAsync("/api/classes");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task StudentMember_GetTeacherPing_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        var response = await client.GetAsync("/api/auth/teacher/ping");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Teacher_GetNonExistentClass_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await client.GetAsync($"/api/classes/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("classes.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task StudentMember_GetClassDetail_ReturnsForbiddenWithoutRoster()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        var response = await client.GetAsync($"/api/classes/{classId}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+        var bodyText = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("students", bodyText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task InactiveClassWithActiveMembership_GetCurrentClass_ReturnsNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+            var schoolClass = await dbContext.Classes.FirstAsync(entity => entity.Id == classId);
+            schoolClass.Status = EnglishTestWeb.Api.Domain.Classes.ClassStatuses.Inactive;
+            await dbContext.SaveChangesAsync();
+        }
+
+        var response = await client.GetAsync("/api/classes/current");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("classes.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+
+        var meResponse = await client.GetAsync("/api/auth/me");
+        await using var body = await meResponse.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(body);
+        Assert.False(document.RootElement.TryGetProperty("activeClass", out _));
+    }
+
+    [Fact]
+    public async Task RevokedMembership_GetCurrentClass_ReturnsNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+            var student = await dbContext.Users.FirstAsync(user => user.Email == AuthTestHelper.StudentEmail);
+            var membership = await dbContext.ClassMemberships.FirstAsync(
+                entry => entry.ClassId == classId && entry.StudentId == student.Id);
+            membership.Status = EnglishTestWeb.Api.Domain.Classes.ClassStatuses.Inactive;
+            await dbContext.SaveChangesAsync();
+        }
+
+        var response = await client.GetAsync("/api/classes/current");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("classes.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+
+        var meResponse = await client.GetAsync("/api/auth/me");
+        await using var body = await meResponse.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(body);
+        Assert.False(document.RootElement.TryGetProperty("activeClass", out _));
+    }
+
+    [Fact]
+    public async Task StudentWithoutClaim_GetCurrentClass_EmitsAuditWithCorrelationId()
+    {
+        await using var factory = new AuditingTestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+        client.DefaultRequestHeaders.Add("X-Correlation-Id", "matrix-corr-001");
+
+        var response = await client.GetAsync("/api/classes/current");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains(
+            factory.AuditLogger.Records,
+            record =>
+                record.ReasonCategory == EnglishTestWeb.Api.Application.Security.AuthorizationDenialReason.ClassMembership
+                && record.ResourceType == "class"
+                && record.CorrelationId == "matrix-corr-001");
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_GetClassDetail_EmitsAuditWithOwnershipReason()
+    {
+        await using var factory = new AuditingTestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        var response = await client.GetAsync($"/api/classes/{classId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains(
+            factory.AuditLogger.Records,
+            record =>
+                record.ReasonCategory == EnglishTestWeb.Api.Application.Security.AuthorizationDenialReason.ClassOwnership
+                && record.ResourceType == "class"
+                && record.ResourceId == classId.ToString());
+    }
+}

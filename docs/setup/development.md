@@ -158,4 +158,20 @@ dotnet run --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj -- --seed-
 4. Xác nhận redirect tới `/student/tests` với tên lớp hiển thị.
 5. Teacher: đăng nhập `/login`, mở `/teacher/classes` — thấy mã lớp và học sinh seeded.
 
-API endpoints mới: `GET /api/classes/by-code/{code}`, `GET /api/classes`, `GET /api/classes/{id}`, `POST /api/auth/student/login`.
+API endpoints: `GET /api/classes/by-code/{code}`, `GET /api/classes`, `GET /api/classes/{id}`, `GET /api/classes/current`, `POST /api/auth/student/login`.
+
+## Server-side class context (Story 1.4)
+
+Student session gắn claim `etw:active_class_id` trong cookie (session-only, không persist DB). Server revalidate membership trên mỗi request quan trọng:
+
+| Endpoint | Hành vi |
+|----------|---------|
+| `GET /api/auth/me` | Trả `activeClass` chỉ khi Student có claim hợp lệ **và** membership còn `active` |
+| `GET /api/classes/current` | Student-only; 404 `classes.notFound` nếu claim missing/stale/revoked |
+
+### Authorization smoke (local)
+
+1. Login student qua flow `/class` → `/student/login` → `/student/tests`.
+2. `GET /api/auth/me` (cookie session) — thấy `activeClass` với `ENG7A`.
+3. Teacher khác truy cập `GET /api/classes/{id}` lớp không sở hữu — nhận 404 `classes.notFound` (hidden).
+4. Student gọi `GET /api/auth/teacher/ping` — 403 `auth.forbidden`.

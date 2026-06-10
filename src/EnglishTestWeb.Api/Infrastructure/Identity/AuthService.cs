@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using EnglishTestWeb.Api.Application.Auth;
+using Microsoft.AspNetCore.Authentication;
 using EnglishTestWeb.Api.Application.Classes;
+using EnglishTestWeb.Api.Application.Security;
 using EnglishTestWeb.Api.Contracts.Auth;
 using EnglishTestWeb.Api.Domain.Classes;
 using EnglishTestWeb.Api.Domain.Identity;
@@ -12,7 +14,8 @@ namespace EnglishTestWeb.Api.Infrastructure.Identity;
 public sealed class AuthService(
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,
-    IClassService classService) : IAuthService
+    IClassService classService,
+    IClassAuthorizationService classAuthorizationService) : IAuthService
 {
     public async Task<AuthLoginResult> LoginTeacherAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
@@ -48,7 +51,7 @@ public sealed class AuthService(
 
         await signInManager.SignInAsync(user, isPersistent: request.RememberMe);
 
-        return new AuthLoginResult(true, await MapUserAsync(user), null);
+        return new AuthLoginResult(true, await MapUserAsync(user, principal: null, cancellationToken), null);
     }
 
     public async Task<StudentLoginResult> LoginStudentAsync(
@@ -102,9 +105,13 @@ public sealed class AuthService(
             return new StudentLoginResult(false, null, "auth.loginInvalid");
         }
 
-        await signInManager.SignInAsync(user, isPersistent: request.RememberMe);
+        var classClaim = new Claim(AuthorizationClaimTypes.ActiveClassId, classContext.ClassId.ToString());
+        await signInManager.SignInWithClaimsAsync(
+            user,
+            new AuthenticationProperties { IsPersistent = request.RememberMe },
+            [classClaim]);
 
-        var mappedUser = await MapUserAsync(user);
+        var mappedUser = await MapUserAsync(user, principal: null, cancellationToken);
         var activeClass = new ActiveClassResponse(
             classContext.ClassId,
             classContext.ClassName,
@@ -133,7 +140,7 @@ public sealed class AuthService(
             return null;
         }
 
-        return await MapUserAsync(user);
+        return await MapUserAsync(user, principal, cancellationToken);
     }
 
     public Task LogoutAsync(CancellationToken cancellationToken = default)
@@ -160,10 +167,9 @@ public sealed class AuthService(
             return new AuthLoginResult(false, null, "auth.loginInvalid");
         }
 
-        var signInResult = await signInManager.PasswordSignInAsync(
+        var signInResult = await signInManager.CheckPasswordSignInAsync(
             user,
             request.Password,
-            isPersistent: false,
             lockoutOnFailure: false);
 
         if (!signInResult.Succeeded)
@@ -171,7 +177,48 @@ public sealed class AuthService(
             return new AuthLoginResult(false, null, "auth.loginInvalid");
         }
 
-        return new AuthLoginResult(true, await MapUserAsync(user), null);
+        var extraClaims = new List<Claim>();
+        if (request.ActiveClassId.HasValue)
+        {
+            extraClaims.Add(new Claim(
+                AuthorizationClaimTypes.ActiveClassId,
+                request.ActiveClassId.Value.ToString()));
+        }
+
+        if (extraClaims.Count > 0)
+        {
+            await signInManager.SignInWithClaimsAsync(user, isPersistent: false, extraClaims);
+        }
+        else
+        {
+            await signInManager.SignInAsync(user, isPersistent: false);
+        }
+
+        var principal = await CreatePrincipalForUserAsync(user, extraClaims);
+        return new AuthLoginResult(true, await MapUserAsync(user, principal, cancellationToken), null);
+    }
+
+    private async Task<ClaimsPrincipal> CreatePrincipalForUserAsync(
+        ApplicationUser user,
+        IReadOnlyList<Claim> extraClaims)
+    {
+        var principal = await signInManager.CreateUserPrincipalAsync(user);
+        if (extraClaims.Count == 0)
+        {
+            return principal;
+        }
+
+        if (principal.Identity is not ClaimsIdentity identity)
+        {
+            return principal;
+        }
+
+        foreach (var claim in extraClaims)
+        {
+            identity.AddClaim(claim);
+        }
+
+        return principal;
     }
 
     private async Task<ApplicationUser?> FindUserAsync(string identifier)
@@ -184,13 +231,44 @@ public sealed class AuthService(
         return await userManager.FindByNameAsync(identifier);
     }
 
-    private async Task<CurrentUserResponse> MapUserAsync(ApplicationUser user)
+    private async Task<CurrentUserResponse> MapUserAsync(
+        ApplicationUser user,
+        ClaimsPrincipal? principal,
+        CancellationToken cancellationToken)
     {
         var roles = await userManager.GetRolesAsync(user);
+        ActiveClassResponse? activeClass = null;
+
+        if (roles.Contains(IdentityRoleNames.Student))
+        {
+            var classIdValue = principal?.FindFirstValue(AuthorizationClaimTypes.ActiveClassId);
+            if (Guid.TryParse(classIdValue, out var classId))
+            {
+                var decision = await classAuthorizationService.RequireStudentClassAccessAsync(
+                    classId,
+                    user.Id,
+                    cancellationToken);
+
+                if (decision.IsAllowed)
+                {
+                    var classContext = await classService.GetClassContextByIdAsync(classId, cancellationToken);
+                    if (classContext is not null
+                        && string.Equals(classContext.Status, ClassStatuses.Active, StringComparison.Ordinal))
+                    {
+                        activeClass = new ActiveClassResponse(
+                            classContext.ClassId,
+                            classContext.ClassName,
+                            classContext.ClassCode);
+                    }
+                }
+            }
+        }
+
         return new CurrentUserResponse(
             user.Id,
             user.Email,
             user.UserName,
-            roles.ToList());
+            roles.ToList(),
+            activeClass);
     }
 }

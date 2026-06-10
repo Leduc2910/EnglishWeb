@@ -102,7 +102,7 @@ public sealed class ClassesControllerTests
 
         var response = await client.GetAsync($"/api/classes/{classId}");
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.Equal("classes.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("classes.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
     }
 }

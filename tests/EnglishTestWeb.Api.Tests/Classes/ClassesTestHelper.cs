@@ -65,6 +65,49 @@ internal static class ClassesTestHelper
         await EnsureUserAsync(userManager, NonMemberStudentEmail, NonMemberStudentPassword, IdentityRoleNames.Student);
     }
 
+    internal const string SecondClassCode = "ENG7B";
+    internal const string SecondClassName = "English 7B";
+
+    internal static async Task<Guid> GetDemoClassIdAsync(TestApiFactory factory)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+        return await dbContext.Classes
+            .Where(entity => entity.ClassCode == ClassCode)
+            .Select(entity => entity.Id)
+            .FirstAsync();
+    }
+
+    internal static async Task<Guid> SeedSecondClassWithoutMembershipAsync(TestApiFactory factory)
+    {
+        await SeedDemoClassAsync(factory);
+
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var teacher = await userManager.FindByEmailAsync(Auth.AuthTestHelper.TeacherEmail)
+            ?? throw new InvalidOperationException("Teacher user missing.");
+
+        var existing = await dbContext.Classes.FirstOrDefaultAsync(entity => entity.ClassCode == SecondClassCode);
+        if (existing is not null)
+        {
+            return existing.Id;
+        }
+
+        var schoolClass = new SchoolClass
+        {
+            Id = Guid.NewGuid(),
+            Name = SecondClassName,
+            ClassCode = SecondClassCode,
+            TeacherId = teacher.Id,
+            Status = ClassStatuses.Active,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        dbContext.Classes.Add(schoolClass);
+        await dbContext.SaveChangesAsync();
+        return schoolClass.Id;
+    }
+
     internal static async Task<Guid> SeedInactiveClassAsync(TestApiFactory factory)
     {
         using var scope = factory.Services.CreateScope();

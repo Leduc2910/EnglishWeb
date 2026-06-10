@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace EnglishTestWeb.Api.Tests;
 
-public sealed class TestApiFactory : WebApplicationFactory<Program>
+public class TestApiFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = Guid.NewGuid().ToString("N");
     private readonly string _testRoot = Path.Combine(Path.GetTempPath(), "EnglishTestWeb.Api.Tests", Guid.NewGuid().ToString("N"));
