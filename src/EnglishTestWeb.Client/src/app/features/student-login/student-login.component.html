@@ -1,0 +1,93 @@
+<main class="login-page">
+  <header class="brand-bar">
+    <a class="brand-link" routerLink="/class">EnglishTestWeb</a>
+    <span class="role-chip">Học sinh</span>
+  </header>
+
+  <div class="login-layout">
+    <section id="student-login-class-context" class="context-card">
+      @if (isLoadingContext()) {
+        <p class="context-label">Đang tải thông tin lớp…</p>
+      } @else {
+        <p class="context-label">Bạn đang vào lớp</p>
+        <h1 id="student-login-class-name" class="class-name">
+          {{ classContext.confirmedClass()?.className }}
+        </h1>
+        <p id="student-login-teacher-name" class="teacher-name">
+          Giáo viên: {{ classContext.confirmedClass()?.teacherDisplayName }}
+        </p>
+      }
+      <button
+        id="student-login-change-class-link"
+        type="button"
+        class="text-button"
+        (click)="changeClass()"
+      >
+        Đổi mã lớp
+      </button>
+    </section>
+
+    <section class="login-card-wrap">
+      <form
+        id="student-login-form"
+        class="login-card"
+        [formGroup]="form"
+        (ngSubmit)="onSubmit()"
+        novalidate
+      >
+        <h2 class="login-title">Đăng nhập học sinh</h2>
+        <p class="login-subtitle">Đăng nhập để xem bài test của lớp này.</p>
+
+        <div class="field">
+          <label for="student-login-identifier-input">Tài khoản học sinh</label>
+          <input
+            id="student-login-identifier-input"
+            type="text"
+            formControlName="identifier"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="field">
+          <label for="student-login-password-input">Mật khẩu</label>
+          <div class="password-row">
+            <input
+              id="student-login-password-input"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="text-button"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-pressed]="showPassword()"
+            >
+              {{ showPassword() ? 'Ẩn' : 'Hiện' }}
+            </button>
+          </div>
+        </div>
+
+        @if (errorMessage()) {
+          <div
+            id="student-login-error-alert"
+            class="error-alert"
+            role="alert"
+            [attr.data-error-code]="errorCode()"
+          >
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button
+          id="student-login-submit-button"
+          type="submit"
+          class="primary-button"
+          [disabled]="isSubmitting() || isLoadingContext()"
+        >
+          {{ isSubmitting() ? 'Đang đăng nhập…' : 'Đăng nhập' }}
+        </button>
+      </form>
+    </section>
+  </div>
+</main>

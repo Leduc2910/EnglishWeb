@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthSessionService } from '../auth/auth-session.service';
+import { ClassContextService } from '../classes/class-context.service';
 import { sanitizeTeacherReturnUrl } from './return-url';
 
 export const teacherGuard: CanActivateFn = async (_route, state) => {
@@ -24,6 +25,7 @@ export const teacherGuard: CanActivateFn = async (_route, state) => {
 
 export const rootRedirectGuard: CanActivateFn = async () => {
   const auth = inject(AuthSessionService);
+  const classContext = inject(ClassContextService);
   const router = inject(Router);
 
   await auth.ensureSessionLoaded();
@@ -32,7 +34,15 @@ export const rootRedirectGuard: CanActivateFn = async () => {
     return router.createUrlTree(['/teacher/dashboard']);
   }
 
-  return router.createUrlTree(['/login']);
+  if (auth.isStudent()) {
+    if (classContext.activeClass() || classContext.readPersistedClassCode()) {
+      return router.createUrlTree(['/student/tests']);
+    }
+
+    return router.createUrlTree(['/class']);
+  }
+
+  return router.createUrlTree(['/class']);
 };
 
 export const guestGuard: CanActivateFn = async (route) => {

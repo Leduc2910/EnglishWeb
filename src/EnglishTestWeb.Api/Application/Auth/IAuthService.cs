@@ -7,6 +7,8 @@ public interface IAuthService
 {
     Task<AuthLoginResult> LoginTeacherAsync(LoginRequest request, CancellationToken cancellationToken = default);
 
+    Task<StudentLoginResult> LoginStudentAsync(StudentLoginRequest request, CancellationToken cancellationToken = default);
+
     Task<CurrentUserResponse?> GetCurrentUserAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default);
 
     Task LogoutAsync(CancellationToken cancellationToken = default);
@@ -17,3 +19,5 @@ public interface IAuthService
 }
 
 public sealed record AuthLoginResult(bool Succeeded, CurrentUserResponse? User, string? ErrorCode);
+
+public sealed record StudentLoginResult(bool Succeeded, StudentLoginResponse? User, string? ErrorCode);

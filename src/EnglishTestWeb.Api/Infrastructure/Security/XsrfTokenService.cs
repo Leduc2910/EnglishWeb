@@ -24,6 +24,6 @@ public sealed class XsrfTokenService(IAntiforgery antiforgery, IWebHostEnvironme
                 Path = "/"
             });
 
-        return new XsrfTokenIssue(XsrfDefaults.CookieName, XsrfDefaults.HeaderName);
+        return new XsrfTokenIssue(XsrfDefaults.CookieName, XsrfDefaults.HeaderName, tokens.RequestToken);
     }
 }

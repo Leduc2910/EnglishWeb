@@ -11,6 +11,21 @@ export interface LoginRequest {
   rememberMe: boolean;
 }
 
+export interface StudentLoginRequest {
+  identifier: string;
+  password: string;
+  classCode: string;
+  rememberMe: boolean;
+}
+
+export interface StudentLoginResponse extends CurrentUser {
+  activeClass: {
+    classId: string;
+    className: string;
+    classCode: string;
+  };
+}
+
 export const LOGIN_ERROR_MESSAGES: Record<string, string> = {
   ERR_LOGIN_IDENTIFIER_REQUIRED: 'Nhập email hoặc tên đăng nhập.',
   ERR_LOGIN_PASSWORD_REQUIRED: 'Nhập mật khẩu.',

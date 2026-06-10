@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { AuthSessionService } from './auth-session.service';
 import { AuthApiService } from './auth-api.service';
+import { ClassesApiService } from '../classes/classes-api.service';
 
 describe('AuthSessionService', () => {
   let service: AuthSessionService;
@@ -12,6 +13,9 @@ describe('AuthSessionService', () => {
     logout: ReturnType<typeof vi.fn>;
     getCurrentUser: ReturnType<typeof vi.fn>;
   };
+  let classesApi: {
+    lookupByCode: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     authApi = {
@@ -20,9 +24,15 @@ describe('AuthSessionService', () => {
       logout: vi.fn().mockResolvedValue(undefined),
       getCurrentUser: vi.fn().mockRejectedValue(new Error('unauthorized')),
     };
+    classesApi = {
+      lookupByCode: vi.fn(),
+    };
 
     TestBed.configureTestingModule({
-      providers: [{ provide: AuthApiService, useValue: authApi }],
+      providers: [
+        { provide: AuthApiService, useValue: authApi },
+        { provide: ClassesApiService, useValue: classesApi },
+      ],
     });
     service = TestBed.inject(AuthSessionService);
     localStorageSetItem = vi.spyOn(Storage.prototype, 'setItem');

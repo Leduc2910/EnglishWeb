@@ -1,32 +1,26 @@
-import { HttpClient, HttpXsrfTokenExtractor } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { httpProviders } from './http.providers';
-
-class TestXsrfTokenExtractor implements HttpXsrfTokenExtractor {
-  getToken(): string | null {
-    return 'xsrf-test-token';
-  }
-}
+import { XsrfTokenStore } from './xsrf-token.store';
 
 describe('httpProviders', () => {
   let http: HttpClient;
   let httpMock: HttpTestingController;
+  let xsrfTokenStore: XsrfTokenStore;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        ...httpProviders,
-        provideHttpClientTesting(),
-        { provide: HttpXsrfTokenExtractor, useClass: TestXsrfTokenExtractor },
-      ],
+      providers: [...httpProviders, provideHttpClientTesting()],
     });
 
     http = TestBed.inject(HttpClient);
     httpMock = TestBed.inject(HttpTestingController);
+    xsrfTokenStore = TestBed.inject(XsrfTokenStore);
+    xsrfTokenStore.setToken('xsrf-test-token');
   });
 
   afterEach(() => {
@@ -41,4 +35,5 @@ describe('httpProviders', () => {
     expect(request.request.withCredentials).toBe(true);
     request.flush({ status: 'ok' });
   });
+
 });

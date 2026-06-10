@@ -24,6 +24,12 @@ _Chunk 1 — API core only._
 
 - Rate limiting cho `POST /api/auth/login` — architecture khuyến nghị; story 1.2 ưu tiên auth correctness; thêm middleware scoped khi có infrastructure.
 
+## Deferred from: code review of 1-3-class-roster-class-code-lookup-and-student-login (2026-06-10)
+
+- Post-login membership revalidation trên mỗi student API call — Story 1.4 policy framework.
+- Rate limiting cho `POST /api/auth/student/login` và `GET /api/classes/by-code/{code}` — cùng lý do defer 1.2.
+- Teacher roster chỉ load chi tiết lớp đầu tiên khi teacher sở hữu nhiều lớp — MVP demo một lớp; mở rộng khi multi-class UX có spec.
+
 ## Deferred from: code review chunk 4 — docs & quality (2026-06-10)
 
 - Deploy doc registry keys không ghi Windows-only caveat — acceptable MVP doc.

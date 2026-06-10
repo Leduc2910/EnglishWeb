@@ -1,0 +1,55 @@
+<section class="teacher-classes">
+  <header class="header">
+    <h1>Lớp học</h1>
+    <p>Quản lý mã lớp và danh sách học sinh trong phạm vi của bạn.</p>
+  </header>
+
+  @if (isLoading()) {
+    <p>Đang tải…</p>
+  } @else if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  } @else if (classes().length === 0) {
+    <p class="empty">Chưa có lớp nào. Chạy seed MVP demo để tạo dữ liệu dev.</p>
+  } @else {
+    @for (item of classes(); track item.classId) {
+      <article class="class-card">
+        <div class="class-header">
+          <h2>{{ item.className }}</h2>
+          <span class="status-badge" [class.inactive]="item.status !== 'active'">
+            {{ statusLabel(item.status) }}
+          </span>
+        </div>
+        <p class="meta"><strong>Mã lớp:</strong> {{ item.classCode }}</p>
+        <p class="meta"><strong>Học sinh:</strong> {{ item.enrolledStudentCount }}</p>
+      </article>
+    }
+
+    @if (selectedDetail(); as detail) {
+      <section class="roster">
+        <h3>Học sinh đã ghi danh</h3>
+        @if (detail.students.length === 0) {
+          <p class="empty">Chưa có học sinh trong lớp.</p>
+        } @else {
+          <table>
+            <thead>
+              <tr>
+                <th>Tên hiển thị</th>
+                <th>Email</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (student of detail.students; track student.studentId) {
+                <tr>
+                  <td>{{ student.displayName }}</td>
+                  <td>{{ student.email ?? '—' }}</td>
+                  <td>{{ statusLabel(student.membershipStatus) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+    }
+  }
+</section>

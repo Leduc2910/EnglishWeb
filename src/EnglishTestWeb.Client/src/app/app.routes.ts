@@ -1,11 +1,35 @@
 import { Routes } from '@angular/router';
 import { guestGuard, rootRedirectGuard, teacherGuard } from './core/route-access/teacher.guard';
+import { studentGuard, studentLoginGuard } from './core/route-access/student.guard';
 
 export const routes: Routes = [
   {
     path: '',
     canActivate: [rootRedirectGuard],
     children: [],
+  },
+  {
+    path: 'class',
+    loadComponent: () =>
+      import('./features/student-class-entry/student-class-entry.component').then(
+        (module) => module.StudentClassEntryComponent,
+      ),
+  },
+  {
+    path: 'student/login',
+    canActivate: [studentLoginGuard],
+    loadComponent: () =>
+      import('./features/student-login/student-login.component').then(
+        (module) => module.StudentLoginComponent,
+      ),
+  },
+  {
+    path: 'student/tests',
+    canActivate: [studentGuard],
+    loadComponent: () =>
+      import('./features/student-assigned-tests/student-assigned-tests.component').then(
+        (module) => module.StudentAssignedTestsComponent,
+      ),
   },
   {
     path: 'login',
@@ -59,13 +83,9 @@ export const routes: Routes = [
       {
         path: 'classes',
         loadComponent: () =>
-          import('./features/teacher-placeholder/teacher-placeholder.component').then(
-            (module) => module.TeacherPlaceholderComponent,
+          import('./features/teacher-classes/teacher-classes.component').then(
+            (module) => module.TeacherClassesComponent,
           ),
-        data: {
-          title: 'Lớp học',
-          description: 'Story 1.3 sẽ triển khai roster và class code.',
-        },
       },
       {
         path: 'results',

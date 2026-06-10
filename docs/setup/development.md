@@ -121,14 +121,41 @@ dotnet run --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj -- --seed-
 | `/forgot-password` | Placeholder quên mật khẩu |
 | `/teacher/dashboard` | Dashboard placeholder |
 | `/teacher/library` | Placeholder Thư viện đề |
-| `/teacher/classes` | Placeholder Lớp học |
+| `/teacher/classes` | Roster lớp + danh sách học sinh (Story 1.3) |
 | `/teacher/results` | Placeholder Kết quả |
 
-### Login smoke (local)
+## Dev student class flow (Story 1.3)
 
-1. Chạy API + Angular dev server (xem [Local run](#local-run)).
-2. Mở `http://localhost:4200/login`.
-3. Đăng nhập bằng dev teacher credentials ở bảng trên.
-4. Xác nhận redirect tới `/teacher/dashboard` và nav hiển thị Dashboard, Thư viện đề, Lớp học, Kết quả.
+MVP demo seed tạo teacher + student + class + membership idempotent khi `Identity:SeedMvpDemoOnStartup` = `true`.
 
-API auth endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/teacher/ping` (teacher-only).
+| Field | Value |
+|-------|-------|
+| Student email | `student@englishtestweb.local` |
+| Student username | `student` |
+| Student password | `Student123!` |
+| Class name | `English 7A` |
+| Class code | `ENG7A` |
+
+Seed thủ công (sau migration + roles):
+
+```powershell
+dotnet run --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj -- --seed-mvp-demo
+```
+
+### Student routes (Angular)
+
+| Route | Mô tả |
+|-------|--------|
+| `/class` | Nhập mã lớp + xác nhận |
+| `/student/login` | Đăng nhập học sinh với class context |
+| `/student/tests` | Assigned tests placeholder |
+
+### Class flow smoke (local)
+
+1. Chạy API + Angular dev server.
+2. Mở `http://localhost:4200/class`.
+3. Nhập mã `ENG7A`, xác nhận lớp, đăng nhập student credentials.
+4. Xác nhận redirect tới `/student/tests` với tên lớp hiển thị.
+5. Teacher: đăng nhập `/login`, mở `/teacher/classes` — thấy mã lớp và học sinh seeded.
+
+API endpoints mới: `GET /api/classes/by-code/{code}`, `GET /api/classes`, `GET /api/classes/{id}`, `POST /api/auth/student/login`.

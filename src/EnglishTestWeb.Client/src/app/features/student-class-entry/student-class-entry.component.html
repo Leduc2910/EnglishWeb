@@ -1,0 +1,80 @@
+<main class="entry-page">
+  <header id="student-class-entry-brand-bar" class="brand-bar">
+    <a id="student-class-entry-logo" class="brand-link" routerLink="/class">EnglishTestWeb</a>
+    <span id="student-class-entry-role-chip" class="role-chip">Học sinh</span>
+  </header>
+
+  <section id="student-class-entry-form" class="entry-panel">
+    <h1 id="student-class-entry-title" class="page-title">Nhập mã lớp</h1>
+    <p class="subtitle">Dùng mã lớp giáo viên đã gửi để vào đúng danh sách bài test.</p>
+
+    @if (isSubmitting() && !lookupResult()) {
+      <p id="student-class-entry-loading" class="loading-text" aria-live="polite">
+        Đang kiểm tra mã lớp…
+      </p>
+    } @else if (!lookupResult()) {
+      <form class="entry-form" [formGroup]="form" (ngSubmit)="onLookup()" novalidate>
+        <div class="field">
+          <label for="student-class-entry-code-input">Mã lớp</label>
+          <input
+            id="student-class-entry-code-input"
+            type="text"
+            formControlName="classCode"
+            placeholder="Ví dụ: ENG7A"
+            autocomplete="off"
+            (input)="onCodeInput($event)"
+          />
+        </div>
+        <p id="student-class-entry-help-text" class="help-text">
+          Mã lớp do giáo viên cung cấp.
+        </p>
+
+        @if (errorMessage()) {
+          <div
+            id="student-class-entry-error-alert"
+            class="error-alert"
+            role="alert"
+            [attr.data-error-code]="errorCode()"
+          >
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button
+          id="student-class-entry-submit-button"
+          type="submit"
+          class="primary-button"
+          [disabled]="isSubmitting()"
+        >
+          {{ isSubmitting() ? 'Đang kiểm tra…' : 'Kiểm tra mã lớp' }}
+        </button>
+      </form>
+    } @else {
+      <section id="student-class-entry-confirmation" class="confirmation">
+        <article id="student-class-entry-class-card" class="class-card">
+          <h2 class="class-name">{{ lookupResult()?.className }}</h2>
+          <p class="class-meta">Giáo viên: {{ lookupResult()?.teacherDisplayName }}</p>
+          <p class="class-meta">Mã lớp: {{ lookupResult()?.classCode }}</p>
+        </article>
+        <div class="confirmation-actions">
+          <button
+            id="student-class-entry-confirm-button"
+            type="button"
+            class="primary-button"
+            (click)="confirmClass()"
+          >
+            Đúng lớp này, tiếp tục
+          </button>
+          <button
+            id="student-class-entry-change-code-button"
+            type="button"
+            class="secondary-button"
+            (click)="changeCode()"
+          >
+            Nhập mã khác
+          </button>
+        </div>
+      </section>
+    }
+  </section>
+</main>

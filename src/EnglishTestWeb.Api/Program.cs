@@ -1,9 +1,11 @@
 using EnglishTestWeb.Api.Application.Auth;
+using EnglishTestWeb.Api.Application.Classes;
 using EnglishTestWeb.Api.Application.Common;
 using EnglishTestWeb.Api.Application.Files;
 using EnglishTestWeb.Api.Application.Identity;
 using EnglishTestWeb.Api.Application.Security;
 using EnglishTestWeb.Api.Domain.Identity;
+using EnglishTestWeb.Api.Infrastructure.Classes;
 using EnglishTestWeb.Api.Infrastructure.Health;
 using EnglishTestWeb.Api.Infrastructure.Identity;
 using EnglishTestWeb.Api.Infrastructure.Persistence;
@@ -112,10 +114,13 @@ if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
 
 builder.Services.Configure<ProtectedStorageOptions>(builder.Configuration.GetSection(ProtectedStorageOptions.SectionName));
 builder.Services.Configure<IdentityDevUserOptions>(builder.Configuration.GetSection(IdentityDevUserOptions.SectionName));
+builder.Services.Configure<MvpDemoDataOptions>(builder.Configuration.GetSection(MvpDemoDataOptions.SectionName));
 builder.Services.AddScoped<IFileStorage, LocalProtectedFileStorage>();
 builder.Services.AddScoped<IHealthProbe, HealthProbe>();
 builder.Services.AddScoped<IIdentityRoleSeeder, IdentityRoleSeeder>();
 builder.Services.AddScoped<IIdentityDevUserSeeder, IdentityDevUserSeeder>();
+builder.Services.AddScoped<IMvpDemoDataSeeder, MvpDemoDataSeeder>();
+builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();
 
@@ -146,8 +151,10 @@ app.MapControllers();
 
 if (app.Configuration.GetValue<bool>("Identity:SeedRolesOnStartup")
     || app.Configuration.GetValue<bool>("Identity:SeedDevTeacherOnStartup")
+    || app.Configuration.GetValue<bool>("Identity:SeedMvpDemoOnStartup")
     || args.Contains("--seed-identity-roles")
-    || args.Contains("--seed-dev-teacher"))
+    || args.Contains("--seed-dev-teacher")
+    || args.Contains("--seed-mvp-demo"))
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
@@ -163,7 +170,14 @@ if (app.Configuration.GetValue<bool>("Identity:SeedRolesOnStartup")
         await scope.ServiceProvider.GetRequiredService<IIdentityDevUserSeeder>().SeedAsync();
     }
 
-    if (args.Contains("--seed-identity-roles") || args.Contains("--seed-dev-teacher"))
+    if (app.Configuration.GetValue<bool>("Identity:SeedMvpDemoOnStartup") || args.Contains("--seed-mvp-demo"))
+    {
+        await scope.ServiceProvider.GetRequiredService<IMvpDemoDataSeeder>().SeedAsync();
+    }
+
+    if (args.Contains("--seed-identity-roles")
+        || args.Contains("--seed-dev-teacher")
+        || args.Contains("--seed-mvp-demo"))
     {
         return;
     }

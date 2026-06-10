@@ -22,6 +22,77 @@ namespace EnglishTestWeb.Api.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("EnglishTestWeb.Api.Domain.Classes.ClassMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("ClassId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("ClassMemberships", (string)null);
+                });
+
+            modelBuilder.Entity("EnglishTestWeb.Api.Domain.Classes.SchoolClass", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClassCode")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("TeacherId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassCode")
+                        .IsUnique();
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("Classes", (string)null);
+                });
+
             modelBuilder.Entity("EnglishTestWeb.Api.Domain.Identity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -236,6 +307,32 @@ namespace EnglishTestWeb.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("EnglishTestWeb.Api.Domain.Classes.ClassMembership", b =>
+                {
+                    b.HasOne("EnglishTestWeb.Api.Domain.Classes.SchoolClass", "Class")
+                        .WithMany("Memberships")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EnglishTestWeb.Api.Domain.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("EnglishTestWeb.Api.Domain.Classes.SchoolClass", b =>
+                {
+                    b.HasOne("EnglishTestWeb.Api.Domain.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -285,6 +382,11 @@ namespace EnglishTestWeb.Api.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("EnglishTestWeb.Api.Domain.Classes.SchoolClass", b =>
+                {
+                    b.Navigation("Memberships");
                 });
 #pragma warning restore 612, 618
         }

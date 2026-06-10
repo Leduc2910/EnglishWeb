@@ -29,6 +29,31 @@ public sealed class AuthController(IAuthService authService, IWebHostEnvironment
         return Ok(result.User);
     }
 
+    [AllowAnonymous]
+    [HttpPost("student/login")]
+    public async Task<ActionResult<StudentLoginResponse>> StudentLogin(
+        [FromBody] StudentLoginRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.LoginStudentAsync(request, cancellationToken);
+        if (!result.Succeeded || result.User is null)
+        {
+            var statusCode = result.ErrorCode switch
+            {
+                "classes.codeNotFound" or "classes.codeInactive" => StatusCodes.Status404NotFound,
+                _ => StatusCodes.Status401Unauthorized
+            };
+
+            return AuthProblem(
+                statusCode,
+                result.ErrorCode ?? "auth.loginInvalid",
+                "Login failed.",
+                "The supplied credentials or class context is invalid.");
+        }
+
+        return Ok(result.User);
+    }
+
     [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)

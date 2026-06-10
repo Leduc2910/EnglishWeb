@@ -1,3 +1,4 @@
+using EnglishTestWeb.Api.Domain.Classes;
 using EnglishTestWeb.Api.Domain.Identity;
 using EnglishTestWeb.Api.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -9,10 +10,15 @@ namespace EnglishTestWeb.Api.Infrastructure.Persistence;
 public sealed class EnglishTestWebDbContext(DbContextOptions<EnglishTestWebDbContext> options)
     : IdentityDbContext<ApplicationUser, IdentityRole, string>(options)
 {
+    public DbSet<SchoolClass> Classes => Set<SchoolClass>();
+
+    public DbSet<ClassMembership> ClassMemberships => Set<ClassMembership>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
+        builder.ApplyConfigurationsFromAssembly(typeof(EnglishTestWebDbContext).Assembly);
         builder.Entity<IdentityRole>().HasData(IdentityRoleDefinitions.All);
     }
 }

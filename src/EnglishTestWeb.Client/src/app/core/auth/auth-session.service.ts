@@ -1,13 +1,21 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { API_AUTH_ERROR_MESSAGES, LOGIN_ERROR_MESSAGES } from './auth.models';
 import { AuthApiService } from './auth-api.service';
-import { CurrentUser, LoginRequest } from './auth.models';
+import { CurrentUser, LoginRequest, StudentLoginRequest } from './auth.models';
 import { readProblemCode } from '../http/problem-details';
 import { HttpErrorResponse } from '@angular/common/http';
+import { API_CLASS_ERROR_MESSAGES, STUDENT_LOGIN_ERROR_MESSAGES } from '../classes/classes.models';
+import { ClassContextService } from '../classes/class-context.service';
+import { ClassesApiService } from '../classes/classes-api.service';
+import { normalizeClassCode } from '../classes/class-code';
+import { XsrfTokenStore } from '../http/xsrf-token.store';
 
 @Injectable({ providedIn: 'root' })
 export class AuthSessionService {
   private readonly authApi = inject(AuthApiService);
+  private readonly classContext = inject(ClassContextService);
+  private readonly classesApi = inject(ClassesApiService);
+  private readonly xsrfTokenStore = inject(XsrfTokenStore);
   private readonly currentUserSignal = signal<CurrentUser | null>(null);
   private sessionLoaded = false;
   private sessionLoadPromise: Promise<CurrentUser | null> | null = null;
@@ -17,6 +25,9 @@ export class AuthSessionService {
   readonly isAuthenticated = computed(() => this.currentUserSignal() !== null);
   readonly isTeacher = computed(() =>
     this.currentUserSignal()?.roles.includes('Teacher') ?? false,
+  );
+  readonly isStudent = computed(() =>
+    this.currentUserSignal()?.roles.includes('Student') ?? false,
   );
 
   persistAccessToken(_token: string): void {
@@ -40,6 +51,22 @@ export class AuthSessionService {
   async login(request: LoginRequest): Promise<CurrentUser> {
     await this.authApi.issueXsrfToken();
     const user = await this.authApi.login(request);
+    this.currentUserSignal.set(user);
+    this.sessionLoaded = true;
+    this.sessionLoadPromise = Promise.resolve(user);
+    return user;
+  }
+
+  async loginStudent(request: StudentLoginRequest): Promise<CurrentUser> {
+    await this.authApi.issueXsrfToken();
+    const response = await this.authApi.loginStudent(request);
+    const user: CurrentUser = {
+      userId: response.userId,
+      email: response.email,
+      userName: response.userName,
+      roles: response.roles,
+    };
+    this.classContext.setActiveClass(response.activeClass);
     this.currentUserSignal.set(user);
     this.sessionLoaded = true;
     this.sessionLoadPromise = Promise.resolve(user);
@@ -75,22 +102,69 @@ export class AuthSessionService {
     return LOGIN_ERROR_MESSAGES['ERR_LOGIN_INVALID'];
   }
 
+  mapStudentApiError(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const body = error.error;
+      if (body && typeof body === 'object') {
+        const code = readProblemCode(body as { code?: string; extensions?: { code?: string } });
+        if (code && API_CLASS_ERROR_MESSAGES[code]) {
+          return API_CLASS_ERROR_MESSAGES[code];
+        }
+      }
+
+      if (error.status === 0) {
+        return STUDENT_LOGIN_ERROR_MESSAGES['ERR_STUDENT_NETWORK'];
+      }
+    }
+
+    return API_CLASS_ERROR_MESSAGES['auth.loginInvalid'];
+  }
+
   clearSession(): void {
     this.currentUserSignal.set(null);
+    this.xsrfTokenStore.clear();
+    this.classContext.clearClassContext();
     this.sessionLoaded = true;
     this.sessionLoadPromise = Promise.resolve(null);
   }
 
   private async loadSessionInternal(): Promise<CurrentUser | null> {
     try {
+      await this.authApi.issueXsrfToken();
       const user = await this.authApi.getCurrentUser();
       this.currentUserSignal.set(user);
+      if (user?.roles.includes('Student')) {
+        await this.restoreStudentClassContext();
+      }
       return user;
     } catch {
       this.currentUserSignal.set(null);
       return null;
     } finally {
       this.sessionLoaded = true;
+    }
+  }
+
+  private async restoreStudentClassContext(): Promise<void> {
+    if (this.classContext.activeClass()) {
+      return;
+    }
+
+    const code = this.classContext.readPersistedClassCode();
+    if (!code) {
+      return;
+    }
+
+    const normalized = normalizeClassCode(code) ?? code;
+    try {
+      const preview = await this.classesApi.lookupByCode(normalized);
+      this.classContext.setActiveClass({
+        classId: preview.classId,
+        className: preview.className,
+        classCode: preview.classCode,
+      });
+    } catch {
+      this.classContext.clearClassContext();
     }
   }
 }

@@ -14,6 +14,6 @@ public sealed class SecurityController(IXsrfTokenService xsrfTokenService) : Con
     public ActionResult<XsrfTokenResponse> IssueXsrfToken()
     {
         var token = xsrfTokenService.Issue(HttpContext);
-        return Ok(new XsrfTokenResponse(token.CookieName, token.HeaderName));
+        return Ok(new XsrfTokenResponse(token.CookieName, token.HeaderName, token.RequestToken));
     }
 }

@@ -1,0 +1,21 @@
+<div class="student-tests-page">
+  <header class="top-bar">
+    <div>
+      <p class="top-label">Lớp hiện tại</p>
+      <h1 class="class-name">
+        {{ classContext.activeClass()?.className ?? classContext.confirmedClass()?.className }}
+      </h1>
+    </div>
+    <div class="account">
+      <span>{{ auth.currentUser()?.userName ?? auth.currentUser()?.email }}</span>
+      <button type="button" class="text-button" (click)="logout()">Đăng xuất</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <h2>Bài của lớp</h2>
+    <p class="empty-state">Chưa có bài được giao.</p>
+    <p class="helper">Epic 4 sẽ hiển thị danh sách homework và thi trực tiếp tại đây.</p>
+    <a routerLink="/class" class="link">Đổi mã lớp</a>
+  </main>
+</div>
