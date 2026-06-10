@@ -20,6 +20,10 @@ _Chunk 1 — API core only._
 - Empty routes không có wildcard 404 — Story 1.2 teacher/student shell.
 - Correlation ID luôn mới mỗi request — acceptable baseline; propagate later if needed.
 
+## Deferred from: code review of 1-2-teacher-login-and-teacher-app-shell (2026-06-10)
+
+- Rate limiting cho `POST /api/auth/login` — architecture khuyến nghị; story 1.2 ưu tiên auth correctness; thêm middleware scoped khi có infrastructure.
+
 ## Deferred from: code review chunk 4 — docs & quality (2026-06-10)
 
 - Deploy doc registry keys không ghi Windows-only caveat — acceptable MVP doc.

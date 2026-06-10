@@ -1,13 +1,29 @@
 import { TestBed } from '@angular/core/testing';
 import { AuthSessionService } from './auth-session.service';
+import { AuthApiService } from './auth-api.service';
 
 describe('AuthSessionService', () => {
   let service: AuthSessionService;
   let localStorageSetItem: ReturnType<typeof vi.spyOn>;
   let sessionStorageSetItem: ReturnType<typeof vi.spyOn>;
+  let authApi: {
+    issueXsrfToken: ReturnType<typeof vi.fn>;
+    login: ReturnType<typeof vi.fn>;
+    logout: ReturnType<typeof vi.fn>;
+    getCurrentUser: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    authApi = {
+      issueXsrfToken: vi.fn().mockResolvedValue(undefined),
+      login: vi.fn(),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockRejectedValue(new Error('unauthorized')),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: AuthApiService, useValue: authApi }],
+    });
     service = TestBed.inject(AuthSessionService);
     localStorageSetItem = vi.spyOn(Storage.prototype, 'setItem');
     sessionStorageSetItem = vi.spyOn(Storage.prototype, 'setItem');
@@ -28,5 +44,12 @@ describe('AuthSessionService', () => {
     );
     expect(localStorage.setItem).not.toHaveBeenCalled();
     expect(sessionStorage.setItem).not.toHaveBeenCalled();
+  });
+
+  it('loads session without browser storage writes', async () => {
+    await service.loadSession();
+    expect(localStorage.setItem).not.toHaveBeenCalled();
+    expect(sessionStorage.setItem).not.toHaveBeenCalled();
+    expect(service.isAuthenticated()).toBe(false);
   });
 });

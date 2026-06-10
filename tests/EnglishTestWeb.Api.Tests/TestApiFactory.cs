@@ -1,10 +1,6 @@
-using EnglishTestWeb.Api.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace EnglishTestWeb.Api.Tests;
 
@@ -22,15 +18,9 @@ public sealed class TestApiFactory : WebApplicationFactory<Program>
             {
                 ["ConnectionStrings:DefaultConnection"] = "Server=(localdb)\\MSSQLLocalDB;Database=EnglishTestWeb_Unused;Trusted_Connection=True;TrustServerCertificate=True",
                 ["DataProtection:KeysPath"] = Path.Combine(_testRoot, "data-protection-keys"),
-                ["ProtectedStorage:RootPath"] = Path.Combine(_testRoot, "protected-storage")
+                ["ProtectedStorage:RootPath"] = Path.Combine(_testRoot, "protected-storage"),
+                ["Testing:DatabaseName"] = _databaseName
             });
-        });
-
-        builder.ConfigureServices(services =>
-        {
-            services.RemoveAll<DbContextOptions<EnglishTestWebDbContext>>();
-            services.AddDbContext<EnglishTestWebDbContext>(options =>
-                options.UseInMemoryDatabase(_databaseName));
         });
     }
 

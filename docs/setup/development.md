@@ -75,7 +75,9 @@ npm start
 
 Angular `proxy.conf.json` forward `/api` tới `http://localhost:5124`.
 
-Nếu cần HTTPS profile (`https://localhost:7204`), cập nhật `proxy.conf.json` cho khớp profile đang chạy.
+**Quan trọng:** Dùng launch profile `http` khi dev với Angular proxy. Profile `https` bật redirect 307 sang `https://localhost:7204` — browser sẽ gọi thẳng HTTPS, mất cookie/XSRF same-origin và login trả `400`.
+
+Nếu bắt buộc chạy HTTPS profile, cập nhật `proxy.conf.json` target thành `https://localhost:7204` và `secure: true`.
 
 ## Smoke / quality gate
 
@@ -94,3 +96,39 @@ GitHub Actions workflow: `.github/workflows/quality.yml` — chạy cùng smoke 
 - Same-origin cookie auth (ASP.NET Core Identity) — không lưu token trong `localStorage`/`sessionStorage`
 - XSRF: cookie `XSRF-TOKEN`, header `X-XSRF-TOKEN` cho unsafe API methods
 - Lỗi API: `ProblemDetails` với `code` / `extensions.code` ổn định
+
+## Dev teacher login (Story 1.2)
+
+Development seed tạo teacher user idempotent khi `Identity:SeedDevTeacherOnStartup` = `true` (mặc định trong `appsettings.Development.json`).
+
+| Field | Value |
+|-------|-------|
+| Email | `teacher@englishtestweb.local` |
+| Username | `teacher` |
+| Password | `Teacher123!` |
+
+Seed thủ công (sau migration + roles):
+
+```powershell
+dotnet run --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj -- --seed-dev-teacher
+```
+
+### Teacher routes (Angular)
+
+| Route | Mô tả |
+|-------|--------|
+| `/login` | Teacher login |
+| `/forgot-password` | Placeholder quên mật khẩu |
+| `/teacher/dashboard` | Dashboard placeholder |
+| `/teacher/library` | Placeholder Thư viện đề |
+| `/teacher/classes` | Placeholder Lớp học |
+| `/teacher/results` | Placeholder Kết quả |
+
+### Login smoke (local)
+
+1. Chạy API + Angular dev server (xem [Local run](#local-run)).
+2. Mở `http://localhost:4200/login`.
+3. Đăng nhập bằng dev teacher credentials ở bảng trên.
+4. Xác nhận redirect tới `/teacher/dashboard` và nav hiển thị Dashboard, Thư viện đề, Lớp học, Kết quả.
+
+API auth endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/teacher/ping` (teacher-only).

@@ -14,21 +14,3 @@
   color: var(--app-text);
   background: var(--app-surface);
 }
-
-.app-shell {
-  margin: 0 auto;
-  max-width: 48rem;
-  padding: 2rem 1.5rem;
-}
-
-h1 {
-  margin: 0 0 0.75rem;
-  font-size: 1.75rem;
-  font-weight: 600;
-}
-
-p {
-  margin: 0 0 1.5rem;
-  color: var(--app-muted);
-  line-height: 1.5;
-}

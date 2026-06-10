@@ -1,0 +1,42 @@
+<div class="teacher-shell">
+  <nav id="teacher-dashboard-app-nav" class="app-nav" aria-label="Điều hướng giáo viên">
+    <a
+      id="teacher-dashboard-nav-dashboard"
+      routerLink="/teacher/dashboard"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      Dashboard
+    </a>
+    <a
+      id="teacher-dashboard-nav-library"
+      routerLink="/teacher/library"
+      routerLinkActive="active"
+    >
+      Thư viện đề
+    </a>
+    <a
+      id="teacher-dashboard-nav-classes"
+      routerLink="/teacher/classes"
+      routerLinkActive="active"
+    >
+      Lớp học
+    </a>
+    <a
+      id="teacher-dashboard-nav-results"
+      routerLink="/teacher/results"
+      routerLinkActive="active"
+    >
+      Kết quả
+    </a>
+
+    <div class="account-menu">
+      <span class="account-label">{{ currentUser()?.email ?? currentUser()?.userName }}</span>
+      <button type="button" class="text-button" (click)="logout()">Đăng xuất</button>
+    </div>
+  </nav>
+
+  <main class="shell-content">
+    <router-outlet />
+  </main>
+</div>

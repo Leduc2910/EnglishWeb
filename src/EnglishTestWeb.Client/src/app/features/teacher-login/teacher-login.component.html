@@ -1,0 +1,92 @@
+<main class="login-page">
+  <header id="teacher-login-brand-bar" class="brand-bar">
+    <a id="teacher-login-logo" class="brand-link" routerLink="/login">EnglishTestWeb</a>
+    <span id="teacher-login-role-chip" class="role-chip">Dành cho giáo viên</span>
+  </header>
+
+  <div class="login-layout">
+    <section id="teacher-login-context-panel" class="context-panel" aria-labelledby="teacher-login-context-title">
+      <h1 class="page-title">Đăng nhập giáo viên</h1>
+      <h2 id="teacher-login-context-title" class="context-title">
+        Tạo bài test từ PDF nhanh hơn cách thủ công.
+      </h2>
+      <p class="context-subtitle">
+        Vào tài khoản để tạo, giao và xem kết quả bài test.
+      </p>
+      <ul class="context-points">
+        <li>Upload PDF</li>
+        <li>Khai báo answer key</li>
+        <li>Publish cho lớp</li>
+      </ul>
+    </section>
+
+    <section class="login-card-wrap">
+      <form
+        id="teacher-login-form"
+        class="login-card"
+        [formGroup]="form"
+        (ngSubmit)="onSubmit()"
+        novalidate
+      >
+        <div class="field">
+          <label for="teacher-login-email-input">Email hoặc tên đăng nhập</label>
+          <input
+            id="teacher-login-email-input"
+            type="text"
+            formControlName="identifier"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="field">
+          <label for="teacher-login-password-input">Mật khẩu</label>
+          <div class="password-row">
+            <input
+              id="teacher-login-password-input"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="text-button"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-pressed]="showPassword()"
+            >
+              {{ showPassword() ? 'Ẩn' : 'Hiện' }}
+            </button>
+          </div>
+        </div>
+
+        <label class="remember-row" for="teacher-login-remember-checkbox">
+          <input id="teacher-login-remember-checkbox" type="checkbox" formControlName="rememberMe" />
+          Giữ đăng nhập trên thiết bị này
+        </label>
+
+        @if (errorMessage()) {
+          <div
+            id="teacher-login-error-alert"
+            class="error-alert"
+            role="alert"
+            [attr.data-error-code]="errorCode()"
+          >
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button
+          id="teacher-login-submit-button"
+          type="submit"
+          class="primary-button"
+          [disabled]="isSubmitting()"
+        >
+          {{ isSubmitting() ? 'Đang đăng nhập…' : 'Đăng nhập' }}
+        </button>
+
+        <a id="teacher-login-forgot-link" class="forgot-link" routerLink="/forgot-password">
+          Quên mật khẩu?
+        </a>
+      </form>
+    </section>
+  </div>
+</main>
