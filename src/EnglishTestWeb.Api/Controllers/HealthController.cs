@@ -8,7 +8,7 @@ namespace EnglishTestWeb.Api.Controllers;
 [ApiController]
 [AllowAnonymous]
 [Route("api/health")]
-public sealed class HealthController(IHealthProbe healthProbe) : ControllerBase
+public sealed class HealthController(IHealthProbe healthProbe, IWebHostEnvironment environment) : ControllerBase
 {
     [HttpGet]
     public ActionResult<HealthResponse> Get()
@@ -18,8 +18,13 @@ public sealed class HealthController(IHealthProbe healthProbe) : ControllerBase
     }
 
     [HttpPost("unsafe-smoke")]
-    public ActionResult<HealthResponse> UnsafeSmoke()
+    public ActionResult UnsafeSmoke()
     {
+        if (!environment.IsDevelopment() && !environment.IsEnvironment("Testing"))
+        {
+            return NotFound();
+        }
+
         var snapshot = healthProbe.GetSnapshot();
         return Ok(new HealthResponse(snapshot.Status, snapshot.Application));
     }

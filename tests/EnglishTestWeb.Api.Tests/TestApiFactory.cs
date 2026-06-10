@@ -33,4 +33,33 @@ public sealed class TestApiFactory : WebApplicationFactory<Program>
                 options.UseInMemoryDatabase(_databaseName));
         });
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            TryDeleteDirectory(_testRoot);
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private static void TryDeleteDirectory(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.Delete(path, recursive: true);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
 }

@@ -1,7 +1,8 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { isApiRequest } from './api-request';
 
 export const credentialsInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!request.url.startsWith('/api')) {
+  if (!isApiRequest(request.url)) {
     return next(request);
   }
 

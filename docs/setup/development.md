@@ -7,7 +7,7 @@
 - Cài [.NET SDK 10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Repo pin qua `global.json`: `10.0.202` với `rollForward: latestFeature`
 - Khuyến nghị: SDK `10.0.300+` khi có sẵn trên máy dev
-- Kiểm tra: `dotnet --version`
+- Kiểm tra: `dotnet --version` (phải là `10.0.x`)
 
 Nếu build báo thiếu SDK, cài đúng feature band hoặc nâng `global.json` cho khớp SDK đã cài.
 
@@ -15,7 +15,7 @@ Nếu build báo thiếu SDK, cài đúng feature band hoặc nâng `global.json
 
 - Angular 22 yêu cầu Node `^22.22.3 || ^24.15.0 || ^26.0.0`
 - Kiểm tra: `node --version` và `npm --version`
-- Workspace hiện tại có thể báo cảnh báo engines nếu Node < `22.22.3` — nâng Node trước khi chạy Angular smoke
+- `.\scripts\quality.ps1` fail sớm nếu Node nằm ngoài engines range
 
 ### SQL Server
 
@@ -35,6 +35,9 @@ Nếu build báo thiếu SDK, cài đúng feature band hoặc nâng `global.json
 dotnet restore EnglishTestWeb.sln
 dotnet build EnglishTestWeb.sln
 
+# EF CLI (local tool manifest)
+dotnet tool restore
+
 # Apply Identity baseline migration (cần SQL Server)
 dotnet ef database update --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj
 
@@ -48,18 +51,31 @@ npm run build
 npm test -- --watch=false
 ```
 
+### Migration troubleshooting
+
+| Triệu chứng | Nguyên nhân thường gặp | Cách xử lý |
+|-------------|------------------------|------------|
+| `dotnet-ef` command not found | Chưa restore local tool | Chạy `dotnet tool restore` |
+| Cannot open database / login failed | SQL Server chưa chạy hoặc connection string sai | Kiểm tra instance `localhost`, bật SQL Server, sửa `appsettings.Development.json` |
+| A network-related error occurred | Instance name/port không đúng | Xác nhận SQL Server Browser/TCP; thử `(localdb)\MSSQLLocalDB` nếu dùng LocalDB |
+| Build succeeded nhưng migration timeout | Firewall hoặc quyền DB user | Tạo database `EnglishTestWeb_Dev` trước hoặc dùng account có quyền `dbcreator` |
+
+`.\scripts\quality.ps1` **không** cần SQL Server — API tests dùng in-memory database.
+
 ## Local run
 
 ```powershell
-# Terminal 1 — API (https://localhost:7204)
-dotnet run --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj
+# Terminal 1 — API (http://localhost:5124)
+dotnet run --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj --launch-profile http
 
 # Terminal 2 — Angular dev server (proxy /api → API)
 cd src/EnglishTestWeb.Client
 npm start
 ```
 
-Angular `proxy.conf.json` forward `/api` tới `https://localhost:7204`.
+Angular `proxy.conf.json` forward `/api` tới `http://localhost:5124`.
+
+Nếu cần HTTPS profile (`https://localhost:7204`), cập nhật `proxy.conf.json` cho khớp profile đang chạy.
 
 ## Smoke / quality gate
 
@@ -67,7 +83,11 @@ Angular `proxy.conf.json` forward `/api` tới `https://localhost:7204`.
 .\scripts\quality.ps1
 ```
 
-Script sẽ dừng với thông báo rõ nếu thiếu SDK, Node, hoặc SQL Server (khi test cần DB).
+Script sẽ dừng với thông báo rõ nếu thiếu SDK 10.0.x, Node engines không hợp lệ, hoặc build/test smoke fail.
+
+## CI
+
+GitHub Actions workflow: `.github/workflows/quality.yml` — chạy cùng smoke sequence trên push/PR.
 
 ## Auth & security baseline
 

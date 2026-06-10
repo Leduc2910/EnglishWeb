@@ -43,7 +43,7 @@ story_location: E:\Code\EnglishTestWeb\_bmad-output\implementation-artifacts
 
 development_status:
   epic-1: in-progress
-  1-1-setup-baseline-net-10-web-api-angular-22-sql-server-identity-protected-storage: review
+  1-1-setup-baseline-net-10-web-api-angular-22-sql-server-identity-protected-storage: done
   1-2-teacher-login-and-teacher-app-shell: backlog
   1-3-class-roster-class-code-lookup-and-student-login: backlog
   1-4-base-authorization-pattern-and-class-scope-guards: backlog

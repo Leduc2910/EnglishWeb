@@ -1,6 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
-import { ApiProblemDetails, readProblemCode } from './problem-details';
+import { isApiRequest } from './api-request';
+import { ApiProblemDetails, isProblemDetails, readProblemCode } from './problem-details';
 
 export class ApiProblemError extends Error {
   readonly status: number;
@@ -20,12 +21,17 @@ export class ApiProblemError extends Error {
 export const problemDetailsInterceptor: HttpInterceptorFn = (request, next) =>
   next(request).pipe(
     catchError((error: unknown) => {
-      if (!(error instanceof HttpErrorResponse) || !error.url?.includes('/api')) {
+      if (!(error instanceof HttpErrorResponse)) {
         return throwError(() => error);
       }
 
-      const problem = error.error as ApiProblemDetails | null;
-      if (!problem || typeof problem !== 'object') {
+      const requestUrl = error.url ?? request.url;
+      if (!isApiRequest(requestUrl)) {
+        return throwError(() => error);
+      }
+
+      const problem = error.error;
+      if (!isProblemDetails(problem)) {
         return throwError(() => error);
       }
 

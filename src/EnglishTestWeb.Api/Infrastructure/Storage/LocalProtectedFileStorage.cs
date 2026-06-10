@@ -7,8 +7,18 @@ public sealed class LocalProtectedFileStorage(
     IOptions<ProtectedStorageOptions> options,
     IWebHostEnvironment environment) : IFileStorage
 {
+    private const long DefaultMaxWriteBytes = 100 * 1024 * 1024;
+
     public async Task<FileStorageResult> WriteAsync(Stream content, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(content);
+
+        var maxWriteBytes = options.Value.MaxWriteBytes ?? DefaultMaxWriteBytes;
+        if (content.CanSeek && content.Length > maxWriteBytes)
+        {
+            throw new InvalidOperationException($"Protected storage writes are limited to {maxWriteBytes} bytes.");
+        }
+
         var rootPath = ProtectedStoragePathValidator.ValidateAndNormalize(
             options.Value.RootPath,
             environment.ContentRootPath,
@@ -27,7 +37,37 @@ public sealed class LocalProtectedFileStorage(
             bufferSize: 64 * 1024,
             useAsync: true);
 
-        await content.CopyToAsync(output, cancellationToken);
-        return new FileStorageResult(storageKey, output.Length);
+        var writtenBytes = await CopyWithLimitAsync(content, output, maxWriteBytes, cancellationToken);
+        return new FileStorageResult(storageKey, writtenBytes);
+    }
+
+    private static async Task<long> CopyWithLimitAsync(
+        Stream input,
+        Stream output,
+        long maxWriteBytes,
+        CancellationToken cancellationToken)
+    {
+        var buffer = new byte[64 * 1024];
+        long totalBytes = 0;
+
+        while (true)
+        {
+            var read = await input.ReadAsync(buffer, cancellationToken);
+            if (read == 0)
+            {
+                break;
+            }
+
+            totalBytes += read;
+            if (totalBytes > maxWriteBytes)
+            {
+                throw new InvalidOperationException(
+                    $"Protected storage writes are limited to {maxWriteBytes} bytes.");
+            }
+
+            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+        }
+
+        return totalBytes;
     }
 }

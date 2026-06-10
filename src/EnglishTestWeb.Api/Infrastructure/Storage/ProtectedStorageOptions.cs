@@ -5,4 +5,6 @@ public sealed class ProtectedStorageOptions
     public const string SectionName = "ProtectedStorage";
 
     public string? RootPath { get; init; }
+
+    public long? MaxWriteBytes { get; init; }
 }

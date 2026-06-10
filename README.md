@@ -8,7 +8,7 @@ Nền tảng khảo thí tiếng Anh cho giáo viên và học sinh — baseline
 |------------|-----------|
 | .NET SDK | 10.0.x (`global.json` pin `10.0.202`, `rollForward: latestFeature`) |
 | Node.js | `^22.22.3 \|\| ^24.15.0 \|\| ^26.0.0` (Angular 22) |
-| SQL Server | LocalDB hoặc SQL Server instance |
+| SQL Server | LocalDB hoặc SQL Server instance (migration/local run) |
 | npm | Đi kèm Node |
 
 Chi tiết setup, migration, storage, và smoke commands: [docs/setup/development.md](docs/setup/development.md)
@@ -19,7 +19,7 @@ Chi tiết setup, migration, storage, và smoke commands: [docs/setup/developmen
 .\scripts\quality.ps1
 ```
 
-Chạy API build/test smoke và Angular build/test smoke. Workspace hiện chưa có Git/CI — script local là handoff gate bắt buộc trước feature stories.
+Chạy API build/test smoke và Angular build/test smoke. CI tương đương: [.github/workflows/quality.yml](.github/workflows/quality.yml).
 
 ## Cấu trúc
 

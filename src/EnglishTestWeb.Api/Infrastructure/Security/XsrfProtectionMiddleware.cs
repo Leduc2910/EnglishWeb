@@ -28,6 +28,11 @@ public static class XsrfProtectionMiddleware
                 await WriteXsrfProblemAsync(context, hasHeader ? "auth.xsrfInvalid" : "auth.xsrfRequired");
                 return;
             }
+            catch (Exception)
+            {
+                await WriteServerProblemAsync(context);
+                return;
+            }
 
             await next(context);
         });
@@ -42,8 +47,34 @@ public static class XsrfProtectionMiddleware
                 || HttpMethods.IsDelete(request.Method));
     }
 
+    private static async Task WriteServerProblemAsync(HttpContext context)
+    {
+        if (context.Response.HasStarted)
+        {
+            return;
+        }
+
+        var problem = new ProblemDetails
+        {
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "XSRF validation failed.",
+            Type = "https://englishtestweb.local/problems/server.xsrfValidationFailed",
+            Detail = "An unexpected error occurred while validating the XSRF token."
+        };
+        problem.Extensions["code"] = "server.xsrfValidationFailed";
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsync(JsonSerializer.Serialize(problem, JsonSerializerOptions.Web));
+    }
+
     private static async Task WriteXsrfProblemAsync(HttpContext context, string code)
     {
+        if (context.Response.HasStarted)
+        {
+            return;
+        }
+
         var problem = new ProblemDetails
         {
             Status = StatusCodes.Status400BadRequest,

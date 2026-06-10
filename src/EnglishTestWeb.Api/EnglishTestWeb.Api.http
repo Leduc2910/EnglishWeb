@@ -1,6 +1,9 @@
 @EnglishTestWeb.Api_HostAddress = http://localhost:5124
 
-GET {{EnglishTestWeb.Api_HostAddress}}/weatherforecast/
+GET {{EnglishTestWeb.Api_HostAddress}}/api/health
 Accept: application/json
 
 ###
+
+GET {{EnglishTestWeb.Api_HostAddress}}/api/security/xsrf-token
+Accept: application/json

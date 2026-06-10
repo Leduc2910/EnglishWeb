@@ -20,9 +20,13 @@ public static class ProtectedStoragePathValidator
         }
 
         var repositoryRoot = FindRepositoryRoot(contentRootPath);
-        if (repositoryRoot is not null && IsSameOrUnder(normalizedRoot, repositoryRoot))
+        var boundaryRoot = repositoryRoot ?? Normalize(contentRootPath);
+        if (IsSameOrUnder(normalizedRoot, boundaryRoot))
         {
-            throw new InvalidOperationException("Protected storage root must live outside the repository.");
+            throw new InvalidOperationException(
+                repositoryRoot is null
+                    ? "Protected storage root must live outside the application deployment directory."
+                    : "Protected storage root must live outside the repository.");
         }
 
         return normalizedRoot;

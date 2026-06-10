@@ -4,7 +4,7 @@ baseline_commit: NO_VCS
 
 # Story 1.1: Setup Baseline .NET 10 Web API + Angular 22 + SQL Server + Identity + Protected Storage
 
-Status: review
+Status: done
 
 ## Story
 
@@ -81,6 +81,65 @@ tôi muốn scaffold baseline solution EnglishTestWeb với backend, frontend, d
   - [x] Angular smoke: `npm install`, `npm run build`, `npm test -- --watch=false` hoặc command Vitest/Angular CLI tương đương đã xác minh.
   - [x] Tạo `scripts/quality.ps1` hoặc tài liệu command duy nhất chạy API build/test và Angular install/build/test smoke.
   - [x] Nếu repo Git/CI được khởi tạo trong quá trình triển khai, thêm minimal CI workflow. Nếu workspace vẫn không có `.git`, ghi rõ trong completion notes và coi local quality script là handoff gate bắt buộc.
+
+### Review Findings
+
+_Chunk 1 — API core — 12 patch fixed. Chunk 2 — API tests — 8 patch fixed. Chunk 3 — Angular client — 7 patch fixed. Chunk 4 — docs & quality below._
+
+- [x] [Review][Patch] Dual role seeding (migration HasData + runtime IdentityRoleSeeder) — fixed via `IdentityRoleDefinitions` shared IDs [`IdentityRoleDefinitions.cs`, `EnglishTestWebDbContext.cs`, `IdentityRoleSeeder.cs`, `Program.cs`]
+- [x] [Review][Patch] Cookie auth thiếu handler API-friendly (401/403 thay vì redirect HTML) — fixed [`Program.cs`]
+- [x] [Review][Patch] Protected storage repo guard fail-open khi không tìm thấy marker repo — fixed, fallback to contentRoot [`ProtectedStoragePathValidator.cs`]
+- [x] [Review][Patch] `EnglishTestWeb.Api.http` vẫn gọi `/weatherforecast/` không tồn tại — fixed [`EnglishTestWeb.Api.http`]
+- [x] [Review][Patch] Endpoint `POST /api/health/unsafe-smoke` expose anonymous trên mọi environment — restricted to dev/test [`HealthController.cs`]
+- [x] [Review][Patch] XSRF middleware chỉ catch `AntiforgeryValidationException` — fixed with server problem handler [`XsrfProtectionMiddleware.cs`]
+- [x] [Review][Patch] `WriteXsrfProblemAsync` thiếu guard `Response.HasStarted` — fixed [`XsrfProtectionMiddleware.cs`]
+- [x] [Review][Patch] Role seed startup không đảm bảo migrations đã apply — fixed with `MigrateAsync` [`Program.cs`]
+- [x] [Review][Patch] `LocalProtectedFileStorage.WriteAsync` thiếu guard null stream — fixed [`LocalProtectedFileStorage.cs`]
+- [x] [Review][Patch] `IFileStorage.WriteAsync` không có giới hạn kích thước — fixed with `MaxWriteBytes` [`LocalProtectedFileStorage.cs`, `ProtectedStorageOptions.cs`]
+- [x] [Review][Patch] Production không bắt buộc `DataProtection:KeysPath` — fixed fail-fast at startup [`Program.cs`]
+- [x] [Review][Patch] `TrustServerCertificate=True` trong `appsettings.json` base — removed from base, kept in Development [`appsettings.json`]
+- [x] [Review][Defer] `HttpContext` trong Application layer (`IXsrfTokenService`) — vi phạm boundary nhẹ, acceptable baseline [`IXsrfTokenService.cs:7`] — deferred, pre-existing architectural debt
+- [x] [Review][Defer] Path validator không xử lý symlink escape — baseline heuristic đủ cho local dev [`ProtectedStoragePathValidator.cs:49-52`] — deferred, harden khi deploy production storage
+- [x] [Review][Defer] `IFileStorage` write-only — read/delete thuộc upload stories sau [`IFileStorage.cs:4-5`] — deferred, by design per story scope
+
+_Chunk 2 — API tests (`tests/EnglishTestWeb.Api.Tests/**`)._
+
+- [x] [Review][Patch] Thiếu test XSRF invalid token (`auth.xsrfInvalid`) — fixed [`XsrfProtectionTests.cs`]
+- [x] [Review][Patch] Thiếu test XSRF cho unsafe verbs khác PUT/PATCH/DELETE — fixed with Theory [`XsrfProtectionTests.cs`]
+- [x] [Review][Patch] Thiếu test whitespace/empty `ProtectedStorage:RootPath` — fixed [`ProtectedStorageTests.cs`]
+- [x] [Review][Patch] Thiếu test boundary khi không có repo marker (publish layout) — fixed [`ProtectedStorageTests.cs`]
+- [x] [Review][Patch] Thiếu test `WriteAsync(null)` sau khi thêm null guard — fixed [`ProtectedStorageTests.cs`]
+- [x] [Review][Patch] Thiếu test `MaxWriteBytes` size limit — fixed [`ProtectedStorageTests.cs`]
+- [x] [Review][Patch] Temp directories không cleanup sau tests — fixed with Dispose [`TestApiFactory.cs`, `ProtectedStorageTests.cs`]
+- [x] [Review][Patch] `WriteAsync` test không verify nội dung file đọc lại — fixed [`ProtectedStorageTests.cs`]
+- [x] [Review][Defer] Protected storage public-URL inaccessibility chưa HTTP-assert — cần static file middleware setup [`ProtectedStorageTests.cs`] — deferred, baseline không expose static protected path
+- [x] [Review][Defer] Positive XSRF path (valid token allows POST) — integration phức tạp hơn smoke scope [`XsrfProtectionTests.cs`] — deferred, add khi có auth flow E2E
+- [x] [Review][Defer] `IClassFixture<TestApiFactory>` perf optimization [`XsrfProtectionTests.cs`] — deferred, smoke suite nhỏ
+
+_Chunk 3 — Angular client (`src/EnglishTestWeb.Client/**`)._
+
+- [x] [Review][Patch] `proxy.conf.json` hardcode `https://localhost:7204` — fixed to `http://localhost:5124` [`proxy.conf.json`]
+- [x] [Review][Patch] Default Angular welcome template (~344 lines) thay vì minimal shell — replaced with baseline shell [`app.html`, `app.css`, `app.spec.ts`]
+- [x] [Review][Patch] Interceptor URL guards không nhất quán — fixed via shared `isApiRequest` [`api-request.ts`, interceptors]
+- [x] [Review][Patch] `problemDetailsInterceptor` chấp nhận mọi object — fixed with `isProblemDetails` [`problem-details.ts`, `problem-details.interceptor.ts`]
+- [x] [Review][Patch] `tsconfig.json` thiếu strict flags — fixed [`tsconfig.json`]
+- [x] [Review][Patch] Auth storage test không spy storage APIs — fixed [`auth-session.service.spec.ts`]
+- [x] [Review][Patch] Thiếu HttpClient interceptor/XSRF tests — fixed [`http.interceptors.spec.ts`, `http.providers.spec.ts`]
+- [x] [Review][Defer] `AuthSessionService` chưa có session read/logout — Story 1.2 scope [`auth-session.service.ts`] — deferred, baseline foundation only
+- [x] [Review][Defer] Empty routes không có wildcard 404 — Story 1.2 shell [`app.routes.ts`] — deferred
+- [x] [Review][Defer] Correlation ID luôn mới mỗi request — acceptable baseline [`correlation-id.interceptor.ts`] — deferred
+
+_Chunk 4 — docs & quality (`README.md`, `docs/**`, `scripts/quality.ps1`, `global.json`, `dotnet-tools.json`)._
+
+- [x] [Review][Patch] `development.md` local run/proxy vẫn ghi `https://localhost:7204` — fixed to `http://localhost:5124` [`docs/setup/development.md`]
+- [x] [Review][Patch] `README.md` vẫn nói "chưa có Git/CI" — fixed, link CI workflow [`README.md`]
+- [x] [Review][Patch] `quality.ps1` không validate SDK 10.0.x / Node engines — fixed [`scripts/quality.ps1`]
+- [x] [Review][Patch] `quality.ps1` fail message generic `dotnet test failed` — fixed with context [`scripts/quality.ps1`]
+- [x] [Review][Patch] `development.md` overclaim SQL diagnostic từ quality script — fixed [`docs/setup/development.md`]
+- [x] [Review][Patch] Thiếu `dotnet tool restore` và migration troubleshooting — fixed [`docs/setup/development.md`, `dotnet-tools.json`]
+- [x] [Review][Patch] AC7 — minimal CI workflow added [`.github/workflows/quality.yml`]
+- [x] [Review][Defer] Deploy doc registry keys không ghi Windows-only caveat — acceptable MVP doc [`docs/deploy/storage-and-data-protection.md`] — deferred
+- [x] [Review][Defer] `quality.ps1` dùng `npm install` thay `npm ci` — acceptable local smoke [`scripts/quality.ps1`] — deferred
 
 ## Dev Notes
 
@@ -307,7 +366,7 @@ Auto (Cursor)
 
 - Baseline two-project stack hoàn tất: .NET 10 API + Angular 22 SPA + Identity migration + protected storage.
 - Cookie auth + XSRF baseline; Angular HttpClient với credentials, XSRF, correlation id, ProblemDetails mapping.
-- Workspace không có Git — local `scripts/quality.ps1` là handoff gate bắt buộc thay CI.
+- Git repo + `scripts/quality.ps1` + `.github/workflows/quality.yml` làm quality gate local và CI.
 
 ### File List
 
@@ -328,6 +387,6 @@ Auto (Cursor)
 
 ## Story Completion Status
 
-Status set to `review`.
+Status set to `done`.
 
-Completion note: All acceptance criteria satisfied; `.\scripts\quality.ps1` passed on 2026-06-10.
+Completion note: All acceptance criteria satisfied; code review chunks 1–4 complete; `.\scripts\quality.ps1` passed; CI workflow `.github/workflows/quality.yml` added.

@@ -60,6 +60,28 @@ builder.Services.ConfigureApplicationCookie(options =>
         ? CookieSecurePolicy.SameAsRequest
         : CookieSecurePolicy.Always;
     options.SlidingExpiration = true;
+    options.Events.OnRedirectToLogin = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        }
+
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        }
+
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
 });
 
 builder.Services.AddAntiforgery(options =>
@@ -88,6 +110,13 @@ builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();
 
 var app = builder.Build();
 
+if (!app.Environment.IsDevelopment()
+    && !app.Environment.IsEnvironment("Testing")
+    && string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    throw new InvalidOperationException("DataProtection:KeysPath is required outside Development/Testing.");
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -108,6 +137,12 @@ app.MapControllers();
 if (app.Configuration.GetValue<bool>("Identity:SeedRolesOnStartup") || args.Contains("--seed-identity-roles"))
 {
     using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+    if (dbContext.Database.IsRelational())
+    {
+        await dbContext.Database.MigrateAsync();
+    }
+
     await scope.ServiceProvider.GetRequiredService<IIdentityRoleSeeder>().SeedAsync();
 
     if (args.Contains("--seed-identity-roles"))

@@ -7,20 +7,26 @@ public sealed class IdentityRoleSeeder(RoleManager<IdentityRole> roleManager) : 
 {
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var roleName in IdentityRoleNames.All)
+        foreach (var roleDefinition in IdentityRoleDefinitions.All)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (await roleManager.RoleExistsAsync(roleName))
+            if (await roleManager.RoleExistsAsync(roleDefinition.Name!))
             {
                 continue;
             }
 
-            var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+            var result = await roleManager.CreateAsync(new IdentityRole
+            {
+                Id = roleDefinition.Id,
+                Name = roleDefinition.Name,
+                NormalizedName = roleDefinition.NormalizedName,
+                ConcurrencyStamp = roleDefinition.ConcurrencyStamp
+            });
             if (!result.Succeeded)
             {
                 var errors = string.Join("; ", result.Errors.Select(error => $"{error.Code}: {error.Description}"));
-                throw new InvalidOperationException($"Failed to seed role '{roleName}'. {errors}");
+                throw new InvalidOperationException($"Failed to seed role '{roleDefinition.Name}'. {errors}");
             }
         }
     }
