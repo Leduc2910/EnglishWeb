@@ -7,4 +7,5 @@ public static class AuthorizationDenialReason
     public const string ClassOwnership = "class.ownership";
     public const string ClassMembership = "class.membership";
     public const string ClassNotFound = "class.notFound";
+    public const string TemplateOwnership = "template.ownership";
 }

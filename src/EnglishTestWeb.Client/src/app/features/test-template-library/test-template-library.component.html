@@ -1,0 +1,172 @@
+<section class="template-library" (click)="closeMenus()">
+  <header class="header">
+    <div>
+      <h1>Thư viện đề</h1>
+      <p>Quản lý đề gốc và chọn hành động nhanh cho homework hoặc thi trực tiếp.</p>
+    </div>
+    <a class="btn-primary" routerLink="/teacher/library/new/setup">Tạo đề mới</a>
+  </header>
+
+  <section class="filters" aria-label="Bộ lọc thư viện đề">
+    <label class="filter-field">
+      <span class="filter-label">Tìm kiếm</span>
+      <input
+        type="search"
+        class="filter-control"
+        placeholder="Tìm theo tên đề"
+        [value]="filters().q"
+        (input)="onSearchInput($event)"
+      />
+    </label>
+
+    <label class="filter-field">
+      <span class="filter-label">Kỹ năng</span>
+      <select class="filter-control" [value]="filters().skill" (change)="onSkillChange($event)">
+        @for (option of skillOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="filter-field">
+      <span class="filter-label">Trạng thái</span>
+      <select class="filter-control" [value]="filters().status" (change)="onStatusChange($event)">
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+  </section>
+
+  @if (blockedActionMessage()) {
+    <p class="blocked-action" role="alert">{{ blockedActionMessage() }}</p>
+  }
+
+  @if (isLoading()) {
+    <p class="loading">Đang tải…</p>
+  } @else if (errorMessage()) {
+    <div class="error-banner">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="btn-secondary" (click)="retryLoad()">Thử lại</button>
+    </div>
+  } @else if (templates().length === 0) {
+    <div class="empty-state">
+      <h2>Chưa có đề nào</h2>
+      <p>Tạo đề Reading, Listening hoặc Speaking từ tài liệu có sẵn.</p>
+      @if (hasActiveFilters()) {
+        <button type="button" class="btn-secondary" (click)="clearFilters()">Xóa bộ lọc</button>
+      }
+      <a class="btn-primary" routerLink="/teacher/library/new/setup">Tạo đề mới</a>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Tên đề</th>
+            <th scope="col">Kỹ năng</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Lần dùng gần nhất</th>
+            <th scope="col">Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (template of templates(); track template.templateId) {
+            <tr>
+              <td class="title-cell">{{ template.title }}</td>
+              <td>
+                <span class="skill-badge">{{ skillLabel(template.skill) }}</span>
+              </td>
+              <td>
+                <span class="status-badge" [attr.data-status]="template.status">
+                  {{ statusLabel(template.status) }}
+                </span>
+              </td>
+              <td>{{ lastUsedLabel(template.lastUsedAt) }}</td>
+              <td class="actions-cell">
+                <button
+                  type="button"
+                  class="actions-trigger"
+                  [attr.aria-expanded]="openMenuId() === template.templateId"
+                  [attr.aria-controls]="'menu-' + template.templateId"
+                  (click)="toggleMenu(template.templateId, $event)"
+                >
+                  Hành động
+                </button>
+                @if (openMenuId() === template.templateId) {
+                  <menu class="actions-menu" [id]="'menu-' + template.templateId" (click)="$event.stopPropagation()">
+                    <li>
+                      <button type="button" (click)="inspectTemplate(template, $event)">
+                        Xem / chỉnh sửa
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        [disabled]="!isReady(template)"
+                        [attr.aria-disabled]="!isReady(template)"
+                        (click)="onHomeworkAction(template, $event)"
+                      >
+                        Giao homework
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        [disabled]="!isReady(template)"
+                        [attr.aria-disabled]="!isReady(template)"
+                        (click)="onLiveExamAction(template, $event)"
+                      >
+                        Tạo phiên thi trực tiếp
+                      </button>
+                    </li>
+                  </menu>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (inspectLoading()) {
+    <p class="inspect-loading">Đang tải chi tiết đề…</p>
+  } @else if (inspectError()) {
+    <div class="inspect-panel inspect-error">
+      <p>{{ inspectError() }}</p>
+      <button type="button" class="btn-secondary" (click)="closeInspectPanel()">Đóng</button>
+    </div>
+  } @else if (inspectedTemplate(); as detail) {
+    <section class="inspect-panel" aria-label="Chi tiết đề gốc">
+      <header class="inspect-header">
+        <h2>{{ detail.title }}</h2>
+        <button type="button" class="btn-secondary" (click)="closeInspectPanel()">Đóng</button>
+      </header>
+      <dl class="inspect-meta">
+        <div>
+          <dt>Kỹ năng</dt>
+          <dd>{{ skillLabel(detail.skill) }}</dd>
+        </div>
+        <div>
+          <dt>Trạng thái</dt>
+          <dd>{{ statusLabel(detail.status) }}</dd>
+        </div>
+        <div>
+          <dt>Lần dùng gần nhất</dt>
+          <dd>{{ lastUsedLabel(detail.lastUsedAt) }}</dd>
+        </div>
+        <div>
+          <dt>Cập nhật</dt>
+          <dd>{{ lastUsedLabel(detail.updatedAt) }}</dd>
+        </div>
+        @if (detail.description) {
+          <div class="inspect-description">
+            <dt>Mô tả</dt>
+            <dd>{{ detail.description }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+  }
+</section>

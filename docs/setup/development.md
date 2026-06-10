@@ -120,7 +120,8 @@ dotnet run --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj -- --seed-
 | `/login` | Teacher login |
 | `/forgot-password` | Placeholder quên mật khẩu |
 | `/teacher/dashboard` | Dashboard placeholder |
-| `/teacher/library` | Placeholder Thư viện đề |
+| `/teacher/library` | Thư viện đề — list, search, filter (Story 2.1) |
+| `/teacher/library/new/setup` | Placeholder tạo đề mới (Story 2.2) |
 | `/teacher/classes` | Roster lớp + danh sách học sinh (Story 1.3) |
 | `/teacher/results` | Placeholder Kết quả |
 
@@ -159,6 +160,20 @@ dotnet run --project src/EnglishTestWeb.Api/EnglishTestWeb.Api.csproj -- --seed-
 5. Teacher: đăng nhập `/login`, mở `/teacher/classes` — thấy mã lớp và học sinh seeded.
 
 API endpoints: `GET /api/classes/by-code/{code}`, `GET /api/classes`, `GET /api/classes/{id}`, `GET /api/classes/current`, `POST /api/auth/student/login`.
+
+## Teacher template library (Story 2.1)
+
+MVP demo seed tạo thêm 3 đề mẫu (Draft, Ready, Archived) cho dev teacher khi `Identity:SeedMvpDemoOnStartup` = `true`.
+
+### Teacher library smoke (local)
+
+1. Chạy API + Angular dev server (đảm bảo đã seed MVP demo).
+2. Đăng nhập teacher tại `/login`.
+3. Mở `/teacher/library` — thấy danh sách đề với skill, status, last-used.
+4. Thử filter kỹ năng/trạng thái và search — URL cập nhật query params (`skill`, `status`, `q`).
+5. Mở menu hành động trên đề Draft — "Giao homework" và "Tạo phiên thi trực tiếp" bị disabled; thông báo `ERR_TEMPLATE_NOT_READY` khi cố thực hiện.
+
+API endpoints: `GET /api/test-templates`, `GET /api/test-templates/{id}` (teacher-only; cross-teacher → 404 `templates.notFound`).
 
 ## Server-side class context (Story 1.4)
 

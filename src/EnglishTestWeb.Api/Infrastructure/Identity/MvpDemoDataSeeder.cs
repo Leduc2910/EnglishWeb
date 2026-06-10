@@ -1,5 +1,6 @@
 using EnglishTestWeb.Api.Domain.Classes;
 using EnglishTestWeb.Api.Domain.Identity;
+using EnglishTestWeb.Api.Domain.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Identity;
 using EnglishTestWeb.Api.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -50,6 +51,7 @@ public sealed class MvpDemoDataSeeder(
 
         var student = await EnsureStudentAsync(options.Value, cancellationToken);
         await EnsureClassAndMembershipAsync(options.Value, teacher.Id, student.Id, cancellationToken);
+        await EnsureDemoTemplatesAsync(teacher.Id, cancellationToken);
     }
 
     private async Task<ApplicationUser> EnsureStudentAsync(
@@ -147,4 +149,70 @@ public sealed class MvpDemoDataSeeder(
             await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
+
+    private async Task EnsureDemoTemplatesAsync(string teacherId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var seeds = new[]
+        {
+            new DemoTemplateSeed(
+                "demo-reading-draft",
+                "Reading Unit 3 — Draft",
+                TemplateSkill.Reading,
+                TemplateStatuses.Draft,
+                null,
+                null),
+            new DemoTemplateSeed(
+                "demo-listening-ready",
+                "Listening Midterm — Ready",
+                TemplateSkill.Listening,
+                TemplateStatuses.Ready,
+                now.AddDays(-7),
+                null),
+            new DemoTemplateSeed(
+                "demo-speaking-archived",
+                "Speaking Practice — Archived",
+                TemplateSkill.Speaking,
+                TemplateStatuses.Archived,
+                now.AddDays(-30),
+                now.AddDays(-5))
+        };
+
+        foreach (var seed in seeds)
+        {
+            var existing = await dbContext.TestTemplates
+                .FirstOrDefaultAsync(
+                    entity => entity.TeacherId == teacherId && entity.Title == seed.Title,
+                    cancellationToken);
+
+            if (existing is not null)
+            {
+                continue;
+            }
+
+            dbContext.TestTemplates.Add(new TestTemplate
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = teacherId,
+                Title = seed.Title,
+                Skill = seed.Skill,
+                Description = $"MVP demo template ({seed.Key}).",
+                Status = seed.Status,
+                CreatedAt = now,
+                UpdatedAt = now,
+                LastUsedAt = seed.LastUsedAt,
+                ArchivedAt = seed.ArchivedAt
+            });
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private sealed record DemoTemplateSeed(
+        string Key,
+        string Title,
+        string Skill,
+        string Status,
+        DateTimeOffset? LastUsedAt,
+        DateTimeOffset? ArchivedAt);
 }

@@ -3,6 +3,7 @@ using System.Text.Json;
 using EnglishTestWeb.Api.Infrastructure.Persistence;
 using EnglishTestWeb.Api.Tests.Auth;
 using EnglishTestWeb.Api.Tests.Classes;
+using EnglishTestWeb.Api.Tests.TestTemplates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -319,6 +320,73 @@ public sealed class AuthorizationMatrixTests
                 record.ReasonCategory == EnglishTestWeb.Api.Application.Security.AuthorizationDenialReason.ClassMembership
                 && record.ResourceType == "class"
                 && record.CorrelationId == "matrix-corr-001");
+    }
+
+    [Fact]
+    public async Task Unauthenticated_GetTestTemplates_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/test-templates");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Student_GetTestTemplates_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var response = await client.GetAsync("/api/test-templates");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_GetTestTemplateDetail_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoReadyTemplateIdAsync(factory);
+        var response = await client.GetAsync($"/api/test-templates/{templateId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("templates.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_GetTestTemplateDetail_EmitsAuditWithOwnershipReason()
+    {
+        await using var factory = new AuditingTestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoReadyTemplateIdAsync(factory);
+        var response = await client.GetAsync($"/api/test-templates/{templateId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains(
+            factory.AuditLogger.Records,
+            record =>
+                record.ReasonCategory == EnglishTestWeb.Api.Application.Security.AuthorizationDenialReason.TemplateOwnership
+                && record.ResourceType == "test-template"
+                && record.ResourceId == templateId.ToString());
     }
 
     [Fact]

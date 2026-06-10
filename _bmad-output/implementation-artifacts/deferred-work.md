@@ -35,6 +35,10 @@ _Chunk 1 — API core only._
 - Deploy doc registry keys không ghi Windows-only caveat — acceptable MVP doc.
 - `quality.ps1` dùng `npm install` thay `npm ci` — acceptable local smoke gate.
 
+## Deferred from: code review of 2-1-thu-vien-de-list-search-filter-and-template-inspection (2026-06-10)
+
+- Triple authorization check trên `GET /api/test-templates/{id}` — mirror `ClassesController`; refactor chung khi extract shared helper.
+
 ## Deferred from: code review of 1-4-base-authorization-pattern-and-class-scope-guards (2026-06-10)
 
 - `GetClassContextByIdAsync` không có auth riêng — caller phải guard trước; document khi thêm caller mới.

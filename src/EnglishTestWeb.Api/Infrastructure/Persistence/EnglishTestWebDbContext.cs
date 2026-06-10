@@ -1,5 +1,6 @@
 using EnglishTestWeb.Api.Domain.Classes;
 using EnglishTestWeb.Api.Domain.Identity;
+using EnglishTestWeb.Api.Domain.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -13,6 +14,8 @@ public sealed class EnglishTestWebDbContext(DbContextOptions<EnglishTestWebDbCon
     public DbSet<SchoolClass> Classes => Set<SchoolClass>();
 
     public DbSet<ClassMembership> ClassMemberships => Set<ClassMembership>();
+
+    public DbSet<TestTemplate> TestTemplates => Set<TestTemplate>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

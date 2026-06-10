@@ -1,5 +1,6 @@
 using EnglishTestWeb.Api.Application.Auth;
 using EnglishTestWeb.Api.Application.Classes;
+using EnglishTestWeb.Api.Application.TestTemplates;
 using EnglishTestWeb.Api.Application.Common;
 using EnglishTestWeb.Api.Application.Files;
 using EnglishTestWeb.Api.Application.Identity;
@@ -10,6 +11,7 @@ using EnglishTestWeb.Api.Infrastructure.Authorization;
 using EnglishTestWeb.Api.Infrastructure.Authorization.Handlers;
 using EnglishTestWeb.Api.Infrastructure.Authorization.Policies;
 using EnglishTestWeb.Api.Infrastructure.Classes;
+using EnglishTestWeb.Api.Infrastructure.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Health;
 using EnglishTestWeb.Api.Infrastructure.Identity;
 using EnglishTestWeb.Api.Infrastructure.Persistence;
@@ -126,11 +128,13 @@ builder.Services.AddScoped<IMvpDemoDataSeeder, MvpDemoDataSeeder>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 builder.Services.AddScoped<IClassAuthorizationService, ClassAuthorizationService>();
+builder.Services.AddScoped<ITemplateAuthorizationService, TemplateAuthorizationService>();
 builder.Services.AddScoped<IHiddenResourceResponseFactory, HiddenResourceResponseFactory>();
 builder.Services.AddScoped<IAuthorizationAuditLogger, AuthorizationAuditLogger>();
 builder.Services.AddScoped<AuthorizationDenialAuditor>();
 builder.Services.AddScoped<IAuthorizationHandler, ClassTeacherAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ClassStudentAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TemplateTeacherAuthorizationHandler>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(AuthorizationPolicies.CanViewClassAsTeacher, policy =>
@@ -143,8 +147,14 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(IdentityRoleNames.Student);
         policy.AddRequirements(new ClassStudentViewRequirement());
     });
+    options.AddPolicy(AuthorizationPolicies.CanViewTemplateAsTeacher, policy =>
+    {
+        policy.RequireRole(IdentityRoleNames.Teacher);
+        policy.AddRequirements(new TemplateTeacherViewRequirement());
+    });
 });
 builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<ITestTemplateService, TestTemplateService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();
 

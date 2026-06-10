@@ -49,8 +49,8 @@ development_status:
   1-4-base-authorization-pattern-and-class-scope-guards: done
   epic-1-retrospective: optional
 
-  epic-2: backlog
-  2-1-thu-vien-de-list-search-filter-and-template-inspection: backlog
+  epic-2: in-progress
+  2-1-thu-vien-de-list-search-filter-and-template-inspection: done
   2-2-create-edit-and-save-draft-template-setup: backlog
   2-3-protected-testmaterial-upload-and-preview: backlog
   2-4-answerkey-and-scoring-configuration: backlog

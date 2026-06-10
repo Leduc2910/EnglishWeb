@@ -72,12 +72,19 @@ export const routes: Routes = [
       {
         path: 'library',
         loadComponent: () =>
+          import('./features/test-template-library/test-template-library.component').then(
+            (module) => module.TestTemplateLibraryComponent,
+          ),
+      },
+      {
+        path: 'library/new/setup',
+        loadComponent: () =>
           import('./features/teacher-placeholder/teacher-placeholder.component').then(
             (module) => module.TeacherPlaceholderComponent,
           ),
         data: {
-          title: 'Thư viện đề',
-          description: 'Epic 2 sẽ triển khai thư viện đề gốc.',
+          title: 'Tạo đề mới',
+          description: 'Story 2.2 sẽ triển khai wizard tạo đề gốc.',
         },
       },
       {

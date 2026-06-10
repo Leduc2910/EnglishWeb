@@ -1,0 +1,271 @@
+.template-library {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+}
+
+.header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.filter-field {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.filter-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.filter-control {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font: inherit;
+  background: #fff;
+}
+
+.filter-control:focus-visible,
+.actions-trigger:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.actions-menu button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+th {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.title-cell {
+  font-weight: 600;
+}
+
+.skill-badge,
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.skill-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.status-badge[data-status='draft'] {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge[data-status='ready'] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge[data-status='archived'] {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.actions-cell {
+  position: relative;
+  width: 8rem;
+}
+
+.actions-trigger {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.actions-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.25rem);
+  z-index: 10;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 8%);
+}
+
+.actions-menu button {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.actions-menu button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.actions-menu button:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  border: 0;
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn-secondary {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.empty-state {
+  display: grid;
+  gap: 0.75rem;
+  padding: 2rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 0.75rem;
+  text-align: center;
+}
+
+.empty-state h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.error-banner,
+.blocked-action {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.loading {
+  color: #6b7280;
+}
+
+.inspect-panel {
+  padding: 1rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #f9fafb;
+}
+
+.inspect-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.inspect-header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.inspect-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0;
+}
+
+.inspect-meta dt {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.inspect-meta dd {
+  margin: 0.25rem 0 0;
+  font-weight: 600;
+  color: #111827;
+}
+
+.inspect-description {
+  grid-column: 1 / -1;
+}
+
+.inspect-error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.inspect-loading {
+  color: #6b7280;
+}
