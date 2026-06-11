@@ -562,6 +562,144 @@ public sealed class AuthorizationMatrixTests
     }
 
     [Fact]
+    public async Task Unauthenticated_GetAnswerKey_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/test-templates/{templateId}/answer-key");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Student_GetAnswerKey_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await client.GetAsync($"/api/test-templates/{templateId}/answer-key");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_GetAnswerKey_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await client.GetAsync($"/api/test-templates/{templateId}/answer-key");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("templates.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Unauthenticated_PutAnswerKey_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        using var client = factory.CreateClient();
+
+        var response = await AuthTestHelper.PutJsonAsync(
+            client,
+            $"/api/test-templates/{templateId}/answer-key",
+            new { questionCount = 1, scoringMode = "equal", totalScore = 10, rows = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Student_PutAnswerKey_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PutJsonAsync(
+            client,
+            $"/api/test-templates/{templateId}/answer-key",
+            new { questionCount = 1, scoringMode = "equal", totalScore = 10, rows = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task TeacherOwner_PutAnswerKeyOnDraft_ReturnsOk()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PutJsonAsync(
+            client,
+            $"/api/test-templates/{templateId}/answer-key",
+            new { questionCount = 1, scoringMode = "equal", totalScore = 10, rows = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TeacherOwner_PutAnswerKeyOnReady_ReturnsConflict()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoReadyTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PutJsonAsync(
+            client,
+            $"/api/test-templates/{templateId}/answer-key",
+            new { questionCount = 1, scoringMode = "equal", totalScore = 10, rows = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("templates.notEditable", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_PutAnswerKey_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PutJsonAsync(
+            client,
+            $"/api/test-templates/{templateId}/answer-key",
+            new { questionCount = 1, scoringMode = "equal", totalScore = 10, rows = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("templates.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
     public async Task TeacherNonOwner_GetClassDetail_EmitsAuditWithOwnershipReason()
     {
         await using var factory = new AuditingTestApiFactory();

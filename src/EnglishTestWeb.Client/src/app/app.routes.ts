@@ -100,12 +100,19 @@ export const routes: Routes = [
       {
         path: 'library/:templateId/answer-key',
         loadComponent: () =>
+          import('./features/test-template-answer-key/test-template-answer-key.component').then(
+            (module) => module.TestTemplateAnswerKeyComponent,
+          ),
+      },
+      {
+        path: 'library/:templateId/review',
+        loadComponent: () =>
           import('./features/teacher-placeholder/teacher-placeholder.component').then(
             (module) => module.TeacherPlaceholderComponent,
           ),
         data: {
-          title: 'Answer key & Scoring',
-          description: 'Story 2.4 sẽ triển khai cấu hình answer key.',
+          title: 'Review & Ready',
+          description: 'Story 2.5 sẽ triển khai review template và mark Ready.',
         },
       },
       {

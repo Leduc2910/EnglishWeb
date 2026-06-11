@@ -1,5 +1,5 @@
 # generated: 2026-06-09
-# last_updated: 2026-06-10
+# last_updated: 2026-06-11
 # project: EnglishTestWeb
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review
 
 generated: 2026-06-09
-last_updated: 2026-06-10
+last_updated: 2026-06-11
 project: EnglishTestWeb
 project_key: NOKEY
 tracking_system: file-system
@@ -53,7 +53,7 @@ development_status:
   2-1-thu-vien-de-list-search-filter-and-template-inspection: done
   2-2-create-edit-and-save-draft-template-setup: done
   2-3-protected-testmaterial-upload-and-preview: done
-  2-4-answerkey-and-scoring-configuration: backlog
+  2-4-answerkey-and-scoring-configuration: review
   2-5-review-template-mark-ready-and-next-actions: backlog
   epic-2-retrospective: optional
 

@@ -75,6 +75,31 @@ internal static class TestTemplatesTestHelper
             .FirstAsync();
     }
 
+    internal static async Task<Guid> EnsureSpeakingDraftTemplateAsync(TestApiFactory factory)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        var teacher = await userManager.FindByEmailAsync(Auth.AuthTestHelper.TeacherEmail)
+            ?? throw new InvalidOperationException("Teacher user missing.");
+
+        const string title = "Test Speaking Draft";
+        await EnsureTemplateAsync(
+            dbContext,
+            teacher.Id,
+            title,
+            TemplateSkill.Speaking,
+            TemplateStatuses.Draft,
+            null,
+            null);
+
+        return await dbContext.TestTemplates
+            .Where(entity => entity.TeacherId == teacher.Id && entity.Title == title)
+            .Select(entity => entity.Id)
+            .FirstAsync();
+    }
+
     internal static async Task<Guid> GetDemoReadyTemplateIdAsync(TestApiFactory factory)
     {
         using var scope = factory.Services.CreateScope();

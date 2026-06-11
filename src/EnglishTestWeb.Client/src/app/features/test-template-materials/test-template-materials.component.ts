@@ -88,6 +88,10 @@ export class TestTemplateMaterialsComponent implements OnInit, OnDestroy {
     () => this.requiredSlotsSatisfied() && !this.isAnyUploading(),
   );
 
+  protected readonly continueLabel = computed(() =>
+    this.templateSkill() === 'speaking' ? 'Tiếp tục sang Review' : 'Tiếp tục nhập answer key',
+  );
+
   ngOnInit(): void {
     this.paramSubscription = this.route.paramMap.subscribe((params) => {
       const templateId = params.get('templateId');
@@ -228,7 +232,8 @@ export class TestTemplateMaterialsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    await this.router.navigate(['/teacher/library', templateId, 'answer-key']);
+    const nextStep = this.templateSkill() === 'speaking' ? 'review' : 'answer-key';
+    await this.router.navigate(['/teacher/library', templateId, nextStep]);
   }
 
   protected async onBack(): Promise<void> {

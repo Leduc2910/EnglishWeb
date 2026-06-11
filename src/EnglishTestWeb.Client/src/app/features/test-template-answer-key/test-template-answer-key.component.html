@@ -1,0 +1,183 @@
+<section class="template-answer-key">
+  <header id="answer-key-wizard-header" class="wizard-header">
+    <div>
+      <h1 id="answer-key-title">{{ templateTitle() || 'Answer key & Scoring' }}</h1>
+      <p id="answer-key-step" class="step-label">Bước 3/4: Answer key & Scoring</p>
+    </div>
+    <nav id="answer-key-stepper" class="stepper" aria-label="Tiến trình tạo đề">
+      <span class="step completed">Thông tin đề</span>
+      <span class="step completed">Upload tài liệu</span>
+      <span class="step active" [class.skipped]="isSpeaking()">Answer key</span>
+      <span class="step pending">Review</span>
+    </nav>
+  </header>
+
+  @if (isLoading()) {
+    <p class="loading">Đang tải answer key…</p>
+  } @else if (loadError()) {
+    <div class="error-banner" role="alert">
+      <p>{{ loadError() }}</p>
+      <a class="btn-secondary" routerLink="/teacher/library">Quay lại thư viện</a>
+    </div>
+  } @else if (isSpeaking()) {
+    <div id="answer-key-not-applicable" class="info-banner" role="status">
+      <p>Answer key không áp dụng cho kỹ năng Speaking. Bài Speaking được giáo viên chấm thủ công.</p>
+      <button type="button" class="btn-primary" (click)="goToReview()">Tiếp tục sang Review</button>
+    </div>
+  } @else {
+    @if (bannerError()) {
+      <p class="error-banner" role="alert">{{ bannerError() }}</p>
+    }
+    @if (saveSuccess()) {
+      <p class="success-banner" role="status">{{ saveSuccess() }}</p>
+    }
+
+    <div class="wizard-body">
+      <div class="config-column">
+        <section id="answer-key-controls" class="controls">
+          <div class="field">
+            <label for="answer-key-question-count-input">Số câu hỏi (1–200)</label>
+            <input
+              id="answer-key-question-count-input"
+              type="number"
+              min="1"
+              max="200"
+              step="1"
+              [value]="questionCountInput()"
+              [disabled]="saveInFlight()"
+              (input)="onQuestionCountChange($event)"
+            />
+            @if (!questionCountValid()) {
+              <p class="field-error" role="alert">Số câu phải là số nguyên từ 1 đến 200.</p>
+            }
+          </div>
+
+          <div class="field">
+            <span class="field-label">Cách tính điểm</span>
+            <div id="answer-key-scoring-mode-control" class="segmented" role="group" aria-label="Cách tính điểm">
+              <button
+                type="button"
+                class="segment"
+                [class.selected]="scoringMode() === 'equal'"
+                [disabled]="saveInFlight()"
+                (click)="onScoringModeChange('equal')"
+              >
+                Điểm đều
+              </button>
+              <button
+                type="button"
+                class="segment"
+                [class.selected]="scoringMode() === 'per-question'"
+                [disabled]="saveInFlight()"
+                (click)="onScoringModeChange('per-question')"
+              >
+                Điểm từng câu
+              </button>
+            </div>
+          </div>
+
+          @if (scoringMode() === 'equal') {
+            <div class="field">
+              <label for="answer-key-total-score-input">Tổng điểm</label>
+              <input
+                id="answer-key-total-score-input"
+                type="number"
+                min="0"
+                step="0.25"
+                [value]="totalScore() ?? ''"
+                [disabled]="saveInFlight()"
+                (input)="onTotalScoreChange($event)"
+              />
+            </div>
+          }
+        </section>
+
+        <section id="answer-key-grid" class="answer-grid" aria-label="Bảng đáp án">
+          @for (row of rows(); track row.questionNumber) {
+            <div class="answer-key-row" [class.missing]="!row.correctAnswer.trim()">
+              <span class="question-number">Câu {{ row.questionNumber }}</span>
+              <input
+                class="answer-key-answer-input"
+                type="text"
+                [attr.aria-label]="'Đáp án câu ' + row.questionNumber"
+                placeholder="Đáp án"
+                [value]="row.correctAnswer"
+                [disabled]="saveInFlight()"
+                (input)="onAnswerChange(row.questionNumber, $event)"
+              />
+              @if (scoringMode() === 'per-question') {
+                <input
+                  class="answer-key-score-input"
+                  type="number"
+                  min="0"
+                  step="0.25"
+                  [attr.aria-label]="'Điểm câu ' + row.questionNumber"
+                  placeholder="Điểm"
+                  [value]="row.score ?? ''"
+                  [disabled]="saveInFlight()"
+                  (input)="onRowScoreChange(row.questionNumber, $event)"
+                />
+              }
+            </div>
+          }
+        </section>
+      </div>
+
+      <aside id="answer-key-validation-summary" class="validation-summary" aria-live="polite">
+        <h2>Tóm tắt</h2>
+        <p id="answer-key-missing-count">
+          Câu thiếu đáp án: <strong>{{ missingAnswerCount() }}</strong>
+        </p>
+        <p id="answer-key-score-total">
+          Tổng điểm: <strong>{{ scoreTotal() }}</strong>
+        </p>
+
+        @if (warningList().length > 0) {
+          <ul id="answer-key-warning-list" class="warning-list">
+            @for (warning of warningList(); track warning) {
+              <li>{{ warning }}</li>
+            }
+          </ul>
+        }
+
+        @if (continueErrors().length > 0) {
+          <ul class="error-list" role="alert">
+            @for (error of continueErrors(); track error.message) {
+              <li>{{ error.message }}</li>
+            }
+          </ul>
+        }
+      </aside>
+    </div>
+
+    <footer id="answer-key-footer-actions" class="footer-actions">
+      <button
+        id="answer-key-back-button"
+        type="button"
+        class="btn-secondary"
+        [disabled]="saveInFlight()"
+        (click)="onBack()"
+      >
+        Quay lại
+      </button>
+      <button
+        id="answer-key-save-draft-button"
+        type="button"
+        class="btn-secondary"
+        [disabled]="saveInFlight() || !questionCountValid()"
+        (click)="onSaveDraft()"
+      >
+        {{ saveInFlight() ? 'Đang lưu…' : 'Lưu nháp' }}
+      </button>
+      <button
+        id="answer-key-continue-button"
+        type="button"
+        class="btn-primary"
+        [disabled]="!canContinue()"
+        (click)="onContinue()"
+      >
+        Tiếp tục sang Review
+      </button>
+    </footer>
+  }
+</section>

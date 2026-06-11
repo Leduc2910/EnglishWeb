@@ -195,7 +195,7 @@ API endpoints: `POST /api/test-templates`, `PUT /api/test-templates/{id}` (draft
 1. Hoàn thành setup draft (Story 2.2) hoặc mở đề Nháp → **Xem / chỉnh sửa** → tiếp tục tới materials.
 2. Mở `/teacher/library/{templateId}/materials` — thấy dropzone PDF, checklist theo kỹ năng, sidebar trạng thái upload.
 3. Upload file PDF hợp lệ — thấy progress, file card (tên, size, fileId), nút **Xem nhanh PDF**.
-4. **Tiếp tục nhập answer key** chỉ bật sau khi PDF bắt buộc upload xong → placeholder answer-key (Story 2.4).
+4. **Tiếp tục nhập answer key** chỉ bật sau khi PDF bắt buộc upload xong → answer-key (Story 2.4); với đề Speaking, nút chuyển thẳng tới Review.
 
 API endpoints:
 
@@ -203,6 +203,22 @@ API endpoints:
 - `POST /api/test-templates/{id}/materials` — multipart `role` + `file` (draft-only)
 - `DELETE /api/test-templates/{id}/materials/{materialId}` — remove/replace prep
 - `GET /api/files/{fileId}/content` — authorized preview stream (range support)
+
+## Teacher answer key & scoring (Story 2.4)
+
+### Answer key smoke (local)
+
+1. Hoàn thành upload materials (Story 2.3) cho đề Reading/Listening Nháp → **Tiếp tục nhập answer key**.
+2. Mở `/teacher/library/{templateId}/answer-key` — thấy Step 3/4 với ô số câu, chế độ tính điểm (Điểm đều / Điểm từng câu), answer grid và validation summary.
+3. Nhập số câu (1–200) — grid tự sinh rows; nhập đáp án từng câu, summary cập nhật số câu thiếu và tổng điểm.
+4. **Lưu nháp** — lưu partial (chưa cần đủ đáp án); reload trang thấy dữ liệu giữ nguyên.
+5. **Tiếp tục sang Review** chỉ đi tiếp khi đủ đáp án và điểm hợp lệ (chặn với `ERR_ANSWER_MISSING` / `ERR_QUESTION_COUNT_INVALID`).
+6. Với đề Speaking, trang answer-key hiển thị thông báo "không áp dụng" + nút chuyển sang Review.
+
+API endpoints:
+
+- `GET /api/test-templates/{id}/answer-key` — 404 `answerKey.notFound` khi chưa tạo draft
+- `PUT /api/test-templates/{id}/answer-key` — upsert draft (draft-only; Ready/Archived → 409 `templates.notEditable`; Speaking → 400 `answerKey.notApplicable`)
 
 ## Server-side class context (Story 1.4)
 

@@ -22,6 +22,8 @@ public sealed class EnglishTestWebDbContext(DbContextOptions<EnglishTestWebDbCon
 
     public DbSet<TestMaterial> TestMaterials => Set<TestMaterial>();
 
+    public DbSet<AnswerKeyVersion> AnswerKeyVersions => Set<AnswerKeyVersion>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

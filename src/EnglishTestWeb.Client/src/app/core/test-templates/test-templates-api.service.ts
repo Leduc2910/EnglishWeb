@@ -2,6 +2,7 @@ import { HttpClient, HttpEventType, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { filter, firstValueFrom, map } from 'rxjs';
 import {
+  AnswerKeyVersionResponse,
   MaterialRole,
   TestMaterialItem,
   TestMaterialListResponse,
@@ -9,6 +10,7 @@ import {
   TestTemplateListFilters,
   TestTemplateListItem,
   TestTemplateSetupPayload,
+  UpsertAnswerKeyRequest,
 } from './test-templates.models';
 
 @Injectable({ providedIn: 'root' })
@@ -91,6 +93,24 @@ export class TestTemplatesApiService {
           }),
           filter((value): value is TestMaterialItem => value !== null),
         ),
+    );
+  }
+
+  getAnswerKey(templateId: string): Promise<AnswerKeyVersionResponse> {
+    return firstValueFrom(
+      this.http.get<AnswerKeyVersionResponse>(`/api/test-templates/${templateId}/answer-key`),
+    );
+  }
+
+  upsertAnswerKey(
+    templateId: string,
+    request: UpsertAnswerKeyRequest,
+  ): Promise<AnswerKeyVersionResponse> {
+    return firstValueFrom(
+      this.http.put<AnswerKeyVersionResponse>(
+        `/api/test-templates/${templateId}/answer-key`,
+        request,
+      ),
     );
   }
 

@@ -52,6 +52,32 @@ export interface TestMaterialListResponse {
   items: TestMaterialItem[];
 }
 
+export type ScoringMode = 'equal' | 'per-question';
+
+export interface AnswerKeyRowResponse {
+  questionNumber: number;
+  correctAnswer: string;
+  score: number | null;
+}
+
+export interface AnswerKeyVersionResponse {
+  answerKeyVersionId: string;
+  templateId: string;
+  status: string;
+  scoringMode: ScoringMode;
+  questionCount: number;
+  totalScore: number | null;
+  rows: AnswerKeyRowResponse[];
+  updatedAt: string;
+}
+
+export interface UpsertAnswerKeyRequest {
+  questionCount: number;
+  scoringMode: ScoringMode;
+  totalScore: number | null;
+  rows: { questionNumber: number; correctAnswer: string; score: number | null }[];
+}
+
 export const PDF_MAX_BYTES = 25 * 1024 * 1024;
 
 export const AUDIO_MAX_BYTES = 50 * 1024 * 1024;
@@ -83,6 +109,17 @@ export const TEMPLATE_ERROR_MESSAGES: Record<string, string> = {
   'materials.uploadFailed': 'Upload thất bại. Vui lòng thử lại.',
   'materials.notFound': 'Không tìm thấy tài liệu.',
   'files.notFound': 'Không tìm thấy file.',
+  ERR_QUESTION_COUNT_INVALID: 'Số câu phải là số nguyên từ 1 đến 200.',
+  ERR_ANSWER_MISSING: 'Còn câu hỏi chưa có đáp án.',
+  ERR_TOTAL_SCORE_INVALID: 'Tổng điểm phải lớn hơn 0.',
+  ERR_ROW_SCORE_INVALID: 'Điểm từng câu phải lớn hơn 0.',
+  'answerKey.notFound': 'Chưa có answer key cho đề này.',
+  'answerKey.invalid.questionCount': 'Số câu phải là số nguyên từ 1 đến 200.',
+  'answerKey.invalid.scoringMode': 'Chế độ tính điểm không hợp lệ.',
+  'answerKey.invalid.rowCount': 'Số dòng đáp án không khớp với số câu.',
+  'answerKey.invalid.rowNumber': 'Số thứ tự câu hỏi không hợp lệ hoặc bị trùng.',
+  'answerKey.notApplicable': 'Answer key không áp dụng cho kỹ năng Speaking.',
+  'answerKey.concurrencyConflict': 'Answer key vừa được cập nhật ở nơi khác. Tải lại trang và thử lại.',
 };
 
 export const SKILL_LABELS: Record<string, string> = {
@@ -125,6 +162,21 @@ export function mapMaterialApiError(error: unknown): string {
   }
 
   return 'Không thể upload tài liệu. Vui lòng thử lại.';
+}
+
+export function mapAnswerKeyApiError(error: unknown): string {
+  if (error && typeof error === 'object' && 'error' in error) {
+    const httpError = error as { error?: { code?: string; extensions?: { code?: string } } };
+    const body = httpError.error;
+    if (body && typeof body === 'object') {
+      const code = body.code ?? body.extensions?.code;
+      if (code && TEMPLATE_ERROR_MESSAGES[code]) {
+        return TEMPLATE_ERROR_MESSAGES[code];
+      }
+    }
+  }
+
+  return 'Không thể lưu answer key. Vui lòng thử lại.';
 }
 
 export function materialContinueRequiredMessage(skill: string): string {

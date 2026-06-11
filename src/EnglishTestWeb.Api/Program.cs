@@ -169,6 +169,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ITestTemplateService, TestTemplateService>();
 builder.Services.AddScoped<ITestTemplateMaterialService, TestTemplateMaterialService>();
+builder.Services.AddScoped<IAnswerKeyService, AnswerKeyService>();
 builder.Services.AddScoped<IProtectedFileService, ProtectedFileService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();

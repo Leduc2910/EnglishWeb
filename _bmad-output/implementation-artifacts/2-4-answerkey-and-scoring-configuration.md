@@ -4,9 +4,7 @@ baseline_commit: 0c3e45d4ad9159101d616db0c4f10ed3a46aed84
 
 # Story 2.4: AnswerKey And Scoring Configuration
 
-Status: ready-for-dev
-
-<!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
+Status: review
 
 ## Story
 
@@ -44,39 +42,39 @@ tôi muốn cấu hình số câu, đáp án đúng và điểm,
 
 ## Tasks / Subtasks
 
-- [ ] Domain + persistence (AC: 5)
-  - [ ] `Domain/TestTemplates/AnswerKeyVersion.cs` — `Id`, `TemplateId`, `Status`, `ScoringMode`, `QuestionCount`, `TotalScore?`, `RowsJson`, `RowVersion` (byte[]), `CreatedAt`, `UpdatedAt`
-  - [ ] `Domain/TestTemplates/AnswerKeyStatuses.cs` — constants: `Draft = "draft"`, `Ready = "ready"`, `Locked = "locked"`
-  - [ ] `Domain/TestTemplates/ScoringModes.cs` — constants: `Equal = "equal"`, `PerQuestion = "per-question"`
-  - [ ] EF configuration `Infrastructure/Persistence/Configurations/AnswerKeyVersionConfiguration.cs` — FK to TestTemplates, unique index per TemplateId, `IsRowVersion()` concurrency token
-  - [ ] Migration `AddAnswerKeyVersioning`; DbSet<AnswerKeyVersion> vào `EnglishTestWebDbContext`
-  - [ ] `Domain/TestTemplates/AnswerKeyRow.cs` — sealed record `(int QuestionNumber, string CorrectAnswer, decimal? Score)` dùng cho JSON serialization
+- [x] Domain + persistence (AC: 5)
+  - [x] `Domain/TestTemplates/AnswerKeyVersion.cs` — `Id`, `TemplateId`, `Status`, `ScoringMode`, `QuestionCount`, `TotalScore?`, `RowsJson`, `RowVersion` (byte[]), `CreatedAt`, `UpdatedAt`
+  - [x] `Domain/TestTemplates/AnswerKeyStatuses.cs` — constants: `Draft = "draft"`, `Ready = "ready"`, `Locked = "locked"`
+  - [x] `Domain/TestTemplates/ScoringModes.cs` — constants: `Equal = "equal"`, `PerQuestion = "per-question"`
+  - [x] EF configuration `Infrastructure/Persistence/Configurations/AnswerKeyVersionConfiguration.cs` — FK to TestTemplates, unique index per TemplateId, `IsRowVersion()` concurrency token
+  - [x] Migration `AddAnswerKeyVersioning`; DbSet<AnswerKeyVersion> vào `EnglishTestWebDbContext`
+  - [x] `Domain/TestTemplates/AnswerKeyRow.cs` — sealed record `(int QuestionNumber, string CorrectAnswer, decimal? Score)` dùng cho JSON serialization
 
-- [ ] Application + API (AC: 1–5)
-  - [ ] `Application/TestTemplates/IAnswerKeyService.cs` — `GetAsync`, `UpsertDraftAsync`
-  - [ ] `Infrastructure/TestTemplates/AnswerKeyService.cs` — implement; serialize/deserialize RowsJson bằng `System.Text.Json`
-  - [ ] `Contracts/TestTemplates/AnswerKeyVersionResponse.cs` — response DTO
-  - [ ] `Contracts/TestTemplates/UpsertAnswerKeyRequest.cs` — request DTO với validation attributes
-  - [ ] `Controllers/AnswerKeyController.cs` — GET + PUT `/api/test-templates/{templateId}/answer-key`
+- [x] Application + API (AC: 1–5)
+  - [x] `Application/TestTemplates/IAnswerKeyService.cs` — `GetAsync`, `UpsertDraftAsync`
+  - [x] `Infrastructure/TestTemplates/AnswerKeyService.cs` — implement; serialize/deserialize RowsJson bằng `System.Text.Json`
+  - [x] `Contracts/TestTemplates/AnswerKeyVersionResponse.cs` — response DTO
+  - [x] `Contracts/TestTemplates/UpsertAnswerKeyRequest.cs` — request DTO với validation attributes
+  - [x] `Controllers/AnswerKeyController.cs` — GET + PUT `/api/test-templates/{templateId}/answer-key`
     - GET: reuse `CanViewTemplateAsTeacher`; trả 404 nếu chưa có
     - PUT: reuse `CanEditTemplateAsTeacher` (draft-only); upsert
-  - [ ] ProblemDetails codes: `answerKey.notFound`, `answerKey.invalid.*`, `templates.notEditable`
-  - [ ] `Program.cs` — đăng ký `IAnswerKeyService`
+  - [x] ProblemDetails codes: `answerKey.notFound`, `answerKey.invalid.*`, `templates.notEditable`
+  - [x] `Program.cs` — đăng ký `IAnswerKeyService`
 
-- [ ] API tests (AC: 2, 4, 5)
-  - [ ] `tests/EnglishTestWeb.Api.Tests/TestTemplates/AnswerKeyControllerTests.cs`
-  - [ ] `tests/EnglishTestWeb.Api.Tests/Security/AuthorizationMatrixTests.cs` — bổ sung answer-key rows
+- [x] API tests (AC: 2, 4, 5)
+  - [x] `tests/EnglishTestWeb.Api.Tests/TestTemplates/AnswerKeyControllerTests.cs`
+  - [x] `tests/EnglishTestWeb.Api.Tests/Security/AuthorizationMatrixTests.cs` — bổ sung answer-key rows
 
-- [ ] Angular wizard Step 3/4 (AC: 1–5)
-  - [ ] `features/test-template-answer-key/test-template-answer-key.component.{ts,html,css,spec.ts}`
-  - [ ] `app.routes.ts` — thay placeholder bằng component thật
-  - [ ] `core/test-templates/test-templates-api.service.ts` — thêm `getAnswerKey`, `upsertAnswerKey`
-  - [ ] `core/test-templates/test-templates.models.ts` — thêm types `AnswerKeyVersionResponse`, `AnswerKeyRowResponse`, `UpsertAnswerKeyRequest`
-  - [ ] Vitest answer-key component specs
+- [x] Angular wizard Step 3/4 (AC: 1–5)
+  - [x] `features/test-template-answer-key/test-template-answer-key.component.{ts,html,css,spec.ts}`
+  - [x] `app.routes.ts` — thay placeholder bằng component thật
+  - [x] `core/test-templates/test-templates-api.service.ts` — thêm `getAnswerKey`, `upsertAnswerKey`
+  - [x] `core/test-templates/test-templates.models.ts` — thêm types `AnswerKeyVersionResponse`, `AnswerKeyRowResponse`, `UpsertAnswerKeyRequest`
+  - [x] Vitest answer-key component specs
 
-- [ ] Docs + quality
-  - [ ] `docs/setup/development.md` — answer key smoke test
-  - [ ] `.\scripts\quality.ps1` pass
+- [x] Docs + quality
+  - [x] `docs/setup/development.md` — answer key smoke test
+  - [x] `.\scripts\quality.ps1` pass
 
 ## Dev Notes
 
@@ -485,12 +483,73 @@ PUT /api/test-templates/{id}/answer-key:
 
 ### Agent Model Used
 
+Claude Fable 5 (claude-fable-5)
+
 ### Debug Log References
+
+- `dotnet ef migrations add AddAnswerKeyVersioning` — sinh migration với `rowversion`, unique index `TemplateId`, cascade FK; verify Up/Down đúng spec.
+- `dotnet test --filter FullyQualifiedName~AnswerKey` — 23/23 pass (15 controller tests + 8 authorization matrix rows).
+- `dotnet test` full suite — 124/124 pass (baseline 101, +23 mới, không regression).
+- `npm test` — 69/69 pass (baseline 58, +11 specs answer-key component).
+- `.\scripts\quality.ps1` — passed (SDK 10.0.202, Node v22.22.3, build + toàn bộ tests).
 
 ### Completion Notes List
 
+- **Implementation Plan:** Domain entity `AnswerKeyVersion` (1-per-template, JSON rows, `rowversion` concurrency) → `IAnswerKeyService`/`AnswerKeyService` (format-only validation, partial save intentional) → `AnswerKeyController` GET/PUT tái sử dụng `CanViewTemplateAsTeacher`/`CanEditTemplateAsTeacher` → Angular Step 3/4 component với signals + computed validation summary.
+- Controller chỉ gọi policy handler 1 lần cho authorize (tránh triple ownership round-trips — review defer từ 2.3); chỉ re-query decision khi denial để audit.
+- Service check thứ tự: template tồn tại (404) → speaking (400 `answerKey.notApplicable`) → draft status (409 `templates.notEditable`) → format validation (400 `answerKey.invalid.*`).
+- Completeness (thiếu đáp án) KHÔNG validate ở PUT — client Continue chặn bằng `ERR_ANSWER_MISSING`/`ERR_QUESTION_COUNT_INVALID`/`ERR_TOTAL_SCORE_INVALID`/`ERR_ROW_SCORE_INVALID`; mark-ready gate thuộc story 2.5.
+- `DbUpdateConcurrencyException` → 409 `answerKey.concurrencyConflict` (không leak 500).
+- `mapAnswerKeyApiError` tạo riêng, dùng `extensions.code` làm sentinel (đúng learning 2.3, không dùng localized string).
+- `saveInFlight` guard + `catchError` feedback trong `onSaveDraft` (pattern 2.2/2.3).
+- Speaking handling đủ 2 phía: materials Continue navigate thẳng `/review` (label đổi "Tiếp tục sang Review"); answer-key route hiển thị banner "không áp dụng" + nút sang Review, không render form, không gọi GET answer-key.
+- Route `/teacher/library/:templateId/review` thêm placeholder (Story 2.5) để Continue/speaking flow có đích navigate.
+- Giảm số câu khi rows có dữ liệu → confirm dialog trước khi trim (UX spec 01.6).
+- Object IDs theo UX 01.6: `answer-key-wizard-header/stepper/controls/grid/validation-summary/footer-actions` + per-element IDs để E2E tìm được.
+
 ### File List
+
+**API (new):**
+- `src/EnglishTestWeb.Api/Domain/TestTemplates/AnswerKeyVersion.cs`
+- `src/EnglishTestWeb.Api/Domain/TestTemplates/AnswerKeyStatuses.cs`
+- `src/EnglishTestWeb.Api/Domain/TestTemplates/ScoringModes.cs`
+- `src/EnglishTestWeb.Api/Domain/TestTemplates/AnswerKeyRow.cs`
+- `src/EnglishTestWeb.Api/Application/TestTemplates/IAnswerKeyService.cs`
+- `src/EnglishTestWeb.Api/Infrastructure/TestTemplates/AnswerKeyService.cs`
+- `src/EnglishTestWeb.Api/Contracts/TestTemplates/AnswerKeyVersionResponse.cs`
+- `src/EnglishTestWeb.Api/Contracts/TestTemplates/UpsertAnswerKeyRequest.cs`
+- `src/EnglishTestWeb.Api/Controllers/AnswerKeyController.cs`
+- `src/EnglishTestWeb.Api/Infrastructure/Persistence/Configurations/AnswerKeyVersionConfiguration.cs`
+- `src/EnglishTestWeb.Api/Infrastructure/Persistence/Migrations/20260611062854_AddAnswerKeyVersioning.cs`
+- `src/EnglishTestWeb.Api/Infrastructure/Persistence/Migrations/20260611062854_AddAnswerKeyVersioning.Designer.cs`
+
+**API (modified):**
+- `src/EnglishTestWeb.Api/Infrastructure/Persistence/EnglishTestWebDbContext.cs` — DbSet AnswerKeyVersions
+- `src/EnglishTestWeb.Api/Infrastructure/Persistence/Migrations/EnglishTestWebDbContextModelSnapshot.cs` — model snapshot (generated)
+- `src/EnglishTestWeb.Api/Program.cs` — đăng ký IAnswerKeyService
+
+**Client (new):**
+- `src/EnglishTestWeb.Client/src/app/features/test-template-answer-key/test-template-answer-key.component.ts`
+- `src/EnglishTestWeb.Client/src/app/features/test-template-answer-key/test-template-answer-key.component.html`
+- `src/EnglishTestWeb.Client/src/app/features/test-template-answer-key/test-template-answer-key.component.css`
+- `src/EnglishTestWeb.Client/src/app/features/test-template-answer-key/test-template-answer-key.component.spec.ts`
+
+**Client (modified):**
+- `src/EnglishTestWeb.Client/src/app/app.routes.ts` — answer-key component thật + review placeholder route
+- `src/EnglishTestWeb.Client/src/app/core/test-templates/test-templates-api.service.ts` — getAnswerKey, upsertAnswerKey
+- `src/EnglishTestWeb.Client/src/app/core/test-templates/test-templates.models.ts` — AnswerKey types, error messages, mapAnswerKeyApiError
+- `src/EnglishTestWeb.Client/src/app/features/test-template-materials/test-template-materials.component.ts` — speaking Continue → review, continueLabel
+- `src/EnglishTestWeb.Client/src/app/features/test-template-materials/test-template-materials.component.html` — continueLabel binding
+
+**Tests (new/modified):**
+- `tests/EnglishTestWeb.Api.Tests/TestTemplates/AnswerKeyControllerTests.cs` (new)
+- `tests/EnglishTestWeb.Api.Tests/Security/AuthorizationMatrixTests.cs` — 8 answer-key matrix rows
+- `tests/EnglishTestWeb.Api.Tests/TestTemplates/TestTemplatesTestHelper.cs` — EnsureSpeakingDraftTemplateAsync
+
+**Docs (modified):**
+- `docs/setup/development.md` — Story 2.4 answer key smoke test + API endpoints
 
 ## Change Log
 
 - 2026-06-11: Story 2.4 created từ epics + UX 01.6 + architecture + 2.3 learnings; ready-for-dev.
+- 2026-06-11: Implemented AnswerKey vertical slice — domain `AnswerKeyVersion` + migration, GET/PUT answer-key API với format validation + speaking/notEditable guards, Angular wizard Step 3/4 với answer grid + validation summary + speaking not-applicable state. 23 API tests + 11 Vitest specs mới; full quality gate pass. Status → review.
