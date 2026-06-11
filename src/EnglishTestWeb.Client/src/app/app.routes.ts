@@ -107,13 +107,23 @@ export const routes: Routes = [
       {
         path: 'library/:templateId/review',
         loadComponent: () =>
-          import('./features/teacher-placeholder/teacher-placeholder.component').then(
-            (module) => module.TeacherPlaceholderComponent,
+          import('./features/test-template-review/test-template-review.component').then(
+            (module) => module.TestTemplateReviewComponent,
           ),
-        data: {
-          title: 'Review & Ready',
-          description: 'Story 2.5 sẽ triển khai review template và mark Ready.',
-        },
+      },
+      {
+        path: 'homework/new',
+        loadComponent: () =>
+          import('./features/homework-create/homework-create.component').then(
+            (module) => module.HomeworkCreateComponent,
+          ),
+      },
+      {
+        path: 'live-exams/new',
+        loadComponent: () =>
+          import('./features/live-exam-create/live-exam-create.component').then(
+            (module) => module.LiveExamCreateComponent,
+          ),
       },
       {
         path: 'classes',

@@ -1,6 +1,8 @@
+using EnglishTestWeb.Api.Domain.Assignments;
 using EnglishTestWeb.Api.Domain.Classes;
 using EnglishTestWeb.Api.Domain.Files;
 using EnglishTestWeb.Api.Domain.Identity;
+using EnglishTestWeb.Api.Domain.LiveExams;
 using EnglishTestWeb.Api.Domain.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +25,10 @@ public sealed class EnglishTestWebDbContext(DbContextOptions<EnglishTestWebDbCon
     public DbSet<TestMaterial> TestMaterials => Set<TestMaterial>();
 
     public DbSet<AnswerKeyVersion> AnswerKeyVersions => Set<AnswerKeyVersion>();
+
+    public DbSet<HomeworkAssignment> HomeworkAssignments => Set<HomeworkAssignment>();
+
+    public DbSet<LiveExamSession> LiveExamSessions => Set<LiveExamSession>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

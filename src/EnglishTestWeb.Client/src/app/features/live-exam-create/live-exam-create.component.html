@@ -1,0 +1,143 @@
+<div class="live-exam-create">
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div data-testid="loading-indicator" class="loading">
+      <p>Đang tải...</p>
+    </div>
+  }
+
+  <!-- Load error state -->
+  @if (isLoadError()) {
+    <div data-testid="load-error" class="error-state">
+      <p>{{ loadError() }}</p>
+      <a routerLink="/teacher/library">Quay lại thư viện</a>
+    </div>
+  }
+
+  <!-- Create form state -->
+  @if (viewState() === 'loaded') {
+    <div class="create-form">
+      <div class="mode-label">Thi trực tiếp</div>
+
+      <!-- Source template summary -->
+      <div class="template-summary">
+        <span data-testid="source-template-title">{{ template()?.title }}</span>
+        <span data-testid="source-template-skill">{{ skillLabel() }}</span>
+      </div>
+
+      <!-- API error banner -->
+      @if (apiError()) {
+        <div data-testid="api-error" class="api-error">{{ apiError() }}</div>
+      }
+
+      <!-- Class select -->
+      <div class="form-field">
+        <label for="class-select">Lớp học</label>
+        <select
+          id="class-select"
+          data-testid="class-select"
+          [value]="selectedClassId()"
+          (change)="onClassChange($event)">
+          <option value="">-- Chọn lớp --</option>
+          @for (cls of activeClasses(); track cls.classId) {
+            <option [value]="cls.classId">{{ cls.className }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Scheduled start (optional) -->
+      <div class="form-field">
+        <label for="scheduled-start">Thời gian bắt đầu dự kiến (tùy chọn)</label>
+        <input
+          id="scheduled-start"
+          data-testid="scheduled-start-input"
+          type="datetime-local"
+          [value]="scheduledStartAt()"
+          (change)="onScheduledStartChange($event)" />
+      </div>
+
+      <!-- Scheduled end (optional) -->
+      <div class="form-field">
+        <label for="scheduled-end">Thời gian kết thúc dự kiến (tùy chọn)</label>
+        <input
+          id="scheduled-end"
+          data-testid="scheduled-end-input"
+          type="datetime-local"
+          [value]="scheduledEndAt()"
+          (change)="onScheduledEndChange($event)" />
+      </div>
+
+      <p class="manual-note">Phiên thi sẽ không tự động mở — giáo viên phải mở thủ công.</p>
+
+      <div class="actions">
+        <button
+          data-testid="create-action"
+          [disabled]="!isFormValid() || isSaving()"
+          (click)="onCreate()">
+          {{ isSaving() ? 'Đang tạo...' : 'Tạo phiên thi' }}
+        </button>
+        <button data-testid="cancel-action" (click)="onCancel()">Hủy</button>
+      </div>
+    </div>
+  }
+
+  <!-- Created / session control state -->
+  @if (isCreated()) {
+    <div class="session-detail">
+      <div class="mode-label">Thi trực tiếp</div>
+
+      <!-- Source template summary -->
+      <div class="template-summary">
+        <span data-testid="source-template-title">{{ template()?.title }}</span>
+        <span data-testid="source-template-skill">{{ skillLabel() }}</span>
+      </div>
+
+      <!-- Status badge -->
+      <div data-testid="session-status-badge" class="status-badge status-{{ session()?.status }}">
+        {{ getStatusLabel(session()?.status ?? '') }}
+      </div>
+
+      <!-- API error banner -->
+      @if (apiError()) {
+        <div data-testid="api-error" class="api-error">{{ apiError() }}</div>
+      }
+
+      <div class="session-info">
+        <p>Lớp: {{ session()?.className }}</p>
+        @if (session()?.scheduledStartAt) {
+          <p>Bắt đầu dự kiến: {{ formatDate(session()?.scheduledStartAt) }}</p>
+        }
+        @if (session()?.scheduledEndAt) {
+          <p>Kết thúc dự kiến: {{ formatDate(session()?.scheduledEndAt) }}</p>
+        }
+        @if (session()?.openedAt) {
+          <p>Đã mở lúc: {{ formatDate(session()?.openedAt) }}</p>
+        }
+        @if (session()?.closedAt) {
+          <p>Đã đóng lúc: {{ formatDate(session()?.closedAt) }}</p>
+        }
+      </div>
+
+      <div class="actions">
+        @if (canOpen()) {
+          <button
+            data-testid="open-action"
+            [disabled]="isOpening()"
+            (click)="onOpen()">
+            {{ isOpening() ? 'Đang mở...' : 'Mở phiên thi' }}
+          </button>
+        }
+        @if (canClose()) {
+          <button
+            data-testid="close-action"
+            [disabled]="isClosing()"
+            (click)="onClose()">
+            {{ isClosing() ? 'Đang đóng...' : 'Đóng phiên thi' }}
+          </button>
+        }
+      </div>
+
+      <p class="manual-note">Phiên thi không tự động mở hoặc đóng theo lịch.</p>
+    </div>
+  }
+</div>

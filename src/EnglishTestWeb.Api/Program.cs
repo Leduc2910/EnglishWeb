@@ -1,5 +1,7 @@
 using EnglishTestWeb.Api.Application.Auth;
 using EnglishTestWeb.Api.Application.Classes;
+using EnglishTestWeb.Api.Application.HomeworkAssignments;
+using EnglishTestWeb.Api.Application.LiveExamSessions;
 using EnglishTestWeb.Api.Application.TestTemplates;
 using EnglishTestWeb.Api.Application.Common;
 using EnglishTestWeb.Api.Application.Files;
@@ -12,6 +14,8 @@ using EnglishTestWeb.Api.Infrastructure.Authorization.Handlers;
 using EnglishTestWeb.Api.Infrastructure.Authorization.Policies;
 using EnglishTestWeb.Api.Infrastructure.Classes;
 using EnglishTestWeb.Api.Infrastructure.Files;
+using EnglishTestWeb.Api.Infrastructure.HomeworkAssignments;
+using EnglishTestWeb.Api.Infrastructure.LiveExamSessions;
 using EnglishTestWeb.Api.Infrastructure.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Health;
 using EnglishTestWeb.Api.Infrastructure.Identity;
@@ -173,6 +177,8 @@ builder.Services.AddScoped<IAnswerKeyService, AnswerKeyService>();
 builder.Services.AddScoped<IProtectedFileService, ProtectedFileService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();
+builder.Services.AddScoped<IHomeworkAssignmentService, HomeworkAssignmentService>();
+builder.Services.AddScoped<ILiveExamSessionService, LiveExamSessionService>();
 
 var app = builder.Build();
 

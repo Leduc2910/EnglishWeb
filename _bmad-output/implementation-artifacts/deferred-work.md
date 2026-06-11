@@ -63,3 +63,81 @@ _Chunk 1 — API core only._
 - Archived physical files không xóa khỏi disk — Implementation Note defer physical GC; sweeper story sau.
 - File access chỉ check template owner, không check `StoredFile.OwnerUserId` — template ownership là auth model hiện tại.
 - Non-seekable upload stream bỏ qua pre-write size check — edge case hiếm; post-write validation + MaxWriteBytes cap đủ MVP.
+
+## Deferred from: code review of 2-4-answerkey-and-scoring-configuration (2026-06-11)
+
+- Race condition first-upsert (2 concurrent PUT trên template mới) → unique-index violation → 409 bị mis-label — low probability MVP; fix khi implement upsert-or-retry pattern hoặc SQL MERGE.
+- `template.UpdatedAt = now` side effect trực tiếp trong `AnswerKeyService` — service ghi vào unrelated entity qua shared DbContext; design smell, không gây bug hiện tại; tách ra khi extract unit-of-work.
+- `CorrectAnswer` max length không capped ở service level → DoS via large RowsJson blob — thêm max-length guard khi có input validation middleware hoặc storage quota story.
+- Tests: Boundary questionCount=1 và questionCount=200 chưa có test case riêng — off-by-one gap; add khi có test expansion.
+- Tests: DbUpdateConcurrencyException và DbUpdateException paths không có test — in-memory DB không support rowversion; cần mock hoặc real DB integration test.
+- Tests: Corrupt RowsJson graceful fallback không có test — cần direct DB write trong test helper; add khi có test infrastructure story.
+- Tests: GET trên Ready/Archived template có existing answer key chưa test — deferred đến story 2.5 khi có promotion flow.
+- Angular: `confirm()` dialog trong `applyQuestionCount` không testable trong Vitest/jsdom — cancel/confirm paths untested; refactor sang ConfirmService khi có modal infrastructure.
+- Angular: Inner catch `getAnswerKey` áp dụng defaults cho ALL errors (không chỉ 404) — acceptable MVP pattern; tighten khi có error-telemetry story.
+- Angular: Missing unit tests: Back button navigation (AC9), non-draft `loadError` (AC1), `goToReview()` speaking button — add khi có test expansion story.
+- Angular: `ERR_ANSWER_MISSING` key trong `TEMPLATE_ERROR_MESSAGES` là dead code — cleanup cosmetic khi có refactor pass.
+- Angular: `body.code` primary path trong `mapAnswerKeyApiError` là dead code (ProblemDetails luôn dùng `extensions.code`) — cleanup khi refactor error handling.
+
+## Deferred from: code review pass 3 of 2-4-answerkey-and-scoring-configuration (2026-06-11)
+
+_Patched in this pass: `continueErrors` stale-state UX bugs (Scenarios A/B/D), API tests for per-question score round-trip / zero-row partial save / updatedAt advancement._
+
+- Backend: Race condition first-INSERT → `DbUpdateException` returns HTTP 500 (`answerKey.saveFailed`) instead of 409 — correct to reclassify + retry when adopting MERGE/upsert-or-retry; low priority MVP.
+- Backend: `teacherId` param in `GetAsync` is unused — ownership enforced by policy at controller; service not self-defending; document when adding new callers.
+- Backend: `QuestionCount`/`RowsJson` partial-save contract undocumented in domain — add `IsComplete()` domain method or XML doc when scoring pipeline is built.
+- Backend: No cross-field validation between `ScoringMode` and `TotalScore` (equal mode with totalScore=null accepted) — frontend validates this; backend validation tightening deferred to scoring/submission story.
+- Backend: `OnDelete(DeleteBehavior.Cascade)` on `AnswerKeyVersion` will become a data-loss cliff when TestSubmission entities arrive — change to Restrict and archive answer key data with submission when submissions are added.
+- Backend: Empty `CorrectAnswer` indistinguishable from "not answered" in stored `RowsJson` — grading engine must treat both as wrong; document invariant when building auto-grader.
+
+## Deferred from: code review of 2-5-review-template-mark-ready-and-next-actions (2026-06-11)
+
+- Backend: `MarkReadyAsync` — race condition with concurrent mark-ready requests (no concurrency token on TestTemplate) → double-transition without error; add `[ConcurrencyCheck]` or row-version when building submission pipeline.
+- Backend: `MarkReadyAsync` — `JsonException` during RowsJson deserialization → rows=[] → returns `answerKeyIncomplete` instead of a distinct `answerKeyCorrupt` code; add distinct code + warning log when adding data-integrity monitoring.
+- Backend: `MarkReadyAsync` — speaking material check accepts any active material regardless of role; a stale `pdf` material (leftover from skill change) passes the speaking check; add role filter when implementing skill-change cleanup.
+- Backend: `MarkReadyAsync` — `OperationCanceledException` from `SaveChangesAsync(cancellationToken)` propagates as unhandled 500; add explicit catch when adding standardized cancellation handling.
+- Backend: `MarkReadyAsync` — service does not verify `teacherId` internally; ownership enforced only at controller/policy layer; add internal ownership check when refactoring to support direct service calls.
+- Backend: `AnswerKeyVersions.FirstOrDefaultAsync` — no ordering → non-deterministic when multiple AnswerKey versions exist; add `.OrderByDescending(a => a.UpdatedAt)` when implementing AnswerKey re-versioning.
+- Angular: `readinessChecks` computed swallows transient 5xx from `getAnswerKey` — `answerKey=null` makes check appear as "incomplete" when data may exist; tighten catch to re-throw on 5xx when adding error telemetry.
+- Angular: Archived template on load shows mark-ready panel (→ 409 error on submit); add `archived` viewState to show non-editable state without confusing user.
+- Angular: AC2 focus behavior — no scroll/focus to first failing checklist item when errors occur; add `scrollIntoView` when implementing UX polish pass.
+- Angular: AC1 confirmation modal — mark-ready fires immediately without confirmation step per UX spec 01.7; add confirmation dialog when implementing UX polish pass.
+- Angular: `loadPage` does not reset template/materials/answerKey signals at start of new load → stale data visible during rapid navigation; pre-existing pattern, fix in global UX hardening story.
+- Architecture: AC5 — structured log only (no durable audit table); add `TemplateAuditLog` entity when building audit trail story (Epic 6).
+
+## Deferred from: code review of 3-1-create-homeworkassignment-from-a-ready-template (2026-06-11)
+
+- Backend: TOCTOU giữa auth check và DB load template/class — 2 query riêng, established pattern toàn codebase; cải thiện khi refactor shared auth helper.
+- Backend: Không có unique constraint trên (TestTemplateId, ClassId) — server-side idempotency explicitly deferred trong Dev Notes; thêm khi implement X-Idempotency-Key hoặc deduplicate story.
+- Backend: DbUpdateException catch-all → homework.createFailed 500 — consistent với project pattern; tách FK violation thành 409 khi có ops telemetry story.
+- Backend: Không có index đơn trên ClassId/TestTemplateId — student-facing query pattern chưa có spec; thêm khi có Epic 4 student tests flow.
+- Backend: HomeworkAssignment.Status không có DB check constraint — consistent với TestTemplate.Status; thêm khi standardize constraint layer.
+- Angular: parseInt("5.9abc") truncates silently cho time limit input — server validates [1,600]; thêm Number.isInteger check khi có input validation story.
+- Angular: Negative timeLimitMinutes bypass HTML min=1 → server rejects — inline field validation improvement; add khi có form validation refactor.
+- Angular: Form signals (selectedClassId, deadlineAt, timeLimitMinutes) không reset khi templateId thay đổi — flow thực tế không trigger; fix khi có multi-template navigation UX.
+- Angular: isFormValid() dùng stale template signal (không refresh) — server rejects if template archived; add auto-refresh khi có staleness detection story.
+- Angular: Không có UX message khi teacher không có active class — form block đúng nhưng không có guidance; add empty-state message khi có UX polish pass.
+
+## Deferred from: code review pass 3 of 3-1-create-homeworkassignment-from-a-ready-template (2026-06-11)
+
+_Patched in this pass: inactive class guard (`homework.classNotActive` 400) — API was relying on Angular-only filter._
+
+- Backend: `CreateHomeworkAssignmentRequest` không có `[Required]` data annotations trên `TemplateId`, `ClassId`, `DeadlineAt` — model binding validation không bắt zero-value Guids/default DateTimeOffset; add khi có input validation middleware story.
+
+## Deferred from: code review pass 2 of 3-1-create-homeworkassignment-from-a-ready-template (2026-06-11)
+
+- Backend: `StatusCode(201)` không set `Location` header — REST best practice cho 201 Created; thêm `CreatedAtAction` khi có GET by-id endpoint.
+- Tests: `Create_TemplateNotOwned_Returns404` dùng `Guid.NewGuid()` (non-existent) thay vì existing-but-foreign template — test coverage gap cho hidden-404 auth path; add second-teacher seed khi có test infrastructure story.
+- Tests: `Create_ClassNotOwned_Returns404` dùng `Guid.NewGuid()` (non-existent) thay vì existing-but-foreign class — same gap; add khi có second-teacher test helper.
+- Tests: Deadline boundary test thiếu `now + 30s` và `now + 61s` — off-by-one coverage; add khi có test expansion story.
+- Backend: `HomeworkAssignment` không có navigation properties — EF shadow navigation pattern; thêm nav props khi có list endpoint cần `.Include()`.
+
+## Deferred from: code review pass 1 of 3-2-create-and-control-liveexamsession (2026-06-11)
+
+- Backend: TOCTOU double-lookup auth pattern (template auth check → re-fetch template) — project-wide established pattern; refactor khi extract shared auth helper.
+- Backend: Không có optimistic concurrency token trên `LiveExamSession.Status` — concurrent open/close có thể double-transition; add `[ConcurrencyCheck]` khi build submission pipeline.
+- Backend: Cross-teacher Open/Close test thiếu real second-teacher fixture — consistent với 3-1 defer pattern; add khi có second-teacher test helper infrastructure.
+- Backend: Multiple open sessions per class không bị chặn bởi DB/service constraint — design decision; clarify khi có student exam-taking story (Epic 4).
+- Angular: datetime-local input parsed qua `new Date(rawString)` không có explicit timezone — browser behavior; low practical risk cho single-timezone MVP; standardize khi có i18n story.
+- Angular: Session signals không refresh sau transition error (alreadyOpen/alreadyClosed) → Open button vẫn hiện mặc dù server đã chuyển trạng thái; add re-fetch on conflict error khi có UX polish pass.
+- Angular: `scheduledEndAt < scheduledStartAt` không được validate client hoặc server — spec không yêu cầu temporal ordering cho MVP; add validation khi có scheduling story.

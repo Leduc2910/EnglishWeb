@@ -37,6 +37,7 @@
 generated: 2026-06-09
 last_updated: 2026-06-11
 project: EnglishTestWeb
+# 3.2 done via code review (2026-06-11)
 project_key: NOKEY
 tracking_system: file-system
 story_location: E:\Code\EnglishTestWeb\_bmad-output\implementation-artifacts
@@ -49,17 +50,17 @@ development_status:
   1-4-base-authorization-pattern-and-class-scope-guards: done
   epic-1-retrospective: optional
 
-  epic-2: in-progress
+  epic-2: done
   2-1-thu-vien-de-list-search-filter-and-template-inspection: done
   2-2-create-edit-and-save-draft-template-setup: done
   2-3-protected-testmaterial-upload-and-preview: done
-  2-4-answerkey-and-scoring-configuration: review
-  2-5-review-template-mark-ready-and-next-actions: backlog
+  2-4-answerkey-and-scoring-configuration: done
+  2-5-review-template-mark-ready-and-next-actions: done
   epic-2-retrospective: optional
 
-  epic-3: backlog
-  3-1-create-homeworkassignment-from-a-ready-template: backlog
-  3-2-create-and-control-liveexamsession: backlog
+  epic-3: in-progress
+  3-1-create-homeworkassignment-from-a-ready-template: done
+  3-2-create-and-control-liveexamsession: done
   3-3-usage-mode-contract-across-delivery-surfaces: backlog
   epic-3-retrospective: optional
 
