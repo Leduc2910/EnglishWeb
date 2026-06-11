@@ -1,0 +1,110 @@
+<section class="homework-create">
+  @if (isLoading()) {
+    <div id="homework-create-loading" class="loading" aria-busy="true">
+      <p>Đang tải…</p>
+    </div>
+  } @else if (isLoadError()) {
+    <div id="homework-create-error" class="error-banner" role="alert">
+      <p>{{ loadError() }}</p>
+      <a class="btn-secondary" routerLink="/teacher/library">Quay lại thư viện</a>
+    </div>
+  } @else if (isSuccess()) {
+    <div id="homework-create-success" class="success-banner" role="status">
+      <h1>Đã giao homework!</h1>
+      <p>
+        <strong>{{ assignment()?.templateTitle }}</strong> đã được giao cho lớp
+        <strong>{{ assignment()?.className }}</strong>.
+      </p>
+      <p>Hạn nộp: {{ formatDeadline(assignment()?.deadlineAt) }}</p>
+      <div class="success-actions">
+        <button type="button" class="btn-primary" (click)="onGoToLibrary()">
+          Về thư viện đề
+        </button>
+      </div>
+    </div>
+  } @else {
+    <header class="page-header">
+      <h1>Giao Homework</h1>
+    </header>
+
+    @if (apiError()) {
+      <div id="homework-create-validation-error" class="error-banner" role="alert">
+        {{ apiError() }}
+      </div>
+    }
+
+    <div id="homework-create-source-template" class="source-template">
+      <h2>Đề gốc</h2>
+      <dl class="info-list">
+        <dt>Tên đề</dt>
+        <dd>{{ template()?.title || '—' }}</dd>
+        <dt>Kỹ năng</dt>
+        <dd>{{ skillLabel() || '—' }}</dd>
+      </dl>
+    </div>
+
+    <form class="homework-form" (ngSubmit)="onSubmit()">
+      <div class="form-field">
+        <label for="homework-create-class-select">Lớp học <span class="required">*</span></label>
+        <select
+          id="homework-create-class-select"
+          [value]="selectedClassId()"
+          (change)="onClassChange($event)"
+          [disabled]="isSaving()"
+          required
+        >
+          <option value="">-- Chọn lớp --</option>
+          @for (c of activeClasses(); track c.classId) {
+            <option [value]="c.classId">{{ c.className }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="homework-create-due-date-input">Hạn nộp <span class="required">*</span></label>
+        <input
+          id="homework-create-due-date-input"
+          type="datetime-local"
+          [value]="deadlineAt()"
+          (change)="onDeadlineChange($event)"
+          [disabled]="isSaving()"
+          required
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="homework-create-time-limit-input">Giới hạn thời gian (phút, tùy chọn)</label>
+        <input
+          id="homework-create-time-limit-input"
+          type="number"
+          min="1"
+          max="600"
+          [value]="timeLimitMinutes()"
+          (input)="onTimeLimitChange($event)"
+          [disabled]="isSaving()"
+          placeholder="Không giới hạn"
+        />
+      </div>
+
+      <div class="form-actions">
+        <button
+          id="homework-create-cancel"
+          type="button"
+          class="btn-secondary"
+          [disabled]="isSaving()"
+          (click)="onCancel()"
+        >
+          Hủy
+        </button>
+        <button
+          id="homework-create-submit"
+          type="submit"
+          class="btn-primary"
+          [disabled]="isSaving() || !isFormValid()"
+        >
+          {{ isSaving() ? 'Đang tạo…' : 'Giao Homework' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>
