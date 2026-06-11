@@ -139,6 +139,12 @@ export class TestTemplateLibraryComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
     this.closeMenus();
+
+    if (template.status === 'draft') {
+      await this.router.navigate(['/teacher/library', template.templateId, 'setup']);
+      return;
+    }
+
     this.inspectLoading.set(true);
     this.inspectError.set(null);
 

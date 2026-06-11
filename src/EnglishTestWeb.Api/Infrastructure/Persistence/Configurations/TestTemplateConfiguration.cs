@@ -27,6 +27,9 @@ public sealed class TestTemplateConfiguration : IEntityTypeConfiguration<TestTem
         builder.Property(entity => entity.Description)
             .HasMaxLength(2000);
 
+        builder.Property(entity => entity.TagsJson)
+            .HasMaxLength(500);
+
         builder.Property(entity => entity.Status)
             .HasMaxLength(32)
             .IsRequired();

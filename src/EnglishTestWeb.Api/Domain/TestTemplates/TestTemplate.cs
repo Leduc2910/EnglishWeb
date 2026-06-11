@@ -12,6 +12,8 @@ public sealed class TestTemplate
 
     public string? Description { get; set; }
 
+    public string? TagsJson { get; set; }
+
     public string Status { get; set; } = TemplateStatuses.Draft;
 
     public DateTimeOffset CreatedAt { get; set; }

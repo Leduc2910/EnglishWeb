@@ -1,4 +1,5 @@
 using EnglishTestWeb.Api.Domain.Classes;
+using EnglishTestWeb.Api.Domain.Files;
 using EnglishTestWeb.Api.Domain.Identity;
 using EnglishTestWeb.Api.Domain.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Identity;
@@ -16,6 +17,10 @@ public sealed class EnglishTestWebDbContext(DbContextOptions<EnglishTestWebDbCon
     public DbSet<ClassMembership> ClassMemberships => Set<ClassMembership>();
 
     public DbSet<TestTemplate> TestTemplates => Set<TestTemplate>();
+
+    public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
+
+    public DbSet<TestMaterial> TestMaterials => Set<TestMaterial>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

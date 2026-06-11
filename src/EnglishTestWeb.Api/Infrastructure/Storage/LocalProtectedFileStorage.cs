@@ -41,6 +41,62 @@ public sealed class LocalProtectedFileStorage(
         return new FileStorageResult(storageKey, writtenBytes);
     }
 
+    public Task<Stream> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ValidateStorageKey(storageKey);
+
+        var rootPath = ProtectedStoragePathValidator.ValidateAndNormalize(
+            options.Value.RootPath,
+            environment.ContentRootPath,
+            environment.WebRootPath);
+
+        var targetPath = Path.Combine(rootPath, storageKey);
+        if (!File.Exists(targetPath))
+        {
+            throw new FileNotFoundException("Protected storage object was not found.", storageKey);
+        }
+
+        Stream stream = new FileStream(
+            targetPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            useAsync: true);
+
+        return Task.FromResult(stream);
+    }
+
+    public Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ValidateStorageKey(storageKey);
+
+        var rootPath = ProtectedStoragePathValidator.ValidateAndNormalize(
+            options.Value.RootPath,
+            environment.ContentRootPath,
+            environment.WebRootPath);
+
+        var targetPath = Path.Combine(rootPath, storageKey);
+        if (File.Exists(targetPath))
+        {
+            File.Delete(targetPath);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private static void ValidateStorageKey(string storageKey)
+    {
+        if (string.IsNullOrWhiteSpace(storageKey)
+            || storageKey.Contains(Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            || storageKey.Contains(Path.AltDirectorySeparatorChar, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Storage key is invalid.", nameof(storageKey));
+        }
+    }
+
     private static async Task<long> CopyWithLimitAsync(
         Stream input,
         Stream output,

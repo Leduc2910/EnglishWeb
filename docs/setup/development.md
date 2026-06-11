@@ -175,6 +175,35 @@ MVP demo seed tạo thêm 3 đề mẫu (Draft, Ready, Archived) cho dev teacher
 
 API endpoints: `GET /api/test-templates`, `GET /api/test-templates/{id}` (teacher-only; cross-teacher → 404 `templates.notFound`).
 
+## Teacher template setup wizard (Story 2.2)
+
+### Template setup smoke (local)
+
+1. Chạy API + Angular dev server (đảm bảo đã seed MVP demo).
+2. Đăng nhập teacher tại `/login`.
+3. Mở `/teacher/library` → **Tạo đề mới** → `/teacher/library/new/setup`.
+4. Nhập tên đề (≥ 3 ký tự), chọn kỹ năng, mô tả/tags tùy chọn → **Lưu nháp** — thấy trạng thái "Đã lưu nháp".
+5. Quay lại thư viện → menu **Xem / chỉnh sửa** trên đề Nháp → mở `/teacher/library/{id}/setup` với dữ liệu đã lưu.
+6. **Tiếp tục upload tài liệu** → `/teacher/library/{id}/materials` (wizard bước 2).
+
+API endpoints: `POST /api/test-templates`, `PUT /api/test-templates/{id}` (draft-only update; Ready/Archived → 409 `templates.notEditable`).
+
+## Teacher template materials upload (Story 2.3)
+
+### Materials upload smoke (local)
+
+1. Hoàn thành setup draft (Story 2.2) hoặc mở đề Nháp → **Xem / chỉnh sửa** → tiếp tục tới materials.
+2. Mở `/teacher/library/{templateId}/materials` — thấy dropzone PDF, checklist theo kỹ năng, sidebar trạng thái upload.
+3. Upload file PDF hợp lệ — thấy progress, file card (tên, size, fileId), nút **Xem nhanh PDF**.
+4. **Tiếp tục nhập answer key** chỉ bật sau khi PDF bắt buộc upload xong → placeholder answer-key (Story 2.4).
+
+API endpoints:
+
+- `GET /api/test-templates/{id}/materials` — list active materials
+- `POST /api/test-templates/{id}/materials` — multipart `role` + `file` (draft-only)
+- `DELETE /api/test-templates/{id}/materials/{materialId}` — remove/replace prep
+- `GET /api/files/{fileId}/content` — authorized preview stream (range support)
+
 ## Server-side class context (Story 1.4)
 
 Student session gắn claim `etw:active_class_id` trong cookie (session-only, không persist DB). Server revalidate membership trên mỗi request quan trọng:

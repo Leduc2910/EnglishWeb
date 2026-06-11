@@ -11,6 +11,7 @@ using EnglishTestWeb.Api.Infrastructure.Authorization;
 using EnglishTestWeb.Api.Infrastructure.Authorization.Handlers;
 using EnglishTestWeb.Api.Infrastructure.Authorization.Policies;
 using EnglishTestWeb.Api.Infrastructure.Classes;
+using EnglishTestWeb.Api.Infrastructure.Files;
 using EnglishTestWeb.Api.Infrastructure.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Health;
 using EnglishTestWeb.Api.Infrastructure.Identity;
@@ -27,6 +28,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 52_428_800;
+});
 builder.Services.AddOpenApi();
 
 builder.Services.AddCors(options =>
@@ -50,6 +55,8 @@ builder.Services.AddDbContext<EnglishTestWebDbContext>(options =>
     {
         var testingDatabaseName = builder.Configuration["Testing:DatabaseName"] ?? "EnglishTestWeb_Tests";
         options.UseInMemoryDatabase(testingDatabaseName);
+        options.ConfigureWarnings(warnings =>
+            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
         return;
     }
 
@@ -135,6 +142,7 @@ builder.Services.AddScoped<AuthorizationDenialAuditor>();
 builder.Services.AddScoped<IAuthorizationHandler, ClassTeacherAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ClassStudentAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TemplateTeacherAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TemplateTeacherEditAuthorizationHandler>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(AuthorizationPolicies.CanViewClassAsTeacher, policy =>
@@ -152,9 +160,16 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(IdentityRoleNames.Teacher);
         policy.AddRequirements(new TemplateTeacherViewRequirement());
     });
+    options.AddPolicy(AuthorizationPolicies.CanEditTemplateAsTeacher, policy =>
+    {
+        policy.RequireRole(IdentityRoleNames.Teacher);
+        policy.AddRequirements(new TemplateTeacherEditRequirement());
+    });
 });
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ITestTemplateService, TestTemplateService>();
+builder.Services.AddScoped<ITestTemplateMaterialService, TestTemplateMaterialService>();
+builder.Services.AddScoped<IProtectedFileService, ProtectedFileService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();
 

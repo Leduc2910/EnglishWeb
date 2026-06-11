@@ -367,6 +367,97 @@ public sealed class AuthorizationMatrixTests
     }
 
     [Fact]
+    public async Task TeacherOwner_PostTestTemplate_ReturnsCreated()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/test-templates", new
+        {
+            title = "Matrix Draft",
+            skill = "reading"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TeacherOwner_PutTestTemplate_ReturnsOk()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PutJsonAsync(client, $"/api/test-templates/{templateId}", new
+        {
+            title = "Matrix Updated Draft",
+            skill = "listening"
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_PostTestTemplate_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/test-templates", new
+        {
+            title = "Unauthorized Draft",
+            skill = "reading"
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Student_PostTestTemplate_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/test-templates", new
+        {
+            title = "Student Draft",
+            skill = "reading"
+        });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_PutTestTemplate_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PutJsonAsync(client, $"/api/test-templates/{templateId}", new
+        {
+            title = "Blocked Update",
+            skill = "reading"
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("templates.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
     public async Task TeacherNonOwner_GetTestTemplateDetail_EmitsAuditWithOwnershipReason()
     {
         await using var factory = new AuditingTestApiFactory();
@@ -387,6 +478,87 @@ public sealed class AuthorizationMatrixTests
                 record.ReasonCategory == EnglishTestWeb.Api.Application.Security.AuthorizationDenialReason.TemplateOwnership
                 && record.ResourceType == "test-template"
                 && record.ResourceId == templateId.ToString());
+    }
+
+    [Fact]
+    public async Task TeacherOwner_PostTestTemplateMaterial_ReturnsCreated()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await TestTemplateMaterialsTestHelper.UploadPdfAsync(client, templateId);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TeacherOwner_GetFileContent_ReturnsOk()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var uploadResponse = await TestTemplateMaterialsTestHelper.UploadPdfAsync(client, templateId);
+        uploadResponse.EnsureSuccessStatusCode();
+
+        await using var uploadBody = await uploadResponse.Content.ReadAsStreamAsync();
+        using var uploadDocument = await JsonDocument.ParseAsync(uploadBody);
+        var fileId = uploadDocument.RootElement.GetProperty("fileId").GetGuid();
+
+        var response = await client.GetAsync($"/api/files/{fileId}/content");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_GetFileContent_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var ownerClient = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(ownerClient);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var uploadResponse = await TestTemplateMaterialsTestHelper.UploadPdfAsync(ownerClient, templateId);
+        uploadResponse.EnsureSuccessStatusCode();
+
+        await using var uploadBody = await uploadResponse.Content.ReadAsStreamAsync();
+        using var uploadDocument = await JsonDocument.ParseAsync(uploadBody);
+        var fileId = uploadDocument.RootElement.GetProperty("fileId").GetGuid();
+
+        using var otherClient = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            otherClient,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var response = await otherClient.GetAsync($"/api/files/{fileId}/content");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("files.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_PostTestTemplateMaterial_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await TestTemplateMaterialsTestHelper.UploadPdfAsync(client, templateId);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("templates.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
     }
 
     [Fact]

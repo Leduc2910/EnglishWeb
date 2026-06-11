@@ -65,6 +65,16 @@ internal static class TestTemplatesTestHelper
             null);
     }
 
+    internal static async Task<Guid> GetDemoDraftTemplateIdAsync(TestApiFactory factory)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+        return await dbContext.TestTemplates
+            .Where(entity => entity.Title == DraftTitle)
+            .Select(entity => entity.Id)
+            .FirstAsync();
+    }
+
     internal static async Task<Guid> GetDemoReadyTemplateIdAsync(TestApiFactory factory)
     {
         using var scope = factory.Services.CreateScope();

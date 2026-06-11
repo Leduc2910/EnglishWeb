@@ -1,0 +1,133 @@
+<section class="template-setup">
+  <header id="create-setup-wizard-header" class="wizard-header">
+    <div>
+      <h1 id="create-setup-title">Tạo đề gốc</h1>
+      <p id="create-setup-step" class="step-label">Bước 1/4: Thông tin đề</p>
+    </div>
+    <nav id="create-setup-stepper" class="stepper" aria-label="Tiến trình tạo đề">
+      <span class="step active">Thông tin đề</span>
+      <span class="step pending">Upload tài liệu</span>
+      <span class="step pending">Answer key</span>
+      <span class="step pending">Review</span>
+    </nav>
+  </header>
+
+  @if (isLoading()) {
+    <p class="loading">Đang tải đề…</p>
+  } @else if (loadError()) {
+    <div class="error-banner" role="alert">
+      <p>{{ loadError() }}</p>
+      <a class="btn-secondary" routerLink="/teacher/library">Quay lại thư viện</a>
+    </div>
+  } @else {
+    @if (bannerError()) {
+      <p class="error-banner" role="alert">{{ bannerError() }}</p>
+    }
+
+    <div class="wizard-body">
+      <form id="create-setup-form" class="setup-form" [formGroup]="form" (ngSubmit)="$event.preventDefault()">
+        <div class="form-group">
+          <label for="create-setup-name-input">Tên đề</label>
+          <input
+            id="create-setup-name-input"
+            type="text"
+            formControlName="title"
+            autocomplete="off"
+            maxlength="120"
+          />
+          @if (titleError(); as message) {
+            <p class="field-error" role="alert">{{ message }}</p>
+          }
+        </div>
+
+        <fieldset class="form-group">
+          <legend id="create-setup-skill-label">Kỹ năng</legend>
+          <div
+            id="create-setup-skill-control"
+            class="skill-segmented"
+            role="radiogroup"
+            aria-labelledby="create-setup-skill-label"
+          >
+            @for (option of skillOptions; track option.value) {
+              <label class="skill-option">
+                <input type="radio" formControlName="skill" [value]="option.value" />
+                <span>{{ option.label }}</span>
+              </label>
+            }
+          </div>
+          @if (skillError(); as message) {
+            <p class="field-error" role="alert">{{ message }}</p>
+          }
+        </fieldset>
+
+        <div class="form-group">
+          <label for="create-setup-description-input">Mô tả (tùy chọn)</label>
+          <textarea
+            id="create-setup-description-input"
+            rows="4"
+            formControlName="description"
+            maxlength="2000"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="create-setup-tag-input">Tags (tùy chọn, phân tách bằng dấu phẩy)</label>
+          <input id="create-setup-tag-input" type="text" formControlName="tagsInput" autocomplete="off" />
+          @if (tagsError(); as message) {
+            <p class="field-error" role="alert">{{ message }}</p>
+          }
+        </div>
+      </form>
+
+      <aside id="create-setup-draft-summary" class="draft-summary" aria-live="polite">
+        <h2>Tóm tắt nháp</h2>
+        <p id="create-setup-draft-status" class="draft-status">{{ saveStatusLabel() }}</p>
+
+        <h3>Trường bắt buộc</h3>
+        <ul id="create-setup-required-checklist" class="checklist">
+          <li [class.complete]="form.controls.title.value.trim().length >= 3">Tên đề</li>
+          <li [class.complete]="!!form.controls.skill.value">Kỹ năng</li>
+        </ul>
+
+        <h3>Yêu cầu theo kỹ năng</h3>
+        <ul class="checklist skill-checklist">
+          @for (item of checklist(); track item.label) {
+            <li [class.required]="item.required">{{ item.label }}</li>
+          }
+        </ul>
+
+        <p class="scope-note">Lớp, hạn nộp và phiên thi được cấu hình sau khi đề Ready.</p>
+      </aside>
+    </div>
+
+    <footer id="create-setup-footer-actions" class="footer-actions">
+      <button
+        id="create-setup-back-button"
+        type="button"
+        class="btn-secondary"
+        [disabled]="isSaving()"
+        (click)="onBack()"
+      >
+        Quay lại
+      </button>
+      <button
+        id="create-setup-save-draft-button"
+        type="button"
+        class="btn-secondary"
+        [disabled]="isSaving()"
+        (click)="onSaveDraft()"
+      >
+        Lưu nháp
+      </button>
+      <button
+        id="create-setup-continue-button"
+        type="button"
+        class="btn-primary"
+        [disabled]="isSaving()"
+        (click)="onContinue()"
+      >
+        Tiếp tục upload tài liệu
+      </button>
+    </footer>
+  }
+</section>

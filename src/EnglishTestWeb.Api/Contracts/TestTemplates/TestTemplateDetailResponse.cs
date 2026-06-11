@@ -5,6 +5,7 @@ public sealed record TestTemplateDetailResponse(
     string Title,
     string Skill,
     string? Description,
+    IReadOnlyList<string> Tags,
     string Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,

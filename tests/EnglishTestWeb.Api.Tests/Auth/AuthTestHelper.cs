@@ -88,6 +88,45 @@ internal static class AuthTestHelper
     internal static Task SignInStudentWithClassAsync(HttpClient client, Guid activeClassId) =>
         SignInUserAsync(client, StudentEmail, StudentPassword, activeClassId);
 
+    internal static async Task<HttpResponseMessage> PostJsonAsync(
+        HttpClient client,
+        string url,
+        object body)
+    {
+        await EnsureXsrfAsync(client);
+        var payload = JsonSerializer.Serialize(body);
+        using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+        return await client.PostAsync(url, content);
+    }
+
+    internal static async Task<HttpResponseMessage> PostMultipartAsync(
+        HttpClient client,
+        string url,
+        Action<MultipartFormDataContent> configure)
+    {
+        await EnsureXsrfAsync(client);
+        using var content = new MultipartFormDataContent();
+        configure(content);
+        return await client.PostAsync(url, content);
+    }
+
+    internal static async Task<HttpResponseMessage> DeleteAsync(HttpClient client, string url)
+    {
+        await EnsureXsrfAsync(client);
+        return await client.DeleteAsync(url);
+    }
+
+    internal static async Task<HttpResponseMessage> PutJsonAsync(
+        HttpClient client,
+        string url,
+        object body)
+    {
+        await EnsureXsrfAsync(client);
+        var payload = JsonSerializer.Serialize(body);
+        using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+        return await client.PutAsync(url, content);
+    }
+
     internal static async Task<HttpResponseMessage> LoginAsync(
         HttpClient client,
         string identifier,

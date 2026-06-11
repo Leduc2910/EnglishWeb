@@ -81,4 +81,88 @@ public sealed class TestTemplatesController(
 
         return Ok(result.Detail);
     }
+
+    [Authorize(Roles = IdentityRoleNames.Teacher)]
+    [HttpPost]
+    public async Task<ActionResult> Create(
+        [FromBody] CreateTestTemplateRequest request,
+        CancellationToken cancellationToken)
+    {
+        var teacherId = currentUserContext.UserId;
+        if (string.IsNullOrWhiteSpace(teacherId))
+        {
+            return hiddenResourceResponseFactory.FromCode(
+                StatusCodes.Status401Unauthorized,
+                "auth.unauthorized",
+                "Unauthorized.",
+                "Authentication is required.");
+        }
+
+        var result = await testTemplateService.CreateDraftForTeacherAsync(teacherId, request, cancellationToken);
+        if (!result.Succeeded || result.Response is null)
+        {
+            return hiddenResourceResponseFactory.FromCode(
+                result.StatusCode,
+                result.ErrorCode ?? "templates.invalid",
+                "Invalid template setup.",
+                "The template setup request could not be processed.");
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Response.TemplateId }, result.Response);
+    }
+
+    [Authorize(Roles = IdentityRoleNames.Teacher)]
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult> Update(
+        Guid id,
+        [FromBody] UpdateTestTemplateRequest request,
+        CancellationToken cancellationToken)
+    {
+        var teacherId = currentUserContext.UserId;
+        if (string.IsNullOrWhiteSpace(teacherId))
+        {
+            return hiddenResourceResponseFactory.FromCode(
+                StatusCodes.Status401Unauthorized,
+                "auth.unauthorized",
+                "Unauthorized.",
+                "Authentication is required.");
+        }
+
+        var authorizationResult = await authorizationService.AuthorizeAsync(
+            User,
+            id,
+            AuthorizationPolicies.CanEditTemplateAsTeacher);
+
+        var decision = await templateAuthorizationService.RequireTeacherTemplateAccessAsync(
+            id,
+            teacherId,
+            cancellationToken);
+
+        if (!authorizationResult.Succeeded || !decision.IsAllowed)
+        {
+            denialAuditor.AuditDenied(decision, "test-template", id.ToString());
+            return hiddenResourceResponseFactory.FromDecision(decision);
+        }
+
+        var result = await testTemplateService.UpdateDraftSetupForTeacherAsync(id, teacherId, request, cancellationToken);
+        if (!result.Succeeded || result.Response is null)
+        {
+            if (string.Equals(result.ErrorCode, "templates.notFound", StringComparison.Ordinal))
+            {
+                var notFoundDecision = AuthorizationDecision.HiddenNotFound(
+                    result.ErrorCode ?? "templates.notFound",
+                    AuthorizationDenialReason.TemplateOwnership);
+                denialAuditor.AuditDenied(notFoundDecision, "test-template", id.ToString());
+                return hiddenResourceResponseFactory.FromDecision(notFoundDecision);
+            }
+
+            return hiddenResourceResponseFactory.FromCode(
+                result.StatusCode,
+                result.ErrorCode ?? "templates.invalid",
+                "Invalid template setup.",
+                "The template setup request could not be processed.");
+        }
+
+        return Ok(result.Response);
+    }
 }

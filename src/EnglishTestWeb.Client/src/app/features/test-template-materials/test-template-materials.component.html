@@ -1,0 +1,163 @@
+<section class="template-materials">
+  <header id="create-materials-wizard-header" class="wizard-header">
+    <div>
+      <h1 id="create-materials-title">{{ templateTitle() || 'Upload tài liệu' }}</h1>
+      <p id="create-materials-step" class="step-label">Bước 2/4: Upload tài liệu</p>
+    </div>
+    <nav id="create-materials-stepper" class="stepper" aria-label="Tiến trình tạo đề">
+      <span class="step completed">Thông tin đề</span>
+      <span class="step active">Upload tài liệu</span>
+      <span class="step pending">Answer key</span>
+      <span class="step pending">Review</span>
+    </nav>
+  </header>
+
+  @if (isLoading()) {
+    <p class="loading">Đang tải tài liệu…</p>
+  } @else if (loadError()) {
+    <div class="error-banner" role="alert">
+      <p>{{ loadError() }}</p>
+      <a class="btn-secondary" routerLink="/teacher/library">Quay lại thư viện</a>
+    </div>
+  } @else {
+    @if (bannerError()) {
+      <p class="error-banner" role="alert">{{ bannerError() }}</p>
+    }
+
+    <div class="wizard-body">
+      <div id="create-materials-upload-section" class="upload-section">
+        @for (slot of slots(); track slot.role) {
+          <section class="upload-slot">
+            <h2>{{ slot.label }}</h2>
+
+            @if (!slot.material && !slot.isUploading) {
+              <div
+                id="create-materials-dropzone"
+                class="dropzone"
+                [class.dropzone-disabled]="isAnyUploading()"
+                (drop)="onDrop(slot.role, $event)"
+                (dragover)="onDragOver($event)"
+              >
+                <p>{{ slot.required ? 'Kéo thả file vào đây hoặc chọn file từ máy' : 'Kéo thả hoặc chọn file (tùy chọn)' }}</p>
+                <label class="btn-secondary file-picker">
+                  <span id="create-materials-file-picker">{{ slot.pickerLabel }}</span>
+                  <input
+                    type="file"
+                    hidden
+                    [accept]="slot.accept"
+                    [disabled]="isAnyUploading()"
+                    (change)="onFileSelected(slot.role, $event)"
+                  />
+                </label>
+              </div>
+            }
+
+            @if (slot.isUploading) {
+              <div id="create-materials-file-card" class="file-card uploading">
+                <p>Đang upload… {{ slot.uploadProgress ?? 0 }}%</p>
+                <div class="progress-bar" aria-hidden="true">
+                  <span [style.width.%]="slot.uploadProgress ?? 0"></span>
+                </div>
+              </div>
+            }
+
+            @if (slot.material; as material) {
+              <div id="create-materials-file-card" class="file-card success">
+                <p class="file-name">{{ material.originalFileName }}</p>
+                <p class="file-meta">{{ formatBytes(material.sizeBytes) }} · fileId: {{ material.fileId }}</p>
+                <div class="file-actions">
+                  <button
+                    id="create-materials-preview-link"
+                    type="button"
+                    class="btn-link"
+                    (click)="onPreview(material)"
+                  >
+                    {{ previewLabelForRole(material.role) }}
+                  </button>
+                  <label class="btn-secondary file-picker">
+                    Thay file
+                    <input
+                      type="file"
+                      hidden
+                      [accept]="slot.accept"
+                      [disabled]="isAnyUploading()"
+                      (change)="onFileSelected(slot.role, $event)"
+                    />
+                  </label>
+                  <button type="button" class="btn-secondary" (click)="onRemove(slot.role)">Xóa</button>
+                </div>
+              </div>
+            }
+
+            @if (slot.uploadError) {
+              <p class="field-error" role="alert">{{ slot.uploadError }}</p>
+            }
+          </section>
+        }
+      </div>
+
+      <aside id="create-materials-summary" class="material-summary" aria-live="polite">
+        <h2>Tóm tắt tài liệu</h2>
+        <p id="create-materials-upload-status" class="upload-status">{{ uploadStatusLabel() }}</p>
+
+        <h3>Yêu cầu</h3>
+        <ul id="create-materials-requirement-list" class="checklist">
+          @for (item of checklist(); track item.label) {
+            <li [class.required]="item.required">{{ item.label }}</li>
+          }
+        </ul>
+      </aside>
+    </div>
+
+    <footer id="create-materials-footer-actions" class="footer-actions">
+      <button
+        id="create-materials-back-button"
+        type="button"
+        class="btn-secondary"
+        [disabled]="isAnyUploading()"
+        (click)="onBack()"
+      >
+        Quay lại
+      </button>
+      <button
+        id="create-materials-save-draft-button"
+        type="button"
+        class="btn-secondary"
+        [disabled]="isAnyUploading()"
+        (click)="onSaveDraft()"
+      >
+        Lưu nháp
+      </button>
+      <button
+        id="create-materials-continue-button"
+        type="button"
+        class="btn-primary"
+        [disabled]="!canContinue()"
+        (click)="onContinue()"
+      >
+        Tiếp tục nhập answer key
+      </button>
+    </footer>
+  }
+
+  @if (previewUrl(); as url) {
+    <div
+      class="preview-modal"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="previewIsAudio() ? 'Nghe thử audio' : 'Xem nhanh PDF'"
+    >
+      <div class="preview-panel">
+        <header class="preview-header">
+          <h2>{{ previewFileName() }}</h2>
+          <button type="button" class="btn-secondary" (click)="closePreview()">Đóng</button>
+        </header>
+        @if (previewIsAudio() && previewUrl(); as audioUrl) {
+          <audio [src]="audioUrl" controls class="audio-preview"></audio>
+        } @else if (safePreviewUrl(); as safeUrl) {
+          <iframe [src]="safeUrl" title="PDF preview"></iframe>
+        }
+      </div>
+    </div>
+  }
+</section>

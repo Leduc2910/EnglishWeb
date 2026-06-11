@@ -48,3 +48,18 @@ _Chunk 1 — API core only._
 - Audit MVP chỉ `ILogger` — không DB persistence; per spec AC 4 scope.
 - Correlation ID chỉ đọc client header — per spec E2 MVP.
 - `/me` `activeClass` không có `status`; `/classes/current` có — summary vs detail intentional.
+
+## Deferred from: code review of 2-2-create-edit-and-save-draft-template-setup (2026-06-10)
+
+- Concurrent PUT cùng draft last-write-wins — không có concurrency AC trong story MVP; thêm row version khi multi-tab edit có spec.
+- TagsJson corrupt deserialize silently → `[]` — edge case hiếm; log/surface error khi có persistence audit story.
+- Tags chip UI — comma-only input đủ MVP story 2.2; chip add/remove UX defer polish Epic 2.
+- DbUpdateException catch-all → `templates.tagLimit` — acceptable MVP; refine per constraint type khi có ops telemetry.
+
+## Deferred from: code review of 2-3-protected-testmaterial-upload-and-preview (2026-06-10)
+
+- Triple ownership DB round-trips per materials request — mirror 2.1/2.2 controller pattern; refactor khi extract shared auth helper.
+- Edit auth handler không enforce draft; service layer là gate duy nhất — defense-in-depth acceptable MVP.
+- Archived physical files không xóa khỏi disk — Implementation Note defer physical GC; sweeper story sau.
+- File access chỉ check template owner, không check `StoredFile.OwnerUserId` — template ownership là auth model hiện tại.
+- Non-seekable upload stream bỏ qua pre-write size check — edge case hiếm; post-write validation + MaxWriteBytes cap đủ MVP.

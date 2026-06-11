@@ -38,6 +38,7 @@ describe('TestTemplateLibraryComponent', () => {
         title: 'Listening Ready',
         skill: 'listening',
         description: 'Demo template',
+        tags: [],
         status: 'ready',
         createdAt: '2026-06-01T00:00:00Z',
         updatedAt: '2026-06-06T00:00:00Z',
@@ -52,6 +53,10 @@ describe('TestTemplateLibraryComponent', () => {
         provideRouter([
           {
             path: 'teacher/library',
+            component: TestTemplateLibraryComponent,
+          },
+          {
+            path: 'teacher/library/:templateId/setup',
             component: TestTemplateLibraryComponent,
           },
         ]),
@@ -98,6 +103,14 @@ describe('TestTemplateLibraryComponent', () => {
     expect(fixture.componentInstance['blockedActionMessage']()).toBe(
       TEMPLATE_ERROR_MESSAGES['ERR_TEMPLATE_NOT_READY'],
     );
+  });
+
+  it('navigates draft templates to setup editor', async () => {
+    const navigateSpy = vi.spyOn(router, 'navigate');
+    await fixture.componentInstance['inspectTemplate'](draftTemplate, new Event('click'));
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/teacher/library', 'tpl-draft', 'setup']);
+    expect(api.getTemplate).not.toHaveBeenCalled();
   });
 
   it('loads inspect panel when viewing template detail', async () => {

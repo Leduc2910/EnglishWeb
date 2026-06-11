@@ -79,12 +79,33 @@ export const routes: Routes = [
       {
         path: 'library/new/setup',
         loadComponent: () =>
+          import('./features/test-template-setup/test-template-setup.component').then(
+            (module) => module.TestTemplateSetupComponent,
+          ),
+      },
+      {
+        path: 'library/:templateId/setup',
+        loadComponent: () =>
+          import('./features/test-template-setup/test-template-setup.component').then(
+            (module) => module.TestTemplateSetupComponent,
+          ),
+      },
+      {
+        path: 'library/:templateId/materials',
+        loadComponent: () =>
+          import('./features/test-template-materials/test-template-materials.component').then(
+            (module) => module.TestTemplateMaterialsComponent,
+          ),
+      },
+      {
+        path: 'library/:templateId/answer-key',
+        loadComponent: () =>
           import('./features/teacher-placeholder/teacher-placeholder.component').then(
             (module) => module.TeacherPlaceholderComponent,
           ),
         data: {
-          title: 'Tạo đề mới',
-          description: 'Story 2.2 sẽ triển khai wizard tạo đề gốc.',
+          title: 'Answer key & Scoring',
+          description: 'Story 2.4 sẽ triển khai cấu hình answer key.',
         },
       },
       {
