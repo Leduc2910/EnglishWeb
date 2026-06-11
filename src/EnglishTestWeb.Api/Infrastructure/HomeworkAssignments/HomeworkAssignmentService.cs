@@ -124,6 +124,8 @@ public sealed class HomeworkAssignmentService(
             assignment.DeadlineAt,
             assignment.TimeLimitMinutes,
             assignment.Status,
+            Mode: "homework",
+            AllowedActions: Array.Empty<string>(),
             assignment.CreatedAt);
 
         return new CreateHomeworkAssignmentResult(true, response, null, StatusCodes.Status201Created);

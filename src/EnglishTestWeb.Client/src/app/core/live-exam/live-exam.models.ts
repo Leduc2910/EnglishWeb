@@ -13,6 +13,8 @@ export interface LiveExamSession {
   classId: string;
   className: string;
   status: string;
+  mode: string;
+  allowedActions: string[];
   scheduledStartAt: string | null;
   scheduledEndAt: string | null;
   openedAt: string | null;

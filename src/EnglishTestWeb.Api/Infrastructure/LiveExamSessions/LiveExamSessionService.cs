@@ -219,6 +219,14 @@ public sealed class LiveExamSessionService(
         return (template, schoolClass);
     }
 
+    private static IReadOnlyList<string> AllowedActionsFor(string status) =>
+        status switch
+        {
+            LiveExamSessionStatuses.Scheduled => ["open"],
+            LiveExamSessionStatuses.Open => ["close"],
+            _ => Array.Empty<string>()
+        };
+
     private static LiveExamSessionResponse MapResponse(
         LiveExamSession session,
         Domain.TestTemplates.TestTemplate template,
@@ -232,6 +240,8 @@ public sealed class LiveExamSessionService(
             schoolClass.Id,
             schoolClass.Name,
             session.Status,
+            Mode: "live-exam",
+            AllowedActions: AllowedActionsFor(session.Status),
             session.ScheduledStartAt,
             session.ScheduledEndAt,
             session.OpenedAt,

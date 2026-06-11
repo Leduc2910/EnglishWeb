@@ -44,6 +44,8 @@ function makeAssignment() {
     deadlineAt: '2026-12-31T12:00:00Z',
     timeLimitMinutes: null,
     status: 'published',
+    mode: 'homework',
+    allowedActions: [],
     createdAt: '2026-06-11T00:00:00Z',
   };
 }

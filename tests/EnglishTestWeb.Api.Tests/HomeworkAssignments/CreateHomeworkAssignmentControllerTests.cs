@@ -32,6 +32,8 @@ public sealed class CreateHomeworkAssignmentControllerTests
         Assert.Equal(templateId, root.GetProperty("templateId").GetGuid());
         Assert.Equal(classId, root.GetProperty("classId").GetGuid());
         Assert.Equal("published", root.GetProperty("status").GetString());
+        Assert.Equal("homework", root.GetProperty("mode").GetString());
+        Assert.Equal(0, root.GetProperty("allowedActions").GetArrayLength());
         Assert.True(root.TryGetProperty("id", out _));
         Assert.True(root.TryGetProperty("templateTitle", out _));
         Assert.True(root.TryGetProperty("className", out _));

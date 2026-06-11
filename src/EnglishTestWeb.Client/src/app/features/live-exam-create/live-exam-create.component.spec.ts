@@ -33,6 +33,8 @@ function makeClasses() {
 }
 
 function makeSession(status = 'scheduled') {
+  const allowedActions =
+    status === 'scheduled' ? ['open'] : status === 'open' ? ['close'] : [];
   return {
     id: 'ses-1',
     templateId: 'tpl-1',
@@ -41,6 +43,8 @@ function makeSession(status = 'scheduled') {
     classId: 'cls-1',
     className: 'Lớp 7A',
     status,
+    mode: 'live-exam',
+    allowedActions,
     scheduledStartAt: null,
     scheduledEndAt: null,
     openedAt: status === 'open' || status === 'closed' ? '2026-06-11T08:00:00Z' : null,

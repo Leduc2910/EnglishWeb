@@ -27,6 +27,9 @@ public sealed class CreateLiveExamSessionControllerTests
         using var document = await JsonDocument.ParseAsync(body);
         var root = document.RootElement;
         Assert.Equal("scheduled", root.GetProperty("status").GetString());
+        Assert.Equal("live-exam", root.GetProperty("mode").GetString());
+        Assert.Equal(1, root.GetProperty("allowedActions").GetArrayLength());
+        Assert.Equal("open", root.GetProperty("allowedActions")[0].GetString());
         Assert.Equal(templateId, root.GetProperty("templateId").GetGuid());
         Assert.Equal(classId, root.GetProperty("classId").GetGuid());
         Assert.True(root.TryGetProperty("id", out _));

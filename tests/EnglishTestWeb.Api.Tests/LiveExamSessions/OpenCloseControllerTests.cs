@@ -22,6 +22,9 @@ public sealed class OpenCloseControllerTests
         await using var body = await response.Content.ReadAsStreamAsync();
         using var document = await JsonDocument.ParseAsync(body);
         Assert.Equal("open", document.RootElement.GetProperty("status").GetString());
+        Assert.Equal("live-exam", document.RootElement.GetProperty("mode").GetString());
+        Assert.Equal(1, document.RootElement.GetProperty("allowedActions").GetArrayLength());
+        Assert.Equal("close", document.RootElement.GetProperty("allowedActions")[0].GetString());
         Assert.False(document.RootElement.GetProperty("openedAt").ValueKind == JsonValueKind.Null);
     }
 
@@ -104,6 +107,8 @@ public sealed class OpenCloseControllerTests
         await using var body = await response.Content.ReadAsStreamAsync();
         using var document = await JsonDocument.ParseAsync(body);
         Assert.Equal("closed", document.RootElement.GetProperty("status").GetString());
+        Assert.Equal("live-exam", document.RootElement.GetProperty("mode").GetString());
+        Assert.Equal(0, document.RootElement.GetProperty("allowedActions").GetArrayLength());
         Assert.False(document.RootElement.GetProperty("closedAt").ValueKind == JsonValueKind.Null);
     }
 

@@ -15,6 +15,8 @@ export interface HomeworkAssignment {
   deadlineAt: string;
   timeLimitMinutes: number | null;
   status: string;
+  mode: string;
+  allowedActions: string[];
   createdAt: string;
 }
 

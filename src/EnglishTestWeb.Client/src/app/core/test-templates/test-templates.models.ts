@@ -147,6 +147,21 @@ export const STATUS_LABELS: Record<string, string> = {
   archived: 'Đã lưu trữ',
 };
 
+export const MODE_LABELS: Record<string, string> = {
+  homework: 'Homework',
+  'live-exam': 'Thi trực tiếp',
+};
+
+export const HOMEWORK_STATUS_LABELS: Record<string, string> = {
+  published: 'Đã giao',
+};
+
+export const LIVE_EXAM_STATUS_LABELS: Record<string, string> = {
+  scheduled: 'Chưa mở',
+  open: 'Đang mở',
+  closed: 'Đã đóng',
+};
+
 export function mapTemplateApiError(error: unknown): string {
   if (error && typeof error === 'object' && 'error' in error) {
     const httpError = error as { error?: { code?: string; extensions?: { code?: string } } };

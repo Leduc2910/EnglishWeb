@@ -195,6 +195,36 @@ describe('TestTemplateReviewComponent', () => {
     expect(document.querySelector('#review-publish-button')).toBeFalsy();
   });
 
+  it('click Giao homework button navigates to /teacher/homework/new with templateId', async () => {
+    await setup('reading', 'ready');
+
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    const btn = document.querySelector<HTMLButtonElement>('#review-create-homework-button');
+    expect(btn).toBeTruthy();
+    btn!.click();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/teacher/homework/new'], {
+      queryParams: { templateId: 'tpl-1' },
+    });
+  });
+
+  it('click Tạo phiên thi trực tiếp button navigates to /teacher/live-exams/new with templateId', async () => {
+    await setup('reading', 'ready');
+
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    const btn = document.querySelector<HTMLButtonElement>('#review-create-live-exam-button');
+    expect(btn).toBeTruthy();
+    btn!.click();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/teacher/live-exams/new'], {
+      queryParams: { templateId: 'tpl-1' },
+    });
+  });
+
   it('navigates to library when no templateId in route', async () => {
     api = {
       getTemplate: vi.fn(),

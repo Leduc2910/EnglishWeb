@@ -8,6 +8,8 @@ public sealed record LiveExamSessionResponse(
     Guid ClassId,
     string ClassName,
     string Status,
+    string Mode,
+    IReadOnlyList<string> AllowedActions,
     DateTimeOffset? ScheduledStartAt,
     DateTimeOffset? ScheduledEndAt,
     DateTimeOffset? OpenedAt,

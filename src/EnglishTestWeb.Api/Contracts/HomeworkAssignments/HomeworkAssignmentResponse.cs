@@ -10,4 +10,6 @@ public sealed record HomeworkAssignmentResponse(
     DateTimeOffset DeadlineAt,
     int? TimeLimitMinutes,
     string Status,
+    string Mode,
+    IReadOnlyList<string> AllowedActions,
     DateTimeOffset CreatedAt);

@@ -172,6 +172,9 @@ export class TestTemplateLibraryComponent implements OnInit {
     }
 
     this.blockedActionMessage.set(null);
+    void this.router.navigate(['/teacher/homework/new'], {
+      queryParams: { templateId: template.templateId },
+    });
   }
 
   protected onLiveExamAction(template: TestTemplateListItem, event: Event): void {
@@ -182,6 +185,9 @@ export class TestTemplateLibraryComponent implements OnInit {
     }
 
     this.blockedActionMessage.set(null);
+    void this.router.navigate(['/teacher/live-exams/new'], {
+      queryParams: { templateId: template.templateId },
+    });
   }
 
   protected async retryLoad(): Promise<void> {

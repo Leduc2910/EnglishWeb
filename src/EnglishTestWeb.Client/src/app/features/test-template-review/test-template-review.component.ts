@@ -140,6 +140,24 @@ export class TestTemplateReviewComponent implements OnInit, OnDestroy {
     await this.router.navigate(['/teacher/library']);
   }
 
+  protected onGoToHomework(): void {
+    const tid = this.template()?.templateId;
+    if (tid) {
+      void this.router.navigate(['/teacher/homework/new'], {
+        queryParams: { templateId: tid },
+      });
+    }
+  }
+
+  protected onGoToLiveExam(): void {
+    const tid = this.template()?.templateId;
+    if (tid) {
+      void this.router.navigate(['/teacher/live-exams/new'], {
+        queryParams: { templateId: tid },
+      });
+    }
+  }
+
   private async loadPage(templateId: string): Promise<void> {
     const requestId = ++this.loadRequestId;
     this.viewState.set('loading');

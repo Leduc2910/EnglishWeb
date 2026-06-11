@@ -105,6 +105,28 @@ describe('TestTemplateLibraryComponent', () => {
     );
   });
 
+  it('navigates to /teacher/homework/new with templateId when homework action on ready template', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    fixture.componentInstance['onHomeworkAction'](readyTemplate, new Event('click'));
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/teacher/homework/new'], {
+      queryParams: { templateId: 'tpl-ready' },
+    });
+    expect(fixture.componentInstance['blockedActionMessage']()).toBeNull();
+  });
+
+  it('navigates to /teacher/live-exams/new with templateId when live exam action on ready template', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    fixture.componentInstance['onLiveExamAction'](readyTemplate, new Event('click'));
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/teacher/live-exams/new'], {
+      queryParams: { templateId: 'tpl-ready' },
+    });
+    expect(fixture.componentInstance['blockedActionMessage']()).toBeNull();
+  });
+
   it('navigates draft templates to setup editor', async () => {
     const navigateSpy = vi.spyOn(router, 'navigate');
     await fixture.componentInstance['inspectTemplate'](draftTemplate, new Event('click'));

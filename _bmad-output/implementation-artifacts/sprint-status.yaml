@@ -1,6 +1,7 @@
 # generated: 2026-06-09
-# last_updated: 2026-06-11
+# last_updated: 2026-06-11 — 3.3 done via code review (2026-06-11)
 # project: EnglishTestWeb
+
 # project_key: NOKEY
 # tracking_system: file-system
 # story_location: E:\Code\EnglishTestWeb\_bmad-output\implementation-artifacts
@@ -37,7 +38,7 @@
 generated: 2026-06-09
 last_updated: 2026-06-11
 project: EnglishTestWeb
-# 3.2 done via code review (2026-06-11)
+# 3.2 done via code review (2026-06-11); 3.3 story created (2026-06-11)
 project_key: NOKEY
 tracking_system: file-system
 story_location: E:\Code\EnglishTestWeb\_bmad-output\implementation-artifacts
@@ -61,7 +62,7 @@ development_status:
   epic-3: in-progress
   3-1-create-homeworkassignment-from-a-ready-template: done
   3-2-create-and-control-liveexamsession: done
-  3-3-usage-mode-contract-across-delivery-surfaces: backlog
+  3-3-usage-mode-contract-across-delivery-surfaces: done
   epic-3-retrospective: optional
 
   epic-4: backlog

@@ -132,6 +132,13 @@ _Patched in this pass: inactive class guard (`homework.classNotActive` 400) — 
 - Tests: Deadline boundary test thiếu `now + 30s` và `now + 61s` — off-by-one coverage; add khi có test expansion story.
 - Backend: `HomeworkAssignment` không có navigation properties — EF shadow navigation pattern; thêm nav props khi có list endpoint cần `.Include()`.
 
+## Deferred from: code review of 3-3-usage-mode-contract-across-delivery-surfaces (2026-06-11)
+
+- `HomeworkAssignment.AllowedActions` hardcoded `Array.Empty<string>()` — no `AllowedActionsFor` helper unlike live exam; correct for MVP (published is only status), but asymmetric; add helper when homework gains state transitions.
+- `mode` values ("homework", "live-exam") are bare string literals — no shared constant; consistent with project string-status convention; add constants when API version or multi-client expansion warrants.
+- Concurrent `OpenAsync` race condition on `LiveExamSession.Status` (see also 3-2 defer) — add `[ConcurrencyCheck]` on Status when building submission pipeline.
+- No GET list/detail endpoints for HomeworkAssignment/LiveExamSession — when built, must include `Mode`/`AllowedActions` in mapping; no structural enforcement today.
+
 ## Deferred from: code review pass 1 of 3-2-create-and-control-liveexamsession (2026-06-11)
 
 - Backend: TOCTOU double-lookup auth pattern (template auth check → re-fetch template) — project-wide established pattern; refactor khi extract shared auth helper.
