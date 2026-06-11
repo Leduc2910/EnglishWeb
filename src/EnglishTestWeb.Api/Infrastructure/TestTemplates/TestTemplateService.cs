@@ -1,3 +1,4 @@
+using System.Text.Json;
 using EnglishTestWeb.Api.Application.Security;
 using EnglishTestWeb.Api.Application.TestTemplates;
 using EnglishTestWeb.Api.Contracts.TestTemplates;
@@ -5,13 +6,16 @@ using EnglishTestWeb.Api.Domain.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EnglishTestWeb.Api.Infrastructure.TestTemplates;
 
 public sealed class TestTemplateService(
     EnglishTestWebDbContext dbContext,
-    ITemplateAuthorizationService templateAuthorizationService) : ITestTemplateService
+    ITemplateAuthorizationService templateAuthorizationService,
+    ILogger<TestTemplateService> logger) : ITestTemplateService
 {
+    private static readonly JsonSerializerOptions RowsJsonOptions = new(JsonSerializerDefaults.Web);
     public async Task<IReadOnlyList<TestTemplateListItemResponse>> ListForTeacherAsync(
         string teacherId,
         TestTemplateListQuery query,
@@ -166,6 +170,140 @@ public sealed class TestTemplateService(
         template.UpdatedAt = DateTimeOffset.UtcNow;
 
         return await SaveTemplateMutationAsync(template, StatusCodes.Status200OK, cancellationToken);
+    }
+
+    public async Task<MarkReadyResult> MarkReadyAsync(
+        Guid templateId,
+        string teacherId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var template = await dbContext.TestTemplates
+            .FirstOrDefaultAsync(entity => entity.Id == templateId, cancellationToken);
+
+        if (template is null)
+        {
+            return new MarkReadyResult(false, null, "templates.notFound", StatusCodes.Status404NotFound);
+        }
+
+        if (string.Equals(template.Status, TemplateStatuses.Archived, StringComparison.Ordinal))
+        {
+            return new MarkReadyResult(false, null, "templates.archived", StatusCodes.Status409Conflict);
+        }
+
+        // Idempotent: already ready — return current state without any change
+        if (string.Equals(template.Status, TemplateStatuses.Ready, StringComparison.Ordinal))
+        {
+            return new MarkReadyResult(true, MapDetail(template), null, StatusCodes.Status200OK);
+        }
+
+        // Defensive check: template info
+        if (string.IsNullOrWhiteSpace(template.Title) || string.IsNullOrWhiteSpace(template.Skill))
+        {
+            return new MarkReadyResult(false, null, "review.templateInfoMissing", StatusCodes.Status400BadRequest);
+        }
+
+        var isReadingOrListening =
+            string.Equals(template.Skill, TemplateSkill.Reading, StringComparison.Ordinal) ||
+            string.Equals(template.Skill, TemplateSkill.Listening, StringComparison.Ordinal);
+        var isSpeaking = string.Equals(template.Skill, TemplateSkill.Speaking, StringComparison.Ordinal);
+
+        // Material check
+        if (isReadingOrListening)
+        {
+            var hasPdf = await dbContext.TestMaterials
+                .AnyAsync(m => m.TemplateId == templateId && m.Role == MaterialRoles.Pdf && m.IsActive, cancellationToken);
+            if (!hasPdf)
+            {
+                return new MarkReadyResult(false, null, "review.missingRequiredMaterial", StatusCodes.Status400BadRequest);
+            }
+        }
+
+        if (isSpeaking)
+        {
+            var hasMaterial = await dbContext.TestMaterials
+                .AnyAsync(m => m.TemplateId == templateId && m.IsActive, cancellationToken);
+            if (!hasMaterial)
+            {
+                return new MarkReadyResult(false, null, "review.missingRequiredMaterial", StatusCodes.Status400BadRequest);
+            }
+        }
+
+        if (!isReadingOrListening && !isSpeaking)
+        {
+            return new MarkReadyResult(false, null, "review.missingRequiredMaterial", StatusCodes.Status400BadRequest);
+        }
+
+        // AnswerKey check (reading/listening only)
+        AnswerKeyVersion? answerKey = null;
+        if (isReadingOrListening)
+        {
+            answerKey = await dbContext.AnswerKeyVersions
+                .FirstOrDefaultAsync(a => a.TemplateId == templateId, cancellationToken);
+
+            if (answerKey is null || answerKey.QuestionCount < 1)
+            {
+                return new MarkReadyResult(false, null, "review.answerKeyIncomplete", StatusCodes.Status400BadRequest);
+            }
+
+            List<AnswerKeyRow> rows;
+            try
+            {
+                rows = JsonSerializer.Deserialize<List<AnswerKeyRow>>(answerKey.RowsJson, RowsJsonOptions) ?? [];
+            }
+            catch (JsonException)
+            {
+                rows = [];
+            }
+
+            if (rows.Count != answerKey.QuestionCount || rows.Any(r => string.IsNullOrWhiteSpace(r.CorrectAnswer)))
+            {
+                return new MarkReadyResult(false, null, "review.answerKeyIncomplete", StatusCodes.Status400BadRequest);
+            }
+
+            // Scoring check
+            if (string.Equals(answerKey.ScoringMode, ScoringModes.Equal, StringComparison.Ordinal))
+            {
+                if (answerKey.TotalScore is null || answerKey.TotalScore <= 0)
+                {
+                    return new MarkReadyResult(false, null, "review.scoringInvalid", StatusCodes.Status400BadRequest);
+                }
+            }
+            else if (string.Equals(answerKey.ScoringMode, ScoringModes.PerQuestion, StringComparison.Ordinal))
+            {
+                if (rows.Any(r => r.Score is null || r.Score <= 0))
+                {
+                    return new MarkReadyResult(false, null, "review.scoringInvalid", StatusCodes.Status400BadRequest);
+                }
+            }
+        }
+
+        // Transition — one SaveChangesAsync for atomicity
+        var now = DateTimeOffset.UtcNow;
+        var previousStatus = template.Status;
+        template.Status = TemplateStatuses.Ready;
+        template.UpdatedAt = now;
+
+        if (answerKey is not null)
+        {
+            answerKey.Status = AnswerKeyStatuses.Ready;
+        }
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return new MarkReadyResult(false, null, "review.markReadyFailed", StatusCodes.Status500InternalServerError);
+        }
+
+        logger.LogInformation(
+            "TemplateMarkedReady: templateId={TemplateId} teacherId={TeacherId} previousStatus={PreviousStatus} newStatus={NewStatus} at={Timestamp}",
+            templateId, teacherId, previousStatus, TemplateStatuses.Ready, now);
+
+        return new MarkReadyResult(true, MapDetail(template), null, StatusCodes.Status200OK);
     }
 
     private async Task<TestTemplateMutationResult> SaveTemplateMutationAsync(

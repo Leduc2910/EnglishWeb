@@ -258,4 +258,38 @@ describe('TestTemplateAnswerKeyComponent', () => {
     expect(component['scoreTotal']()).toBe(5);
     expect(component['missingAnswerCount']()).toBe(0);
   });
+
+  it('blocks continue when total score is zero in equal mode', async () => {
+    await setup();
+    fixture.componentInstance['scoringMode'].set('equal');
+    fixture.componentInstance['totalScore'].set(0);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['canContinue']()).toBe(false);
+
+    const errors = fixture.componentInstance['validateForContinue']();
+    expect(errors.some((e) => e.code === 'ERR_TOTAL_SCORE_INVALID')).toBe(true);
+  });
+
+  it('blocks continue when per-question scores are missing', async () => {
+    await setup();
+    const countInput = document.createElement('input');
+    countInput.value = '2';
+    fixture.componentInstance['onQuestionCountChange']({ target: countInput } as unknown as Event);
+    fixture.componentInstance['onScoringModeChange']('per-question');
+
+    for (const questionNumber of [1, 2]) {
+      const answerInput = document.createElement('input');
+      answerInput.value = 'A';
+      fixture.componentInstance['onAnswerChange'](questionNumber, {
+        target: answerInput,
+      } as unknown as Event);
+    }
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['canContinue']()).toBe(false);
+
+    const errors = fixture.componentInstance['validateForContinue']();
+    expect(errors.some((e) => e.code === 'ERR_ROW_SCORE_INVALID')).toBe(true);
+  });
 });

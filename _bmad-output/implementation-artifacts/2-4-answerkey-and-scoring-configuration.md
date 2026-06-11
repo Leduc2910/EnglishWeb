@@ -4,7 +4,7 @@ baseline_commit: 0c3e45d4ad9159101d616db0c4f10ed3a46aed84
 
 # Story 2.4: AnswerKey And Scoring Configuration
 
-Status: review
+Status: done
 
 ## Story
 
@@ -548,6 +548,59 @@ Claude Fable 5 (claude-fable-5)
 
 **Docs (modified):**
 - `docs/setup/development.md` — Story 2.4 answer key smoke test + API endpoints
+
+### Review Findings
+
+**Chunk A (Domain + Persistence): ✅ Clean — no patch items.**
+
+**Chunk B (Application + API):**
+
+- [x] [Review][Patch] `MapResponse` không có try/catch quanh `JsonSerializer.Deserialize` → unhandled 500 nếu RowsJson corrupt [`src/EnglishTestWeb.Api/Infrastructure/TestTemplates/AnswerKeyService.cs:MapResponse`]
+- [x] [Review][Patch] `catch (DbUpdateException)` trả `answerKey.concurrencyConflict` cho mọi DB error — đổi sang `answerKey.saveFailed` / 500 [`src/EnglishTestWeb.Api/Infrastructure/TestTemplates/AnswerKeyService.cs:~141`]
+- [x] [Review][Patch] `UpsertAnswerKeyRequest.ScoringMode` khai báo `string?` → đổi thành `string`; bỏ `!` null-forgiving [`src/EnglishTestWeb.Api/Contracts/TestTemplates/UpsertAnswerKeyRequest.cs:6`]
+- [x] [Review][Patch] `AnswerKeyRowRequest.CorrectAnswer` khai báo `string?` → đổi thành `string` [`src/EnglishTestWeb.Api/Contracts/TestTemplates/UpsertAnswerKeyRequest.cs:10`]
+- [x] [Review][Patch] Fallback error code trong `Upsert` controller đổi từ `"answerKey.invalid.questionCount"` sang `"answerKey.error"` [`src/EnglishTestWeb.Api/Controllers/AnswerKeyController.cs:~78`]
+**Chunk C (API Tests):**
+
+- [x] [Review][Patch] `Put_Twice_UpdatesWithoutDuplicate`: thiếu assertion `answerKeyVersionId` giống nhau giữa 2 response [`tests/.../AnswerKeyControllerTests.cs`]
+- [x] [Review][Patch] `Get_AfterPut_ReturnsPersistedRows`: chỉ assert `rows[0]`, bỏ qua `rows[1]` [`tests/.../AnswerKeyControllerTests.cs`]
+- [x] [Review][Patch] Thiếu test: `Get_SpeakingTemplate_ReturnsNotFound` (GET speaking → 404 `answerKey.notFound`) [`tests/.../AnswerKeyControllerTests.cs`]
+- [x] [Review][Patch] Thiếu test: GET/PUT với non-existent `templateId` (GET → `answerKey.notFound`, PUT → `templates.notFound`) [`tests/.../AnswerKeyControllerTests.cs`]
+- [x] [Review][Defer] Boundary questionCount=1 và questionCount=200 chưa test — off-by-one gap; add khi có test expansion — deferred, pre-existing
+- [x] [Review][Defer] GET trên Ready template có answer key chưa test — edge case; deferred đến story 2.5 — deferred, pre-existing
+- [x] [Review][Defer] DbUpdateConcurrencyException / DbUpdateException paths không có test — cần mock hoặc real DB; in-memory DB không support rowversion — deferred, pre-existing
+- [x] [Review][Defer] Corrupt RowsJson graceful fallback không có test — cần direct DB write helper — deferred, pre-existing
+
+- [x] [Review][Defer] Race condition first-upsert (2 concurrent PUT) → unique-index → 409 misleading — low probability MVP, partially mitigated bởi patch P2 — deferred, pre-existing
+- [x] [Review][Defer] `template.UpdatedAt` side effect trực tiếp trong `AnswerKeyService` — design smell, không gây bug hiện tại — deferred, pre-existing
+- [x] [Review][Defer] `CorrectAnswer` max length không capped ở service → DoS concern — low priority MVP — deferred, pre-existing
+
+**Chunk D (Angular Frontend):**
+
+- [x] [Review][Patch] `answerKey.saveFailed` thiếu trong `TEMPLATE_ERROR_MESSAGES` → backend emit code này nhưng frontend dùng generic fallback [`src/EnglishTestWeb.Client/src/app/core/test-templates/test-templates.models.ts`]
+- [x] [Review][Patch] `min="0"` trên total score và per-question score inputs → browser cho phép 0 nhưng validation yêu cầu `> 0`; đổi sang `min="0.01"` [`src/.../test-template-answer-key.component.html`]
+- [x] [Review][Patch] `onContinue` thiếu `saveInFlight` guard → nếu gọi programmatically khi `saveInFlight=true`, `onSaveDraft` silent no-op, `bannerError` null, navigation fires với unsaved data [`src/.../test-template-answer-key.component.ts`]
+- [x] [Review][Defer] `confirm()` dialog trong `applyQuestionCount` không testable trong Vitest/jsdom; cancel/confirm paths untested — refactor sang ConfirmService ngoài scope MVP — deferred
+- [x] [Review][Defer] Inner catch `getAnswerKey` áp dụng defaults cho ALL errors (kể cả 403/500) không chỉ 404 — acceptable MVP pattern — deferred
+- [x] [Review][Defer] `ERR_ANSWER_MISSING` key trong `TEMPLATE_ERROR_MESSAGES` dead code — không ai read nó — deferred cosmetic
+- [x] [Review][Defer] `body.code` primary path trong `mapAnswerKeyApiError` dead code — ProblemDetails luôn dùng `extensions.code`; fallback hoạt động đúng — deferred cosmetic
+- [x] [Review][Defer] `.step.pending` CSS class không có rule — cosmetic — deferred
+- [x] [Review][Defer] Missing tests: Back button (AC9), non-draft loadError (AC1), `goToReview()` speaking — coverage gaps — deferred
+
+**Chunk E (Frontend mods + docs):**
+
+- [x] [Review][Patch] Missing tests cho `continueLabel` speaking variant và navigation to `review` — 2 tests thêm vào `test-template-materials.component.spec.ts`
+- [x] [Review][Clean] `docs/setup/development.md`: cập nhật mô tả Story 2.3 + thêm section Story 2.4 smoke test — no bugs ✅
+- [x] [Review][Clean] `continueLabel()` computed và `onContinue` navigation branching (speaking→review, others→answer-key) — logic đúng ✅
+
+**Second Pass (cross-cutting review):**
+
+- [x] [Review][Patch] Angular test thiếu: totalScore invalid (equal mode) không block continue — thêm test `blocks continue when total score is zero in equal mode`
+- [x] [Review][Patch] Angular test thiếu: per-question score missing không block continue — thêm test `blocks continue when per-question scores are missing`
+- [x] [Review][Defer] `auth.unauthorized` và `answerKey.error` thiếu trong `TEMPLATE_ERROR_MESSAGES` — generic fallback acceptable; 401 path là extreme edge case — deferred
+- [x] [Review][Dismiss] Server không validate score range — intentional by spec (save draft = no completeness check)
+- [x] [Review][Dismiss] `teacherId` param trong service interface unused — design smell consistent với codebase pattern
+- [x] [Review][Dismiss] Matrix tests thiếu GET happy-path — `AnswerKeyControllerTests` có `Get_AfterPut_ReturnsPersistedRows` cover happy path
 
 ## Change Log
 

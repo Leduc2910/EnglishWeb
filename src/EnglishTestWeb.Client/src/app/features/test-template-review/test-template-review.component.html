@@ -1,0 +1,185 @@
+<section class="template-review">
+  <header id="review-publish-wizard-header" class="wizard-header">
+    <div>
+      <h1 id="review-title">{{ template()?.title || 'Kiểm tra đề trước khi sử dụng' }}</h1>
+      <p id="review-step" class="step-label">Bước 4/4: Review đề</p>
+    </div>
+    <nav id="review-publish-stepper" class="stepper" aria-label="Tiến trình tạo đề">
+      <span class="step completed">Thông tin đề</span>
+      <span class="step completed">Upload tài liệu</span>
+      <span class="step completed">Answer key</span>
+      <span class="step active">Review</span>
+    </nav>
+  </header>
+
+  @if (viewState() === 'loading') {
+    <p class="loading">Đang tải…</p>
+  } @else if (viewState() === 'loadError') {
+    <div class="error-banner" role="alert">
+      <p>{{ loadError() }}</p>
+      <a class="btn-secondary" routerLink="/teacher/library">Quay lại thư viện</a>
+    </div>
+  } @else if (isSuccess()) {
+    <div id="review-publish-success-banner" class="success-banner" role="status">
+      <p class="success-title">Đề đã sẵn sàng sử dụng.</p>
+      <p>{{ template()?.title }} ({{ skillLabel() }}) đã được đánh dấu sẵn sàng.</p>
+      <div class="next-actions">
+        <button
+          id="review-create-homework-button"
+          type="button"
+          class="btn-primary"
+          disabled
+          title="Story 3.1"
+        >
+          Giao homework
+        </button>
+        <button
+          id="review-create-live-exam-button"
+          type="button"
+          class="btn-secondary"
+          disabled
+          title="Story 3.2"
+        >
+          Tạo phiên thi trực tiếp
+        </button>
+        <button type="button" class="btn-secondary" (click)="onGoToLibrary()">
+          Về thư viện đề
+        </button>
+      </div>
+    </div>
+  } @else {
+    @if (markReadyError()) {
+      <p class="error-banner" role="alert">{{ markReadyError() }}</p>
+    }
+
+    <div id="review-publish-review-cards" class="wizard-body">
+      <div class="review-column">
+        <section id="review-publish-basic-info-card" class="review-card">
+          <div class="card-header">
+            <h2>Thông tin đề</h2>
+            <a
+              class="edit-link"
+              [routerLink]="['/teacher/library', template()?.templateId, 'setup']"
+            >Chỉnh sửa</a>
+          </div>
+          <dl class="info-list">
+            <dt>Tên đề</dt>
+            <dd>{{ template()?.title || '—' }}</dd>
+            <dt>Kỹ năng</dt>
+            <dd>{{ skillLabel() || '—' }}</dd>
+            @if (template()?.description) {
+              <dt>Ghi chú</dt>
+              <dd>{{ template()?.description }}</dd>
+            }
+            @if ((template()?.tags ?? []).length > 0) {
+              <dt>Tags</dt>
+              <dd>
+                @for (tag of template()?.tags ?? []; track tag) {
+                  <span class="tag">{{ tag }}</span>
+                }
+              </dd>
+            }
+          </dl>
+        </section>
+
+        <section id="review-publish-material-card" class="review-card">
+          <div class="card-header">
+            <h2>Tài liệu</h2>
+            <a
+              class="edit-link"
+              [routerLink]="['/teacher/library', template()?.templateId, 'materials']"
+            >Chỉnh sửa</a>
+          </div>
+          @if (materials().length === 0) {
+            <p class="empty-state">Chưa có tài liệu nào.</p>
+          } @else {
+            <ul class="material-list">
+              @for (material of materials(); track material.materialId) {
+                <li class="material-item">
+                  <span class="material-role">{{ material.role }}</span>
+                  <span class="material-name">{{ material.originalFileName }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        @if (!isSpeaking()) {
+          <section id="review-publish-answer-key-card" class="review-card">
+            <div class="card-header">
+              <h2>Answer key & Điểm</h2>
+              <a
+                class="edit-link"
+                [routerLink]="['/teacher/library', template()?.templateId, 'answer-key']"
+              >Chỉnh sửa</a>
+            </div>
+            @if (!answerKey()) {
+              <p class="empty-state">Chưa có answer key.</p>
+            } @else {
+              <dl class="info-list">
+                <dt>Số câu</dt>
+                <dd>{{ answerKey()?.questionCount }}</dd>
+                <dt>Cách tính điểm</dt>
+                <dd>{{ answerKey()?.scoringMode === 'equal' ? 'Điểm đều' : 'Điểm từng câu' }}</dd>
+                @if (answerKey()?.scoringMode === 'equal') {
+                  <dt>Tổng điểm</dt>
+                  <dd>{{ answerKey()?.totalScore ?? '—' }}</dd>
+                }
+                <dt>Câu thiếu đáp án</dt>
+                <dd>{{ (answerKey()?.rows ?? []).filter(r => !r.correctAnswer.trim()).length }}</dd>
+              </dl>
+            }
+          </section>
+        }
+      </div>
+
+      <aside id="review-publish-readiness-panel" class="readiness-panel" aria-live="polite">
+        <h2>Kiểm tra sẵn sàng</h2>
+        <ul id="review-publish-checklist" class="readiness-checklist">
+          @for (check of readinessChecks(); track check.id) {
+            <li class="checklist-item" [class.passed]="check.passed" [class.failed]="!check.passed">
+              <span class="check-icon" aria-hidden="true">{{ check.passed ? '✓' : '✗' }}</span>
+              {{ check.label }}
+            </li>
+          }
+        </ul>
+
+        @if (readinessChecks().some(c => !c.passed)) {
+          <div id="review-publish-warning-list" class="warning-list" role="alert">
+            <p>Một số điều kiện chưa đạt. Quay lại các bước trước để hoàn thiện.</p>
+          </div>
+        }
+      </aside>
+    </div>
+
+    <footer id="review-publish-footer-actions" class="footer-actions">
+      <button
+        id="review-publish-back-button"
+        type="button"
+        class="btn-secondary"
+        [disabled]="isSavingReady()"
+        (click)="onBack()"
+      >
+        Quay lại
+      </button>
+      <button
+        id="review-publish-save-draft-button"
+        type="button"
+        class="btn-secondary"
+        [disabled]="isSavingReady()"
+        (click)="onGoToLibrary()"
+      >
+        Lưu nháp
+      </button>
+      <button
+        id="review-publish-button"
+        type="button"
+        class="btn-primary"
+        [disabled]="isSavingReady()"
+        (click)="onMarkReady()"
+      >
+        {{ isSavingReady() ? 'Đang xử lý…' : 'Đánh dấu sẵn sàng' }}
+      </button>
+    </footer>
+  }
+</section>

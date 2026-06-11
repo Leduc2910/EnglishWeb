@@ -120,6 +120,19 @@ export const TEMPLATE_ERROR_MESSAGES: Record<string, string> = {
   'answerKey.invalid.rowNumber': 'Số thứ tự câu hỏi không hợp lệ hoặc bị trùng.',
   'answerKey.notApplicable': 'Answer key không áp dụng cho kỹ năng Speaking.',
   'answerKey.concurrencyConflict': 'Answer key vừa được cập nhật ở nơi khác. Tải lại trang và thử lại.',
+  'answerKey.saveFailed': 'Lưu answer key thất bại. Vui lòng thử lại.',
+  ERR_TEMPLATE_INFO_MISSING: 'Thông tin đề chưa đầy đủ. Quay lại Bước 1 để hoàn thiện.',
+  ERR_REVIEW_PDF_MISSING: 'Chưa có file tài liệu hợp lệ. Quay lại Bước 2 để upload.',
+  ERR_REVIEW_ANSWER_KEY_INCOMPLETE: 'Answer key chưa hoàn tất. Quay lại Bước 3 để điền đủ đáp án.',
+  ERR_REVIEW_SCORE_INVALID: 'Cấu hình điểm chưa hợp lệ. Quay lại Bước 3 để cập nhật điểm.',
+  ERR_TEMPLATE_ARCHIVED: 'Đề đã bị lưu trữ. Không thể đánh dấu sẵn sàng.',
+  ERR_TEMPLATE_READY_FAILED: 'Chưa thể đánh dấu đề sẵn sàng. Vui lòng thử lại.',
+  'review.templateInfoMissing': 'Thông tin đề chưa đầy đủ.',
+  'review.missingRequiredMaterial': 'Chưa có tài liệu bắt buộc.',
+  'review.answerKeyIncomplete': 'Answer key chưa hoàn tất.',
+  'review.scoringInvalid': 'Cấu hình điểm chưa hợp lệ.',
+  'templates.archived': 'Đề đã bị lưu trữ.',
+  'review.markReadyFailed': 'Đánh dấu sẵn sàng thất bại. Vui lòng thử lại.',
 };
 
 export const SKILL_LABELS: Record<string, string> = {
@@ -177,6 +190,21 @@ export function mapAnswerKeyApiError(error: unknown): string {
   }
 
   return 'Không thể lưu answer key. Vui lòng thử lại.';
+}
+
+export function mapMarkReadyError(error: unknown): string {
+  if (error && typeof error === 'object' && 'error' in error) {
+    const httpError = error as { error?: { code?: string; extensions?: { code?: string } } };
+    const body = httpError.error;
+    if (body && typeof body === 'object') {
+      const code = body.code ?? body.extensions?.code;
+      if (code && TEMPLATE_ERROR_MESSAGES[code]) {
+        return TEMPLATE_ERROR_MESSAGES[code];
+      }
+    }
+  }
+
+  return TEMPLATE_ERROR_MESSAGES['ERR_TEMPLATE_READY_FAILED'];
 }
 
 export function materialContinueRequiredMessage(skill: string): string {

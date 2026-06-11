@@ -165,4 +165,59 @@ public sealed class TestTemplatesController(
 
         return Ok(result.Response);
     }
+
+    [Authorize(Roles = IdentityRoleNames.Teacher)]
+    [HttpPost("{id:guid}/mark-ready")]
+    public async Task<ActionResult> MarkReady(Guid id, CancellationToken cancellationToken)
+    {
+        var teacherId = currentUserContext.UserId;
+        if (string.IsNullOrWhiteSpace(teacherId))
+        {
+            return hiddenResourceResponseFactory.FromCode(
+                StatusCodes.Status401Unauthorized,
+                "auth.unauthorized",
+                "Unauthorized.",
+                "Authentication is required.");
+        }
+
+        var authorizationResult = await authorizationService.AuthorizeAsync(
+            User,
+            id,
+            AuthorizationPolicies.CanViewTemplateAsTeacher);
+
+        if (!authorizationResult.Succeeded)
+        {
+            return await HiddenTemplateResponseAsync(id, teacherId, cancellationToken);
+        }
+
+        var result = await testTemplateService.MarkReadyAsync(id, teacherId, cancellationToken);
+        if (!result.Succeeded || result.Response is null)
+        {
+            if (string.Equals(result.ErrorCode, "templates.notFound", StringComparison.Ordinal))
+            {
+                return await HiddenTemplateResponseAsync(id, teacherId, cancellationToken);
+            }
+
+            return hiddenResourceResponseFactory.FromCode(
+                result.StatusCode,
+                result.ErrorCode ?? "review.markReadyFailed",
+                "Mark ready failed.",
+                "The template could not be marked ready.");
+        }
+
+        return Ok(result.Response);
+    }
+
+    private async Task<ActionResult> HiddenTemplateResponseAsync(
+        Guid templateId,
+        string teacherId,
+        CancellationToken cancellationToken)
+    {
+        var decision = await templateAuthorizationService.RequireTeacherTemplateAccessAsync(
+            templateId,
+            teacherId,
+            cancellationToken);
+        denialAuditor.AuditDenied(decision, "test-template", templateId.ToString());
+        return hiddenResourceResponseFactory.FromDecision(decision);
+    }
 }

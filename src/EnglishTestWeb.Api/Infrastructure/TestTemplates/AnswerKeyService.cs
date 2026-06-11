@@ -104,7 +104,7 @@ public sealed class AnswerKeyService(EnglishTestWebDbContext dbContext) : IAnswe
                 Id = Guid.NewGuid(),
                 TemplateId = templateId,
                 Status = AnswerKeyStatuses.Draft,
-                ScoringMode = request.ScoringMode!,
+                ScoringMode = request.ScoringMode,
                 QuestionCount = request.QuestionCount,
                 TotalScore = request.TotalScore,
                 RowsJson = rowsJson,
@@ -115,7 +115,7 @@ public sealed class AnswerKeyService(EnglishTestWebDbContext dbContext) : IAnswe
         }
         else
         {
-            existing.ScoringMode = request.ScoringMode!;
+            existing.ScoringMode = request.ScoringMode;
             existing.QuestionCount = request.QuestionCount;
             existing.TotalScore = request.TotalScore;
             existing.RowsJson = rowsJson;
@@ -142,8 +142,8 @@ public sealed class AnswerKeyService(EnglishTestWebDbContext dbContext) : IAnswe
             return new AnswerKeyAccessResult(
                 false,
                 null,
-                "answerKey.concurrencyConflict",
-                StatusCodes.Status409Conflict);
+                "answerKey.saveFailed",
+                StatusCodes.Status500InternalServerError);
         }
 
         return new AnswerKeyAccessResult(true, MapResponse(entity), null);
@@ -190,7 +190,15 @@ public sealed class AnswerKeyService(EnglishTestWebDbContext dbContext) : IAnswe
 
     private static AnswerKeyVersionResponse MapResponse(AnswerKeyVersion entity)
     {
-        var rows = JsonSerializer.Deserialize<List<AnswerKeyRow>>(entity.RowsJson, RowsJsonOptions) ?? [];
+        List<AnswerKeyRow> rows;
+        try
+        {
+            rows = JsonSerializer.Deserialize<List<AnswerKeyRow>>(entity.RowsJson, RowsJsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            rows = [];
+        }
 
         return new AnswerKeyVersionResponse(
             entity.Id,

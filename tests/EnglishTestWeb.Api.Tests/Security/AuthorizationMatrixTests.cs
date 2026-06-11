@@ -721,4 +721,286 @@ public sealed class AuthorizationMatrixTests
                 && record.ResourceType == "class"
                 && record.ResourceId == classId.ToString());
     }
+
+    // mark-ready matrix rows
+    [Fact]
+    public async Task TeacherOwner_MarkReady_WithCompleteData_ReturnsOk()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.EnsureDraftWithCompleteAnswerKeyAsync(factory);
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/test-templates/{templateId}/mark-ready", new { });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TeacherOwner_MarkReady_AlreadyReady_ReturnsOk()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoReadyTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/test-templates/{templateId}/mark-ready", new { });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TeacherNonOwner_MarkReady_ReturnsHiddenNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInUserAsync(
+            client,
+            ClassesTestHelper.OtherTeacherEmail,
+            ClassesTestHelper.OtherTeacherPassword);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/test-templates/{templateId}/mark-ready", new { });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Student_MarkReady_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await ClassesTestHelper.SeedDemoClassAsync(factory);
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/test-templates/{templateId}/mark-ready", new { });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_MarkReady_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/test-templates/{templateId}/mark-ready", new { });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    // --- Homework Assignments ---
+
+    [Fact]
+    public async Task Teacher_CreateHomeworkAssignment_WithValidData_Returns201()
+    {
+        await using var factory = new TestApiFactory();
+        var (templateId, classId) = await HomeworkAssignments.HomeworkAssignmentTestHelper.EnsureReadyTemplateAndClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/homework-assignments", new
+        {
+            templateId,
+            classId,
+            deadlineAt = DateTimeOffset.UtcNow.AddDays(7),
+            timeLimitMinutes = (int?)null
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Student_CreateHomeworkAssignment_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        var (templateId, classId) = await HomeworkAssignments.HomeworkAssignmentTestHelper.EnsureReadyTemplateAndClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/homework-assignments", new
+        {
+            templateId,
+            classId,
+            deadlineAt = DateTimeOffset.UtcNow.AddDays(7),
+            timeLimitMinutes = (int?)null
+        });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_CreateHomeworkAssignment_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.EnsureXsrfAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/homework-assignments", new
+        {
+            templateId = Guid.NewGuid(),
+            classId = Guid.NewGuid(),
+            deadlineAt = DateTimeOffset.UtcNow.AddDays(7),
+            timeLimitMinutes = (int?)null
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // --- Live Exam Sessions ---
+
+    [Fact]
+    public async Task Teacher_CreateLiveExamSession_WithValidData_Returns201()
+    {
+        await using var factory = new TestApiFactory();
+        var (templateId, classId) = await LiveExamSessions.LiveExamSessionTestHelper.EnsureReadyTemplateAndClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/live-exam-sessions", new
+        {
+            templateId,
+            classId,
+            scheduledStartAt = (DateTimeOffset?)null,
+            scheduledEndAt = (DateTimeOffset?)null
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Student_CreateLiveExamSession_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        var (templateId, classId) = await LiveExamSessions.LiveExamSessionTestHelper.EnsureReadyTemplateAndClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/live-exam-sessions", new
+        {
+            templateId,
+            classId,
+            scheduledStartAt = (DateTimeOffset?)null,
+            scheduledEndAt = (DateTimeOffset?)null
+        });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_CreateLiveExamSession_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.EnsureXsrfAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/live-exam-sessions", new
+        {
+            templateId = Guid.NewGuid(),
+            classId = Guid.NewGuid(),
+            scheduledStartAt = (DateTimeOffset?)null,
+            scheduledEndAt = (DateTimeOffset?)null
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Teacher_OpenLiveExamSession_OwnSession_Returns200()
+    {
+        await using var factory = new TestApiFactory();
+        var (templateId, classId) = await LiveExamSessions.LiveExamSessionTestHelper.EnsureReadyTemplateAndClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+        var sessionId = await LiveExamSessions.LiveExamSessionTestHelper.CreateScheduledSessionAsync(factory, client, templateId, classId);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/live-exam-sessions/{sessionId}/open", new { });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Teacher_OpenLiveExamSession_NonOwnedSession_ReturnsNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await Classes.ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/live-exam-sessions/{Guid.NewGuid()}/open", new { });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Student_OpenLiveExamSession_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await Classes.ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/live-exam-sessions/{Guid.NewGuid()}/open", new { });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_OpenLiveExamSession_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.EnsureXsrfAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/live-exam-sessions/{Guid.NewGuid()}/open", new { });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Teacher_CloseLiveExamSession_NonOwnedSession_ReturnsNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await Classes.ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/live-exam-sessions/{Guid.NewGuid()}/close", new { });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Student_CloseLiveExamSession_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await Classes.ClassesTestHelper.SeedDemoClassAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/live-exam-sessions/{Guid.NewGuid()}/close", new { });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_CloseLiveExamSession_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.EnsureXsrfAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, $"/api/live-exam-sessions/{Guid.NewGuid()}/close", new { });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }

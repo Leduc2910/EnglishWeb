@@ -68,6 +68,9 @@ public sealed class AnswerKeyControllerTests
             url,
             BuildRequest(questionCount: 2, scoringMode: "equal", totalScore: 10m));
         first.EnsureSuccessStatusCode();
+        await using var firstBody = await first.Content.ReadAsStreamAsync();
+        using var firstDoc = await JsonDocument.ParseAsync(firstBody);
+        var firstVersionId = firstDoc.RootElement.GetProperty("answerKeyVersionId").GetGuid();
 
         var second = await AuthTestHelper.PutJsonAsync(
             client,
@@ -86,6 +89,7 @@ public sealed class AnswerKeyControllerTests
         using var document = await JsonDocument.ParseAsync(body);
         Assert.Equal(4, document.RootElement.GetProperty("questionCount").GetInt32());
         Assert.Equal("per-question", document.RootElement.GetProperty("scoringMode").GetString());
+        Assert.Equal(firstVersionId, document.RootElement.GetProperty("answerKeyVersionId").GetGuid());
     }
 
     [Fact]
@@ -114,6 +118,8 @@ public sealed class AnswerKeyControllerTests
         Assert.Equal(2, rows.GetArrayLength());
         Assert.Equal(1, rows[0].GetProperty("questionNumber").GetInt32());
         Assert.Equal("A", rows[0].GetProperty("correctAnswer").GetString());
+        Assert.Equal(2, rows[1].GetProperty("questionNumber").GetInt32());
+        Assert.Equal("B", rows[1].GetProperty("correctAnswer").GetString());
         Assert.Equal(8m, document.RootElement.GetProperty("totalScore").GetDecimal());
     }
 
@@ -355,6 +361,128 @@ public sealed class AnswerKeyControllerTests
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("templates.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Get_SpeakingTemplate_ReturnsNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.EnsureSpeakingDraftTemplateAsync(factory);
+        var response = await client.GetAsync($"/api/test-templates/{templateId}/answer-key");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("answerKey.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Get_NonExistentTemplateId_ReturnsNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await client.GetAsync($"/api/test-templates/{Guid.NewGuid()}/answer-key");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_NonExistentTemplateId_ReturnsNotFound()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await AuthTestHelper.PutJsonAsync(
+            client,
+            $"/api/test-templates/{Guid.NewGuid()}/answer-key",
+            BuildRequest(questionCount: 1, scoringMode: "equal", totalScore: 10m));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_PerQuestionMode_RoundTripsRowScores()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PutJsonAsync(
+            client,
+            $"/api/test-templates/{templateId}/answer-key",
+            BuildRequest(questionCount: 2, scoringMode: "per-question", totalScore: null, perQuestionScore: 3.5m));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var body = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(body);
+        var rows = document.RootElement.GetProperty("rows");
+        Assert.Equal(2, rows.GetArrayLength());
+        Assert.Equal(3.5m, rows[0].GetProperty("score").GetDecimal());
+        Assert.Equal(3.5m, rows[1].GetProperty("score").GetDecimal());
+        Assert.Equal(JsonValueKind.Null, document.RootElement.GetProperty("totalScore").ValueKind);
+    }
+
+    [Fact]
+    public async Task Put_ZeroRows_SavesDraftWithEmptyRowsArray()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var response = await AuthTestHelper.PutJsonAsync(
+            client,
+            $"/api/test-templates/{templateId}/answer-key",
+            new { questionCount = 15, scoringMode = "equal", totalScore = 15m, rows = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var body = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(body);
+        Assert.Equal(15, document.RootElement.GetProperty("questionCount").GetInt32());
+        Assert.Equal(0, document.RootElement.GetProperty("rows").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Put_Twice_UpdatedAtAdvances()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var url = $"/api/test-templates/{templateId}/answer-key";
+
+        var first = await AuthTestHelper.PutJsonAsync(
+            client, url,
+            BuildRequest(questionCount: 2, scoringMode: "equal", totalScore: 10m));
+        first.EnsureSuccessStatusCode();
+        await using var firstBody = await first.Content.ReadAsStreamAsync();
+        using var firstDoc = await JsonDocument.ParseAsync(firstBody);
+        var firstUpdatedAt = firstDoc.RootElement.GetProperty("updatedAt").GetDateTimeOffset();
+
+        await Task.Delay(10);
+
+        var second = await AuthTestHelper.PutJsonAsync(
+            client, url,
+            BuildRequest(questionCount: 3, scoringMode: "equal", totalScore: 9m));
+        second.EnsureSuccessStatusCode();
+        await using var secondBody = await second.Content.ReadAsStreamAsync();
+        using var secondDoc = await JsonDocument.ParseAsync(secondBody);
+        var secondUpdatedAt = secondDoc.RootElement.GetProperty("updatedAt").GetDateTimeOffset();
+
+        Assert.True(secondUpdatedAt >= firstUpdatedAt);
+        Assert.NotEqual(DateTimeOffset.MinValue, secondUpdatedAt);
     }
 
     private static object BuildRequest(

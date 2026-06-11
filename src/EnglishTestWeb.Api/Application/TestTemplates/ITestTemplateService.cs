@@ -13,6 +13,12 @@ public sealed record TestTemplateMutationResult(
     string? ErrorCode,
     int StatusCode);
 
+public sealed record MarkReadyResult(
+    bool Succeeded,
+    TestTemplateDetailResponse? Response,
+    string? ErrorCode,
+    int StatusCode);
+
 public interface ITestTemplateService
 {
     Task<IReadOnlyList<TestTemplateListItemResponse>> ListForTeacherAsync(
@@ -34,5 +40,10 @@ public interface ITestTemplateService
         Guid templateId,
         string teacherId,
         UpdateTestTemplateRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<MarkReadyResult> MarkReadyAsync(
+        Guid templateId,
+        string teacherId,
         CancellationToken cancellationToken = default);
 }

@@ -119,4 +119,10 @@ export class TestTemplatesApiService {
       this.http.delete<void>(`/api/test-templates/${templateId}/materials/${materialId}`),
     );
   }
+
+  markReady(templateId: string): Promise<TestTemplateDetail> {
+    return firstValueFrom(
+      this.http.post<TestTemplateDetail>(`/api/test-templates/${templateId}/mark-ready`, {}),
+    );
+  }
 }

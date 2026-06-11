@@ -75,7 +75,7 @@ public sealed class AnswerKeyController(
 
             return hiddenResourceResponseFactory.FromCode(
                 result.StatusCode,
-                result.ErrorCode ?? "answerKey.invalid.questionCount",
+                result.ErrorCode ?? "answerKey.error",
                 "Answer key update failed.",
                 "The answer key request could not be processed.");
         }

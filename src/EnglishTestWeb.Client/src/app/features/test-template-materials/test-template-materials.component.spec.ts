@@ -121,6 +121,49 @@ describe('TestTemplateMaterialsComponent', () => {
     expect(fixture.componentInstance['isAnyUploading']()).toBe(true);
   });
 
+  it('shows "Tiếp tục sang Review" label for speaking templates', async () => {
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component['templateSkill'].set('speaking');
+    fixture.detectChanges();
+
+    expect(component['continueLabel']()).toBe('Tiếp tục sang Review');
+  });
+
+  it('navigates to review (not answer-key) when template is speaking', async () => {
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component['templateId'].set('tpl-1');
+    component['templateSkill'].set('speaking');
+    component['slots'].set([
+      {
+        role: 'cue',
+        label: 'Cue PDF',
+        required: true,
+        accept: 'application/pdf,.pdf',
+        pickerLabel: 'Chọn file PDF cue',
+        material: {
+          materialId: 'mat-1',
+          fileId: 'file-1',
+          role: 'cue',
+          originalFileName: 'cue.pdf',
+          sizeBytes: 100,
+          contentType: 'application/pdf',
+          uploadedAt: '2026-06-11T00:00:00Z',
+        },
+        uploadProgress: null,
+        uploadError: null,
+        isUploading: false,
+      },
+    ]);
+    fixture.detectChanges();
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    await component['onContinue']();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/teacher/library', 'tpl-1', 'review']);
+  });
+
   it('opens preview only after successful upload', async () => {
     api.uploadMaterial.mockResolvedValue({
       materialId: 'mat-1',

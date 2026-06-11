@@ -82,7 +82,7 @@
               <input
                 id="answer-key-total-score-input"
                 type="number"
-                min="0"
+                min="0.01"
                 step="0.25"
                 [value]="totalScore() ?? ''"
                 [disabled]="saveInFlight()"
@@ -109,7 +109,7 @@
                 <input
                   class="answer-key-score-input"
                   type="number"
-                  min="0"
+                  min="0.01"
                   step="0.25"
                   [attr.aria-label]="'Điểm câu ' + row.questionNumber"
                   placeholder="Điểm"

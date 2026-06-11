@@ -120,6 +120,7 @@ export class TestTemplateAnswerKeyComponent implements OnInit, OnDestroy {
     const raw = (event.target as HTMLInputElement).value;
     this.questionCountInput.set(raw);
     this.saveSuccess.set(null);
+    this.continueErrors.set([]);
 
     const parsed = Number(raw);
     if (!raw.trim() || !Number.isFinite(parsed)) {
@@ -150,6 +151,7 @@ export class TestTemplateAnswerKeyComponent implements OnInit, OnDestroy {
     const parsed = Number(raw);
     this.totalScore.set(raw.trim() && Number.isFinite(parsed) ? parsed : null);
     this.saveSuccess.set(null);
+    this.continueErrors.set([]);
   }
 
   protected onAnswerChange(questionNumber: number, event: Event): void {
@@ -160,6 +162,7 @@ export class TestTemplateAnswerKeyComponent implements OnInit, OnDestroy {
       ),
     );
     this.saveSuccess.set(null);
+    this.continueErrors.set([]);
   }
 
   protected onRowScoreChange(questionNumber: number, event: Event): void {
@@ -170,6 +173,7 @@ export class TestTemplateAnswerKeyComponent implements OnInit, OnDestroy {
       current.map((row) => (row.questionNumber === questionNumber ? { ...row, score } : row)),
     );
     this.saveSuccess.set(null);
+    this.continueErrors.set([]);
   }
 
   protected async onSaveDraft(): Promise<void> {
@@ -185,6 +189,7 @@ export class TestTemplateAnswerKeyComponent implements OnInit, OnDestroy {
 
     this.bannerError.set(null);
     this.saveSuccess.set(null);
+    this.continueErrors.set([]);
     this.saveInFlight.set(true);
 
     try {
@@ -209,6 +214,11 @@ export class TestTemplateAnswerKeyComponent implements OnInit, OnDestroy {
   }
 
   protected async onContinue(): Promise<void> {
+    if (this.saveInFlight()) {
+      return;
+    }
+
+    this.saveSuccess.set(null);
     const errors = this.validateForContinue();
     this.continueErrors.set(errors);
     if (errors.length > 0) {
