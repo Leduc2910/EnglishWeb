@@ -154,6 +154,24 @@ public sealed class AssignedTestsControllerTests
     }
 
     [Fact]
+    public async Task GetAssignedTests_AsStudent_WithNoActiveClass_ReturnsEmptyList()
+    {
+        await using var factory = new TestApiFactory();
+        await AuthTestHelper.SeedRolesAndUsersAsync(factory);
+        using var client = factory.CreateClient();
+        // Sign in without active class (activeClassId = null)
+        await AuthTestHelper.SignInStudentAsync(client);
+
+        var response = await client.GetAsync("/api/assigned-tests");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var body = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(body);
+        var items = document.RootElement.GetProperty("items");
+        Assert.Equal(0, items.GetArrayLength());
+    }
+
+    [Fact]
     public async Task GetAssignedTests_AsStudentFromDifferentClass_ReturnsEmpty()
     {
         await using var factory = new TestApiFactory();

@@ -1,5 +1,13 @@
 # Deferred Work
 
+## Deferred from: code review round 2 of 4-1-student-assigned-tests-list (2026-06-12)
+
+- `AssignedTestService`: 14-arg positional record constructor in LINQ projection — fragile to field-order changes; extract factory method when adding more DTO fields.
+- Angular `onStartItem('available')`: clears `blockedItemMessage` but performs no navigation (intentional Story 4.2 placeholder); add "not yet implemented" visual guard if UX regression becomes noticeable before 4.2.
+- Angular `logout()`: async errors swallowed by template `(click)` binding — add `.catch()` when standardizing error-handling patterns across components.
+- Angular CSS class `status-{{ item.studentStatus }}`: string interpolation from backend-controlled union; add explicit CSS class map if new statuses are introduced outside the TypeScript union.
+- Test: `SeedRolesAndUsersAsync` called redundantly inside each `SeedHomework*` / `SeedLiveExam*` helper — acceptable due to idempotency; refactor to `IAsyncLifetime` fixture when test suite grows.
+
 ## Deferred from: code review of 1-1-setup-baseline-net-10-web-api-angular-22-sql-server-identity-protected-storage (2026-06-10)
 
 _Chunk 1 — API core only._
@@ -138,6 +146,19 @@ _Patched in this pass: inactive class guard (`homework.classNotActive` 400) — 
 - `mode` values ("homework", "live-exam") are bare string literals — no shared constant; consistent with project string-status convention; add constants when API version or multi-client expansion warrants.
 - Concurrent `OpenAsync` race condition on `LiveExamSession.Status` (see also 3-2 defer) — add `[ConcurrencyCheck]` on Status when building submission pipeline.
 - No GET list/detail endpoints for HomeworkAssignment/LiveExamSession — when built, must include `Mode`/`AllowedActions` in mapping; no structural enforcement today.
+
+## Deferred from: code review of 4-1-student-assigned-tests-list (2026-06-12)
+
+- `HomeworkAssignment` with `default(DateTimeOffset)` deadline (epoch) evaluates to `"expired"` — data integrity concern predating this story; surface when adding schema validation or migration with DEFAULT constraint.
+- `studentId` parameter in `IAssignedTestService.GetForStudentAsync` is accepted but not used in queries (filtering is classId-only by spec design); document when per-student item filtering is introduced.
+- Unknown `LiveExamSession.Status` value silently collapses to `"closed"` — acceptable most-restrictive fallback; add explicit logging/mapping when new statuses are introduced.
+- Angular `onStartItem`: unknown `studentStatus` falls through to `router.navigate` — values are backend-controlled contract; add explicit default guard when adding new student statuses.
+- Two sequential DB round-trips in `AssignedTestService` (homework + live exams) instead of a UNION — optimize when profiling shows query latency is a concern.
+- `AssignedTestItem.Status` exposes raw internal domain status strings without a stable API contract — acceptable by spec design; add mapping layer when API versioning is introduced.
+- Non-deterministic sort order on `OrderByDescending(i => i.CreatedAt)` when multiple items share identical timestamps — add secondary sort key (`i.Id`) when list stability under load matters.
+- Orphaned FK rows (deleted TestTemplate or Class) silently dropped by INNER JOIN — FK constraints prevent this in production; document when adding cascade/archive policy.
+- Invalid `studentId` string (non-existent Identity user) passes whitespace guard and reaches service (which ignores it) — Identity session management upstream rejects invalid tokens.
+- Angular: concurrent rapid reload requests can overwrite list signal with stale response — no pagination/cancellation scope in this story; address when implementing pull-to-refresh or streaming.
 
 ## Deferred from: code review pass 1 of 3-2-create-and-control-liveexamsession (2026-06-11)
 

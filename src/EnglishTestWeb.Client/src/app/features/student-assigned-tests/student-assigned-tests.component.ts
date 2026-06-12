@@ -87,12 +87,17 @@ export class StudentAssignedTestsComponent implements OnInit {
       this.blockedItemMessage.set(ASSIGNED_TEST_ERROR_MESSAGES['ERR_LIVE_EXAM_NOT_OPEN']);
       return;
     }
-    if (item.studentStatus === 'expired' || item.studentStatus === 'closed') {
-      this.blockedItemMessage.set('Bài này đã hết hạn và không thể bắt đầu.');
+    if (item.studentStatus === 'expired') {
+      this.blockedItemMessage.set(ASSIGNED_TEST_ERROR_MESSAGES['ERR_HOMEWORK_EXPIRED']);
+      return;
+    }
+    if (item.studentStatus === 'closed') {
+      this.blockedItemMessage.set(ASSIGNED_TEST_ERROR_MESSAGES['ERR_ITEM_CLOSED']);
       return;
     }
     this.blockedItemMessage.set(null);
-    void this.router.navigate(['/student/workspace', item.id]);
+    // Story 4.2 sẽ thêm navigate to workspace
+    // void this.router.navigate(['/student/workspace', item.id]);
   }
 
   protected async logout(): Promise<void> {

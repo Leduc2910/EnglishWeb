@@ -21,6 +21,7 @@
     } @else {
       <div class="tab-bar" role="tablist">
         <button
+          id="assigned-tests-tab-homework"
           role="tab"
           type="button"
           class="tab-button"
@@ -31,6 +32,7 @@
           Bài tập về nhà
         </button>
         <button
+          id="assigned-tests-tab-live-exam"
           role="tab"
           type="button"
           class="tab-button"
@@ -43,13 +45,13 @@
       </div>
 
       <div class="filter-row">
-        <select class="filter-select" [value]="skillFilter()" (change)="onSkillFilter($any($event.target).value)">
+        <select id="assigned-tests-skill-filter" class="filter-select" [value]="skillFilter()" (change)="onSkillFilter($any($event.target).value)">
           <option value="all">Tất cả kỹ năng</option>
           <option value="reading">Đọc</option>
           <option value="listening">Nghe</option>
           <option value="speaking">Nói</option>
         </select>
-        <select class="filter-select" [value]="statusFilter()" (change)="onStatusFilter($any($event.target).value)">
+        <select id="assigned-tests-status-filter" class="filter-select" [value]="statusFilter()" (change)="onStatusFilter($any($event.target).value)">
           <option value="all">Tất cả trạng thái</option>
           <option value="available">Đang mở</option>
           <option value="not-open">Chưa mở</option>
@@ -59,7 +61,7 @@
       </div>
 
       @if (blockedItemMessage()) {
-        <p class="blocked-message" role="alert">{{ blockedItemMessage() }}</p>
+        <p id="assigned-tests-blocked-message" class="blocked-message" role="alert">{{ blockedItemMessage() }}</p>
       }
 
       @if (activeTab() === 'homework') {

@@ -24,4 +24,6 @@ export const STUDENT_STATUS_LABELS: Record<string, string> = {
 
 export const ASSIGNED_TEST_ERROR_MESSAGES: Record<string, string> = {
   ERR_LIVE_EXAM_NOT_OPEN: 'Bài thi trực tiếp chưa được mở. Vui lòng chờ giáo viên mở bài.',
+  ERR_HOMEWORK_EXPIRED: 'Bài tập đã hết hạn nộp.',
+  ERR_ITEM_CLOSED: 'Bài thi đã đóng.',
 };

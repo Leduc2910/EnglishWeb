@@ -4,7 +4,7 @@ baseline_commit: 89b76eb
 
 # Story 4.1: Danh Sách Bài Thi Được Giao Cho Học Sinh
 
-Status: review
+Status: done
 
 ## Story
 
@@ -445,6 +445,38 @@ import { flushPromises } from '@vue/test-utils'; // hoặc custom implementation
 - [Source: `src/EnglishTestWeb.Client/src/app/core/live-exam/live-exam.models.ts` — LiveExamSession model]
 - [Source: `_bmad-output/implementation-artifacts/3-3-usage-mode-contract-across-delivery-surfaces.md` — mode constants, STUDENT_STATUS_LABELS pattern]
 - [Source: `_bmad-output/implementation-artifacts/deferred-work.md` — nav props defer (3-1), no index defer (3-1), no GET endpoints defer (3-3)]
+
+## Review Findings
+
+- [x] [Review][Dismiss] Empty migration Up()/Down() — false positive; ClassId indexes were already created by FK auto-index in AddHomeworkAssignments/AddLiveExamSessions migrations; new migration correctly empty (only updates nav prop name in snapshot)
+- [x] [Review][Patch] Missing stable IDs in HTML template — FIXED: added id="assigned-tests-tab-homework", id="assigned-tests-tab-live-exam", id="assigned-tests-skill-filter", id="assigned-tests-status-filter", id="assigned-tests-blocked-message" [student-assigned-tests.component.html]
+- [x] [Review][Patch] Missing error message constants ERR_HOMEWORK_EXPIRED and ERR_ITEM_CLOSED; hardcoded string in onStartItem() — FIXED: added constants to assigned-tests.models.ts; updated onStartItem() to use them [assigned-tests.models.ts + student-assigned-tests.component.ts]
+- [x] [Review][Patch] onStartItem() navigates to workspace — FIXED: navigation commented out as placeholder per spec [student-assigned-tests.component.ts]
+- [x] [Review][Patch] No test for null activeClassId — FIXED: added GetAssignedTests_AsStudent_WithNoActiveClass_ReturnsEmptyList [AssignedTestsControllerTests.cs]
+- [x] [Review][Defer] HomeworkAssignment with default(DateTimeOffset) deadline evaluates to "expired" permanently [AssignedTestService.cs – homeworkItems query] — deferred, pre-existing
+- [x] [Review][Defer] studentId parameter accepted by service but never used in queries (all filtering is by classId only) — deferred, by spec design; document when per-student filtering is added
+- [x] [Review][Defer] Unknown LiveExamSession status silently collapses to "closed" — deferred, acceptable most-restrictive fallback
+- [x] [Review][Defer] onStartItem: unknown studentStatus falls through to router.navigate [student-assigned-tests.component.ts:85] — deferred, values are backend-controlled
+- [x] [Review][Defer] Two separate sequential DB round-trips instead of UNION — deferred, performance optimization
+- [x] [Review][Defer] AssignedTestItem.Status exposes raw internal domain status strings without stable contract — deferred, by spec design
+- [x] [Review][Defer] Non-deterministic sort order when multiple items share identical CreatedAt timestamp — deferred, low-impact edge case
+- [x] [Review][Defer] Orphaned FK rows (deleted TestTemplate or Class) silently dropped from results by INNER JOIN — deferred, FK constraints prevent this in practice
+- [x] [Review][Defer] Invalid studentId (non-existent user) passes whitespace guard; service ignores studentId anyway — deferred, Identity rejects invalid tokens upstream
+- [x] [Review][Defer] Angular: concurrent rapid API requests can overwrite list with stale data — deferred, no pagination/cancellation scope
+
+### Review Round 2 Findings (2026-06-12)
+
+- [x] [Review][Dismiss] Empty-state missing confirmedClass() fallback — false positive; both paragraphs already use `activeClass()?.className ?? confirmedClass()?.className`
+- [x] [Review][Dismiss] null activeClassId returns 200 OK before auth check — by spec design; spec explicitly states return empty list when no active class
+- [x] [Review][Dismiss] $any($event.target).value in template — accepted Angular workaround; type assertion syntax not valid in Angular templates
+- [x] [Review][Dismiss] Error message keys (ERR_*) not keyed by studentStatus — by design; homework/live-exam need different wording for same terminal status
+- [x] [Review][Dismiss] Stale claim + revoked membership — handled; RequireStudentClassAccessAsync live-revalidates membership
+- [x] [Review][Dismiss] WithNoActiveClass test doesn't actually exercise null branch — false positive; SeedRolesAndUsersAsync creates users only, no class memberships
+- [x] [Review][Defer] Fragile positional 14-arg record constructor in LINQ projection [AssignedTestService.cs] — deferred, established pattern; refactor when adding fields
+- [x] [Review][Defer] onStartItem('available') clears blockedItemMessage but navigates nowhere — deferred, intentional Story 4.2 placeholder
+- [x] [Review][Defer] logout() async errors swallowed by template event binding — deferred, low-risk UX
+- [x] [Review][Defer] CSS class interpolation `status-{{ item.studentStatus }}` — deferred, backend-controlled TypeScript union
+- [x] [Review][Defer] SeedRolesAndUsersAsync called redundantly in multiple test helpers — deferred, idempotent; refactor when adding IAsyncLifetime
 
 ## Dev Agent Record
 
