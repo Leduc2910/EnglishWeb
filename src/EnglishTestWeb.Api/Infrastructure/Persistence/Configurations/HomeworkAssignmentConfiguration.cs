@@ -35,12 +35,14 @@ public sealed class HomeworkAssignmentConfiguration : IEntityTypeConfiguration<H
 
         builder.HasIndex(entity => new { entity.TeacherId, entity.TestTemplateId });
 
+        builder.HasIndex(entity => entity.ClassId);
+
         builder.HasOne<Domain.Identity.ApplicationUser>()
             .WithMany()
             .HasForeignKey(entity => entity.TeacherId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<TestTemplate>()
+        builder.HasOne(entity => entity.Template)
             .WithMany()
             .HasForeignKey(entity => entity.TestTemplateId)
             .OnDelete(DeleteBehavior.Restrict);

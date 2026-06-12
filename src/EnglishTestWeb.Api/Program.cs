@@ -1,3 +1,4 @@
+using EnglishTestWeb.Api.Application.AssignedTests;
 using EnglishTestWeb.Api.Application.Auth;
 using EnglishTestWeb.Api.Application.Classes;
 using EnglishTestWeb.Api.Application.HomeworkAssignments;
@@ -12,6 +13,7 @@ using EnglishTestWeb.Api.Infrastructure.Audit;
 using EnglishTestWeb.Api.Infrastructure.Authorization;
 using EnglishTestWeb.Api.Infrastructure.Authorization.Handlers;
 using EnglishTestWeb.Api.Infrastructure.Authorization.Policies;
+using EnglishTestWeb.Api.Infrastructure.AssignedTests;
 using EnglishTestWeb.Api.Infrastructure.Classes;
 using EnglishTestWeb.Api.Infrastructure.Files;
 using EnglishTestWeb.Api.Infrastructure.HomeworkAssignments;
@@ -179,6 +181,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();
 builder.Services.AddScoped<IHomeworkAssignmentService, HomeworkAssignmentService>();
 builder.Services.AddScoped<ILiveExamSessionService, LiveExamSessionService>();
+builder.Services.AddScoped<IAssignedTestService, AssignedTestService>();
 
 var app = builder.Build();
 

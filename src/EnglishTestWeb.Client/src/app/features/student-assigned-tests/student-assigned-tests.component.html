@@ -13,9 +13,124 @@
   </header>
 
   <main class="content">
-    <h2>Bài của lớp</h2>
-    <p class="empty-state">Chưa có bài được giao.</p>
-    <p class="helper">Epic 4 sẽ hiển thị danh sách homework và thi trực tiếp tại đây.</p>
-    <a routerLink="/class" class="link">Đổi mã lớp</a>
+    @if (viewState() === 'loading') {
+      <p class="loading-state">Đang tải...</p>
+    } @else if (viewState() === 'error') {
+      <p class="error-state">Không thể tải danh sách bài. Vui lòng thử lại.</p>
+      <button type="button" class="text-button retry-button" (click)="loadItems()">Thử lại</button>
+    } @else {
+      <div class="tab-bar" role="tablist">
+        <button
+          id="assigned-tests-tab-homework"
+          role="tab"
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab() === 'homework'"
+          [attr.aria-selected]="activeTab() === 'homework'"
+          (click)="onTabChange('homework')"
+        >
+          Bài tập về nhà
+        </button>
+        <button
+          id="assigned-tests-tab-live-exam"
+          role="tab"
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab() === 'live-exam'"
+          [attr.aria-selected]="activeTab() === 'live-exam'"
+          (click)="onTabChange('live-exam')"
+        >
+          Thi trực tiếp
+        </button>
+      </div>
+
+      <div class="filter-row">
+        <select id="assigned-tests-skill-filter" class="filter-select" [value]="skillFilter()" (change)="onSkillFilter($any($event.target).value)">
+          <option value="all">Tất cả kỹ năng</option>
+          <option value="reading">Đọc</option>
+          <option value="listening">Nghe</option>
+          <option value="speaking">Nói</option>
+        </select>
+        <select id="assigned-tests-status-filter" class="filter-select" [value]="statusFilter()" (change)="onStatusFilter($any($event.target).value)">
+          <option value="all">Tất cả trạng thái</option>
+          <option value="available">Đang mở</option>
+          <option value="not-open">Chưa mở</option>
+          <option value="expired">Đã hết hạn</option>
+          <option value="closed">Đã đóng</option>
+        </select>
+      </div>
+
+      @if (blockedItemMessage()) {
+        <p id="assigned-tests-blocked-message" class="blocked-message" role="alert">{{ blockedItemMessage() }}</p>
+      }
+
+      @if (activeTab() === 'homework') {
+        @if (filteredHomework().length === 0) {
+          <p class="empty-state">
+            Không có bài tập về nhà cho lớp
+            {{ classContext.activeClass()?.className ?? classContext.confirmedClass()?.className }}.
+          </p>
+        } @else {
+          <ul class="item-list">
+            @for (item of filteredHomework(); track item.id) {
+              <li class="item-card">
+                <div class="item-header">
+                  <span class="item-title">{{ item.title }}</span>
+                  <span class="skill-badge">{{ item.skill }}</span>
+                  <span class="status-badge status-{{ item.studentStatus }}">{{ statusLabels[item.studentStatus] }}</span>
+                </div>
+                @if (item.deadlineAt) {
+                  <p class="item-meta">Hạn nộp: {{ item.deadlineAt | date:'dd/MM/yyyy HH:mm' }}</p>
+                }
+                @if (item.timeLimitMinutes) {
+                  <p class="item-meta">Thời gian: {{ item.timeLimitMinutes }} phút</p>
+                }
+                <button
+                  type="button"
+                  class="start-button"
+                  [disabled]="item.studentStatus !== 'available'"
+                  (click)="onStartItem(item)"
+                >
+                  Bắt đầu
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        @if (filteredLiveExams().length === 0) {
+          <p class="empty-state">
+            Không có bài thi trực tiếp cho lớp
+            {{ classContext.activeClass()?.className ?? classContext.confirmedClass()?.className }}.
+          </p>
+        } @else {
+          <ul class="item-list">
+            @for (item of filteredLiveExams(); track item.id) {
+              <li class="item-card">
+                <div class="item-header">
+                  <span class="item-title">{{ item.title }}</span>
+                  <span class="skill-badge">{{ item.skill }}</span>
+                  <span class="status-badge status-{{ item.studentStatus }}">{{ statusLabels[item.studentStatus] }}</span>
+                </div>
+                @if (item.scheduledStartAt) {
+                  <p class="item-meta">Dự kiến bắt đầu: {{ item.scheduledStartAt | date:'dd/MM/yyyy HH:mm' }}</p>
+                }
+                @if (item.openedAt) {
+                  <p class="item-meta">Mở lúc: {{ item.openedAt | date:'HH:mm' }}</p>
+                }
+                <button
+                  type="button"
+                  class="start-button"
+                  [disabled]="item.studentStatus !== 'available'"
+                  (click)="onStartItem(item)"
+                >
+                  Bắt đầu
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
   </main>
 </div>
