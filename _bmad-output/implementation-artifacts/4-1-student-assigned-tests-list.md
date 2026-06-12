@@ -4,7 +4,7 @@ baseline_commit: 89b76eb
 
 # Story 4.1: Danh Sách Bài Thi Được Giao Cho Học Sinh
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -42,14 +42,14 @@ tôi muốn xem các bài tập về nhà và kỳ thi trực tiếp có sẵn t
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Backend — AssignedTestItem contract và interface (AC1, AC6)
-  - [ ] 1.1 Tạo `src/EnglishTestWeb.Api/Contracts/AssignedTests/AssignedTestItem.cs` — record với các field: Id, Mode, Title, Skill, ClassId, ClassName, Status, StudentStatus, DeadlineAt, TimeLimitMinutes, ScheduledStartAt, OpenedAt, ClosedAt, CreatedAt
-  - [ ] 1.2 Tạo `src/EnglishTestWeb.Api/Application/AssignedTests/IAssignedTestService.cs` — interface `GetForStudentAsync(string studentId, Guid classId, CancellationToken) → Task<IReadOnlyList<AssignedTestItem>>`
-  - [ ] 1.3 Thêm navigation properties vào `HomeworkAssignment` entity: `TestTemplate? Template` và navigation key `public Guid TestTemplateId` giữ nguyên (chỉ thêm nav prop để `.Include()` hoạt động)
-  - [ ] 1.4 Thêm navigation properties vào `LiveExamSession` entity tương tự
+- [x] Task 1: Backend — AssignedTestItem contract và interface (AC1, AC6)
+  - [x] 1.1 Tạo `src/EnglishTestWeb.Api/Contracts/AssignedTests/AssignedTestItem.cs` — record với các field: Id, Mode, Title, Skill, ClassId, ClassName, Status, StudentStatus, DeadlineAt, TimeLimitMinutes, ScheduledStartAt, OpenedAt, ClosedAt, CreatedAt
+  - [x] 1.2 Tạo `src/EnglishTestWeb.Api/Application/AssignedTests/IAssignedTestService.cs` — interface `GetForStudentAsync(string studentId, Guid classId, CancellationToken) → Task<IReadOnlyList<AssignedTestItem>>`
+  - [x] 1.3 Thêm navigation properties vào `HomeworkAssignment` entity: `TestTemplate? Template` và navigation key `public Guid TestTemplateId` giữ nguyên (chỉ thêm nav prop để `.Include()` hoạt động)
+  - [x] 1.4 Thêm navigation properties vào `LiveExamSession` entity tương tự
 
-- [ ] Task 2: Backend — Service implementation (AC1, AC3, AC4, AC6)
-  - [ ] 2.1 Tạo `src/EnglishTestWeb.Api/Infrastructure/AssignedTests/AssignedTestService.cs`
+- [x] Task 2: Backend — Service implementation (AC1, AC3, AC4, AC6)
+  - [x] 2.1 Tạo `src/EnglishTestWeb.Api/Infrastructure/AssignedTests/AssignedTestService.cs`
     - Inject `AppDbContext`, `TimeProvider`
     - Query `HomeworkAssignments` WHERE `ClassId = classId` + `.Include(h => h.Template)` + project sang DTO
     - Query `LiveExamSessions` WHERE `ClassId = classId` + `.Include(s => s.Template)` + project sang DTO
@@ -57,12 +57,12 @@ tôi muốn xem các bài tập về nhà và kỳ thi trực tiếp có sẵn t
       - Homework: deadline >= now → `"available"`, deadline < now → `"expired"`
       - LiveExam scheduled → `"not-open"`, open → `"available"`, closed → `"closed"`
     - Trả về combined list sorted by CreatedAt descending
-  - [ ] 2.2 Register service trong DI (Program.cs hoặc extension method)
-  - [ ] 2.3 Thêm EF Core index trên `HomeworkAssignment.ClassId` và `LiveExamSession.ClassId` (trong `AppDbContext` hoặc migration)
-  - [ ] 2.4 `dotnet ef migrations add AddAssignedTestIndexes` nếu cần, hoặc chỉ thêm index annotation
+  - [x] 2.2 Register service trong DI (Program.cs hoặc extension method)
+  - [x] 2.3 Thêm EF Core index trên `HomeworkAssignment.ClassId` và `LiveExamSession.ClassId` (trong `AppDbContext` hoặc migration)
+  - [x] 2.4 `dotnet ef migrations add AddAssignedTestIndexes` nếu cần, hoặc chỉ thêm index annotation
 
-- [ ] Task 3: Backend — Controller và authorization (AC1, AC6)
-  - [ ] 3.1 Tạo `src/EnglishTestWeb.Api/Controllers/AssignedTestsController.cs`
+- [x] Task 3: Backend — Controller và authorization (AC1, AC6)
+  - [x] 3.1 Tạo `src/EnglishTestWeb.Api/Controllers/AssignedTestsController.cs`
     - Route: `GET /api/assigned-tests`
     - `[Authorize(Roles = IdentityRoleNames.Student)]`
     - Extract `activeClassId` từ `ICurrentUserContext.ActiveClassId`
@@ -70,11 +70,11 @@ tôi muốn xem các bài tập về nhà và kỳ thi trực tiếp có sẵn t
     - Gọi `IAssignedTestService.GetForStudentAsync`
     - Verify student có membership trong class đó qua `IClassAuthorizationService.RequireStudentClassAccessAsync` trước khi query
     - Return `200 OK` với `{ items: [...] }`
-  - [ ] 3.2 `dotnet test` — xác nhận tất cả tests hiện có vẫn pass
+  - [x] 3.2 `dotnet test` — xác nhận tất cả tests hiện có vẫn pass
 
-- [ ] Task 4: Backend — API tests (AC1, AC3, AC4, AC6)
-  - [ ] 4.1 Tạo `tests/EnglishTestWeb.Api.Tests/AssignedTests/AssignedTestsTestHelper.cs` — helper tạo test data: homework + live exam cho class
-  - [ ] 4.2 Tạo `tests/EnglishTestWeb.Api.Tests/AssignedTests/AssignedTestsControllerTests.cs` với cases:
+- [x] Task 4: Backend — API tests (AC1, AC3, AC4, AC6)
+  - [x] 4.1 Tạo `tests/EnglishTestWeb.Api.Tests/AssignedTests/AssignedTestsTestHelper.cs` — helper tạo test data: homework + live exam cho class
+  - [x] 4.2 Tạo `tests/EnglishTestWeb.Api.Tests/AssignedTests/AssignedTestsControllerTests.cs` với cases:
     - `GetAssignedTests_AsAnonymous_Returns401`
     - `GetAssignedTests_AsTeacher_Returns403`
     - `GetAssignedTests_AsStudent_WithHomework_ReturnsHomeworkItem` (mode="homework", studentStatus="available")
@@ -84,20 +84,20 @@ tôi muốn xem các bài tập về nhà và kỳ thi trực tiếp có sẵn t
     - `GetAssignedTests_AsStudent_WithClosedLiveExam_ReturnsClosedStatus` (studentStatus="closed")
     - `GetAssignedTests_AsStudent_EmptyClass_ReturnsEmptyList`
     - `GetAssignedTests_AsStudentFromDifferentClass_ReturnsEmpty` (student has active class A, items are in class B → items from B not visible)
-  - [ ] 4.3 Thêm `GET /api/assigned-tests` vào `AuthorizationMatrixTests.cs` — unauthenticated → 401, teacher → 403
-  - [ ] 4.4 `dotnet test` — xác nhận tất cả tests pass
+  - [x] 4.3 Thêm `GET /api/assigned-tests` vào `AuthorizationMatrixTests.cs` — unauthenticated → 401, teacher → 403
+  - [x] 4.4 `dotnet test` — xác nhận tất cả tests pass
 
-- [ ] Task 5: Angular — core service và models (AC1, AC5)
-  - [ ] 5.1 Tạo `src/EnglishTestWeb.Client/src/app/core/assigned-tests/assigned-tests.models.ts`:
+- [x] Task 5: Angular — core service và models (AC1, AC5)
+  - [x] 5.1 Tạo `src/EnglishTestWeb.Client/src/app/core/assigned-tests/assigned-tests.models.ts`:
     - Interface `AssignedTestItem` với tất cả fields từ backend DTO
     - Constants `STUDENT_STATUS_LABELS` mapping: `available` → "Đang mở", `not-open` → "Chưa mở", `expired` → "Đã hết hạn", `closed` → "Đã đóng"
     - Constants `ASSIGNED_TEST_ERROR_MESSAGES` với `'ERR_LIVE_EXAM_NOT_OPEN'`
-  - [ ] 5.2 Tạo `src/EnglishTestWeb.Client/src/app/core/assigned-tests/assigned-tests-api.service.ts`:
+  - [x] 5.2 Tạo `src/EnglishTestWeb.Client/src/app/core/assigned-tests/assigned-tests-api.service.ts`:
     - Method `getForActiveClass(): Promise<AssignedTestItem[]>` gọi `GET /api/assigned-tests`
     - Return `response.items` (array)
 
-- [ ] Task 6: Angular — component update (AC1, AC2, AC3, AC4, AC5)
-  - [ ] 6.1 Cập nhật `features/student-assigned-tests/student-assigned-tests.component.ts`:
+- [x] Task 6: Angular — component update (AC1, AC2, AC3, AC4, AC5)
+  - [x] 6.1 Cập nhật `features/student-assigned-tests/student-assigned-tests.component.ts`:
     - Inject `AssignedTestsApiService`, `ClassContextService`, `AuthSessionService`, `Router`
     - Signals: `viewState: 'loading' | 'loaded' | 'error'`, `homeworkItems`, `liveExamItems`, `activeTab: 'homework' | 'live-exam'`, `skillFilter`, `statusFilter`, `blockedItemMessage`
     - `ngOnInit()`: load items từ API, phân loại vào `homeworkItems` / `liveExamItems`
@@ -105,7 +105,7 @@ tôi muốn xem các bài tập về nhà và kỳ thi trực tiếp có sẵn t
     - `onTabChange(tab)`, `onSkillFilter(skill)`, `onStatusFilter(status)`: update filter signals
     - `onStartItem(item: AssignedTestItem)`: kiểm tra availability; nếu item.studentStatus = 'not-open' → set `blockedItemMessage = ASSIGNED_TEST_ERROR_MESSAGES['ERR_LIVE_EXAM_NOT_OPEN']`; nếu status = 'expired' hoặc 'closed' → set message tương ứng; nếu available → navigate (placeholder cho story 4.2: `router.navigate(['/student/workspace', item.id])`)
     - `logout()`: giữ nguyên như hiện tại
-  - [ ] 6.2 Cập nhật `features/student-assigned-tests/student-assigned-tests.component.html`:
+  - [x] 6.2 Cập nhật `features/student-assigned-tests/student-assigned-tests.component.html`:
     - Header: class name + user info + logout (giữ nguyên, clean up placeholder text)
     - Loading state
     - Error state với retry
@@ -116,10 +116,10 @@ tôi muốn xem các bài tập về nhà và kỳ thi trực tiếp có sẵn t
       - Nút "Bắt đầu" disabled nếu `item.studentStatus !== 'available'`
       - `blockedItemMessage` hiển thị inline khi có
     - Empty state: message gắn với class name hiện tại
-  - [ ] 6.3 Cập nhật CSS cho tabs, cards, filter row, status badges
+  - [x] 6.3 Cập nhật CSS cho tabs, cards, filter row, status badges
 
-- [ ] Task 7: Angular — component spec (AC1, AC2, AC3, AC4, AC5)
-  - [ ] 7.1 Tạo `src/EnglishTestWeb.Client/src/app/features/student-assigned-tests/student-assigned-tests.component.spec.ts`:
+- [x] Task 7: Angular — component spec (AC1, AC2, AC3, AC4, AC5)
+  - [x] 7.1 Tạo `src/EnglishTestWeb.Client/src/app/features/student-assigned-tests/student-assigned-tests.component.spec.ts`:
     - Mock `AssignedTestsApiService` với `vi.fn().mockResolvedValue()`
     - Test `tải được danh sách và phân loại vào hai tab`
     - Test `empty state hiển thị đúng khi không có bài`
@@ -127,7 +127,7 @@ tôi muốn xem các bài tập về nhà và kỳ thi trực tiếp có sẵn t
     - Test `live exam scheduled → click Bắt đầu → hiển thị ERR_LIVE_EXAM_NOT_OPEN message`
     - Test `filter theo skill → chỉ hiển thị items khớp skill`
     - Test `filter theo status → chỉ hiển thị items khớp studentStatus`
-  - [ ] 7.2 `npm test` — xác nhận tất cả tests pass (tăng từ số hiện tại)
+  - [x] 7.2 `npm test` — xác nhận tất cả tests pass (tăng từ số hiện tại)
 
 ## Dev Notes
 

@@ -798,6 +798,34 @@ public sealed class AuthorizationMatrixTests
         Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
     }
 
+    // --- Assigned Tests ---
+
+    [Fact]
+    public async Task Unauthenticated_GetAssignedTests_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/assigned-tests");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Teacher_GetAssignedTests_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await client.GetAsync("/api/assigned-tests");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
     // --- Homework Assignments ---
 
     [Fact]

@@ -1,3 +1,5 @@
+using EnglishTestWeb.Api.Domain.TestTemplates;
+
 namespace EnglishTestWeb.Api.Domain.LiveExams;
 
 public sealed class LiveExamSession
@@ -23,4 +25,6 @@ public sealed class LiveExamSession
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
+
+    public TestTemplate? Template { get; set; }
 }

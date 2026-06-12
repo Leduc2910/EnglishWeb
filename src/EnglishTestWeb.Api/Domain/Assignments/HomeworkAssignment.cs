@@ -1,3 +1,5 @@
+using EnglishTestWeb.Api.Domain.TestTemplates;
+
 namespace EnglishTestWeb.Api.Domain.Assignments;
 
 public sealed class HomeworkAssignment
@@ -19,4 +21,6 @@ public sealed class HomeworkAssignment
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
+
+    public TestTemplate? Template { get; set; }
 }
