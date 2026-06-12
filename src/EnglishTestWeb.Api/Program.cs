@@ -1,5 +1,7 @@
 using EnglishTestWeb.Api.Application.AssignedTests;
+using EnglishTestWeb.Api.Application.Speaking;
 using EnglishTestWeb.Api.Application.Submissions;
+using EnglishTestWeb.Api.Infrastructure.Speaking;
 using EnglishTestWeb.Api.Infrastructure.Submissions;
 using EnglishTestWeb.Api.Application.Auth;
 using EnglishTestWeb.Api.Application.Classes;
@@ -38,7 +40,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 52_428_800;
+    options.MultipartBodyLengthLimit = 110_000_000; // 100MB speaking files + overhead
 });
 builder.Services.AddOpenApi();
 
@@ -185,6 +187,7 @@ builder.Services.AddScoped<IHomeworkAssignmentService, HomeworkAssignmentService
 builder.Services.AddScoped<ILiveExamSessionService, LiveExamSessionService>();
 builder.Services.AddScoped<IAssignedTestService, AssignedTestService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
+builder.Services.AddScoped<ISpeakingSubmissionService, SpeakingSubmissionService>();
 
 var app = builder.Build();
 

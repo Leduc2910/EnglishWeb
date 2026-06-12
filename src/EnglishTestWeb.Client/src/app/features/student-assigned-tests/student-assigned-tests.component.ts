@@ -9,6 +9,7 @@ import {
 } from '../../core/assigned-tests/assigned-tests.models';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { ClassContextService } from '../../core/classes/class-context.service';
+import { SpeakingApiService } from '../../core/speaking/speaking-api.service';
 import { SubmissionsApiService } from '../../core/submissions/submissions-api.service';
 
 @Component({
@@ -21,6 +22,7 @@ export class StudentAssignedTestsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly assignedTestsApi = inject(AssignedTestsApiService);
   private readonly submissionsApi = inject(SubmissionsApiService);
+  private readonly speakingApi = inject(SpeakingApiService);
   protected readonly auth = inject(AuthSessionService);
   protected readonly classContext = inject(ClassContextService);
 
@@ -89,6 +91,24 @@ export class StudentAssignedTestsComponent implements OnInit {
       this.blockedItemMessage.set(ASSIGNED_TEST_ERROR_MESSAGES['ERR_LIVE_EXAM_NOT_OPEN']);
       return;
     }
+
+    // Speaking submissions are always accessible even when expired/closed —
+    // the page still shows the prompt and any existing draft (AC6).
+    if (item.skill === 'speaking') {
+      this.blockedItemMessage.set(null);
+      const request =
+        item.mode === 'homework'
+          ? { homeworkAssignmentId: item.id, liveExamSessionId: null }
+          : { homeworkAssignmentId: null, liveExamSessionId: item.id };
+      try {
+        const speakingSubmission = await this.speakingApi.createOrResume(request);
+        await this.router.navigate(['/student/speaking', speakingSubmission.id]);
+      } catch {
+        this.blockedItemMessage.set('Không thể mở bài làm nói. Vui lòng thử lại.');
+      }
+      return;
+    }
+
     if (item.studentStatus === 'expired') {
       this.blockedItemMessage.set(ASSIGNED_TEST_ERROR_MESSAGES['ERR_HOMEWORK_EXPIRED']);
       return;

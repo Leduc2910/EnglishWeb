@@ -1,0 +1,130 @@
+<div class="speaking-page">
+  @if (viewState() === 'loading') {
+    <p class="loading-state">Đang tải bài làm nói...</p>
+  } @else if (viewState() === 'error') {
+    <div class="error-state">
+      <p class="error-message" data-testid="load-error">{{ errorMessage() }}</p>
+      <div class="error-actions">
+        <button type="button" class="primary-button" (click)="retryLoad()">Thử lại</button>
+        <button type="button" class="text-button" (click)="backToTests()">Quay lại danh sách</button>
+      </div>
+    </div>
+  } @else {
+    <header class="speaking-header">
+      <button type="button" class="back-button" (click)="backToTests()">← Quay lại</button>
+      <div class="speaking-meta">
+        <h1 class="template-title" data-testid="template-title">{{ dto()!.templateTitle }}</h1>
+        <span class="skill-badge skill-speaking">Speaking</span>
+        <span class="mode-badge mode-{{ dto()!.mode }}" data-testid="mode-badge">{{ modeLabel() }}</span>
+        <span class="class-name" data-testid="class-name">{{ dto()!.className }}</span>
+      </div>
+      <span
+        class="source-status"
+        [class.source-open]="dto()!.isSourceOpen"
+        [class.source-closed]="!dto()!.isSourceOpen"
+        data-testid="source-status"
+      >
+        {{ dto()!.isSourceOpen ? 'Đang mở' : 'Đã đóng' }}
+      </span>
+    </header>
+
+    <div class="speaking-body">
+      <section class="prompt-card" aria-label="Đề bài nói" data-testid="prompt-card">
+        <h2 class="section-title">Đề bài</h2>
+        @if (dto()!.cueMaterialFileName) {
+          <div class="cue-material" data-testid="cue-material">
+            <span class="cue-icon">📄</span>
+            <span class="cue-filename" data-testid="cue-filename">{{ dto()!.cueMaterialFileName }}</span>
+          </div>
+        } @else {
+          <p class="no-cue" data-testid="no-cue">Không có tài liệu đề bài đính kèm.</p>
+        }
+      </section>
+
+      <section class="upload-card" aria-label="Tải lên bài ghi âm" data-testid="upload-card">
+        <h2 class="section-title">Bài ghi âm / video của bạn</h2>
+
+        @if (dto()!.draftFile) {
+          <div class="draft-file" data-testid="draft-file">
+            <div class="draft-file-info">
+              <span class="draft-icon">🎙️</span>
+              <div class="draft-details">
+                <span class="draft-filename" data-testid="draft-filename">
+                  {{ dto()!.draftFile!.originalFileName }}
+                </span>
+                <span class="draft-meta" data-testid="draft-meta">
+                  {{ formatFileSize(dto()!.draftFile!.sizeBytes) }} ·
+                  Tải lên lúc {{ formatDate(dto()!.draftFile!.uploadedAt) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <p class="no-draft" data-testid="no-draft">Chưa có bài ghi âm nào.</p>
+        }
+
+        @if (canUpload()) {
+          <div class="upload-section" data-testid="upload-section">
+            <label class="upload-label" for="audio-file-input">
+              {{ dto()!.draftFile ? 'Tải lên bản ghi âm mới (thay thế bản hiện tại)' : 'Chọn file ghi âm' }}
+            </label>
+
+            <input
+              id="audio-file-input"
+              type="file"
+              accept="audio/mpeg,audio/wav,audio/ogg,audio/webm,audio/mp4,video/mp4,video/webm"
+              class="file-input"
+              data-testid="file-input"
+              (change)="onFileSelected($event)"
+            />
+
+            @if (clientValidationError()) {
+              <p class="validation-error" data-testid="client-validation-error" role="alert">
+                {{ clientValidationError() }}
+              </p>
+            }
+
+            @if (selectedFile()) {
+              <div class="selected-file" data-testid="selected-file">
+                <span data-testid="selected-filename">{{ selectedFile()!.name }}</span>
+                <span class="selected-size">({{ formatFileSize(selectedFile()!.size) }})</span>
+              </div>
+
+              <button
+                type="button"
+                class="primary-button"
+                [disabled]="uploadState() === 'uploading'"
+                (click)="onUpload()"
+                data-testid="upload-button"
+              >
+                @if (uploadState() === 'uploading') {
+                  Đang tải lên...
+                } @else {
+                  Tải lên
+                }
+              </button>
+            }
+
+            @if (uploadState() === 'error') {
+              <p class="upload-error" data-testid="upload-error" role="alert">
+                {{ uploadErrorMessage() }}
+              </p>
+            }
+
+            <p class="upload-hint">
+              Chấp nhận file âm thanh (MP3, WAV, OGG, WebM, MP4) và video (MP4, WebM). Tối đa 100MB.
+            </p>
+          </div>
+        } @else if (dto()!.status !== 'draft') {
+          <p class="submitted-notice" data-testid="submitted-notice">
+            Bài đã được nộp.
+          </p>
+        } @else {
+          <p class="closed-notice" data-testid="closed-notice">
+            Nguồn bài thi đã đóng, không thể tải lên thêm.
+          </p>
+        }
+      </section>
+    </div>
+  }
+</div>

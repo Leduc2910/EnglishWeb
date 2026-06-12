@@ -4,6 +4,7 @@ using EnglishTestWeb.Api.Domain.Classes;
 using EnglishTestWeb.Api.Domain.Files;
 using EnglishTestWeb.Api.Domain.Identity;
 using EnglishTestWeb.Api.Domain.LiveExams;
+using EnglishTestWeb.Api.Domain.Speaking;
 using EnglishTestWeb.Api.Domain.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -34,6 +35,8 @@ public sealed class EnglishTestWebDbContext(DbContextOptions<EnglishTestWebDbCon
     public DbSet<Submission> Submissions => Set<Submission>();
 
     public DbSet<SubmissionAnswer> SubmissionAnswers => Set<SubmissionAnswer>();
+
+    public DbSet<SpeakingSubmission> SpeakingSubmissions => Set<SpeakingSubmission>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

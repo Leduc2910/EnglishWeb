@@ -40,6 +40,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'student/speaking/:speakingSubmissionId',
+    canActivate: [studentGuard],
+    loadComponent: () =>
+      import(
+        './features/student-speaking-submission/student-speaking-submission.component'
+      ).then((module) => module.StudentSpeakingSubmissionComponent),
+  },
+  {
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () =>
