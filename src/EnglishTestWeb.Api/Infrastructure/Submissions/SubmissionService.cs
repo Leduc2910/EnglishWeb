@@ -215,6 +215,14 @@ public sealed class SubmissionService(
             .Select(m => (Guid?)m.StoredFileId)
             .FirstOrDefaultAsync(cancellationToken);
 
+        // Load saved draft answers
+        var answerRows = await db.SubmissionAnswers
+            .AsNoTracking()
+            .Where(a => a.SubmissionId == submissionId)
+            .OrderBy(a => a.QuestionNumber)
+            .Select(a => new AnswerRowDto(a.QuestionNumber, a.Answer))
+            .ToListAsync(cancellationToken);
+
         return new SubmissionWorkspaceDto(
             sub.Id,
             sub.Status,
@@ -232,6 +240,62 @@ public sealed class SubmissionService(
             pdfMaterialId.Value,
             audioMaterialId,
             questionCount,
-            []);
+            answerRows);
+    }
+
+    public async Task<AutosaveAnswersResult> AutosaveAnswersAsync(
+        Guid submissionId,
+        string studentId,
+        AutosaveAnswersRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var submission = await db.Submissions
+            .Include(s => s.Answers)
+            .Where(s => s.Id == submissionId && s.StudentId == studentId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (submission is null)
+            return new AutosaveAnswersResult(false, "submission.notFound");
+
+        // AC5: Reject autosave if already submitted
+        if (submission.Status != SubmissionStatuses.Draft)
+            return new AutosaveAnswersResult(false, "submission.notDraft");
+
+        if (request.Rows is null or { Count: 0 })
+            return new AutosaveAnswersResult(true, null);
+
+        // Deduplicate by QuestionNumber — last value in list wins
+        var deduped = request.Rows
+            .GroupBy(r => r.QuestionNumber)
+            .Select(g => g.Last())
+            .ToList();
+
+        var now = timeProvider.GetUtcNow();
+        var existingMap = submission.Answers.ToDictionary(a => a.QuestionNumber);
+
+        foreach (var row in deduped)
+        {
+            var answer = row.Answer?.Length > 500 ? row.Answer[..500] : row.Answer;
+
+            if (existingMap.TryGetValue(row.QuestionNumber, out var existing))
+            {
+                existing.Answer = answer;
+                existing.UpdatedAt = now;
+            }
+            else
+            {
+                db.SubmissionAnswers.Add(new SubmissionAnswer
+                {
+                    Id = Guid.NewGuid(),
+                    SubmissionId = submissionId,
+                    QuestionNumber = row.QuestionNumber,
+                    Answer = answer,
+                    UpdatedAt = now,
+                });
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return new AutosaveAnswersResult(true, null);
     }
 }

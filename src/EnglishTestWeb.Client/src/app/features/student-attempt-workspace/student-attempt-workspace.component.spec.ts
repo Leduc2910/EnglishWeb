@@ -38,6 +38,7 @@ describe('StudentAttemptWorkspaceComponent', () => {
   let submissionsApi: {
     getWorkspace: ReturnType<typeof vi.fn>;
     getMaterialContentUrl: ReturnType<typeof vi.fn>;
+    autosaveAnswers: ReturnType<typeof vi.fn>;
   };
 
   async function setup(
@@ -52,6 +53,7 @@ describe('StudentAttemptWorkspaceComponent', () => {
         (subId: string, fileId: string) =>
           `/api/submissions/${subId}/materials/${fileId}/content`,
       ),
+      autosaveAnswers: vi.fn().mockResolvedValue(undefined),
     };
 
     await TestBed.configureTestingModule({
@@ -84,6 +86,7 @@ describe('StudentAttemptWorkspaceComponent', () => {
     submissionsApi = {
       getWorkspace: vi.fn().mockReturnValue(new Promise(() => {})),
       getMaterialContentUrl: vi.fn(),
+      autosaveAnswers: vi.fn().mockResolvedValue(undefined),
     };
 
     await TestBed.configureTestingModule({
@@ -191,13 +194,82 @@ describe('StudentAttemptWorkspaceComponent', () => {
     expect(submitBtn.disabled).toBe(true);
   });
 
-  it('autosave-status region hiện diện', async () => {
+  it('autosave-status region hiện diện với aria-live', async () => {
     await setup('sub-1');
     await initAndLoad();
 
     const autosave = fixture.nativeElement.querySelector('[data-testid="autosave-status"]');
     expect(autosave).toBeTruthy();
+    expect(autosave.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('autosave-status hiển thị idle khi chưa nhập', async () => {
+    await setup('sub-1');
+    await initAndLoad();
+
+    const autosave = fixture.nativeElement.querySelector('[data-testid="autosave-status"]');
     expect(autosave.textContent).toContain('—');
+  });
+
+  it('performAutosave thành công → autosaveStatus = saved', async () => {
+    await setup('sub-1');
+    await initAndLoad();
+
+    submissionsApi.autosaveAnswers.mockResolvedValue(undefined);
+    await (component as any).performAutosave();
+
+    expect((component as any).autosaveStatus()).toBe('saved');
+  });
+
+  it('performAutosave thất bại → autosaveStatus = error', async () => {
+    await setup('sub-1');
+    await initAndLoad();
+
+    submissionsApi.autosaveAnswers.mockRejectedValue(new Error('network error'));
+    await (component as any).performAutosave();
+
+    expect((component as any).autosaveStatus()).toBe('error');
+  });
+
+  it('load workspace có answerRows → answerInputs được khôi phục', async () => {
+    const wsWithAnswers = makeWorkspace({
+      answerRows: [
+        { questionNumber: 1, answer: 'A' },
+        { questionNumber: 2, answer: 'C' },
+      ],
+    });
+    await setup('sub-1', wsWithAnswers);
+    await initAndLoad();
+
+    const inputs = (component as any).answerInputs();
+    expect(inputs[1]).toBe('A');
+    expect(inputs[2]).toBe('C');
+    expect((component as any).answeredCount()).toBe(2);
+  });
+
+  it('load workspace có answerRows null → bỏ qua, không crash', async () => {
+    const wsWithNull = makeWorkspace({
+      answerRows: [
+        { questionNumber: 1, answer: null },
+        { questionNumber: 2, answer: 'B' },
+      ],
+    });
+    await setup('sub-1', wsWithNull);
+    await initAndLoad();
+
+    const inputs = (component as any).answerInputs();
+    expect(inputs[1]).toBeUndefined();
+    expect(inputs[2]).toBe('B');
+  });
+
+  it('workspace status=submitted → performAutosave không gọi autosaveAnswers', async () => {
+    const submittedWs = makeWorkspace({ status: 'submitted' });
+    await setup('sub-1', submittedWs);
+    await initAndLoad();
+
+    await (component as any).performAutosave();
+
+    expect(submissionsApi.autosaveAnswers).not.toHaveBeenCalled();
   });
 
   it('answer-progress hiện diện và đúng', async () => {

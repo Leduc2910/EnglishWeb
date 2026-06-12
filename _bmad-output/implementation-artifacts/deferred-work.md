@@ -1,5 +1,14 @@
 # Deferred Work
 
+## Deferred from: code review of 4-3-draft-answer-autosave-and-restore (2026-06-12)
+
+- `SubmissionService.AutosaveAnswersAsync`: Concurrent PUT requests racing trên cùng QuestionNumber mới có thể gây unique index violation (DbUpdateException 500) — MVP single-session assumption che khuất nhưng cần xử lý khi mở rộng multi-device.
+- `SubmissionsController` / `AutosaveAnswersRequest`: Không có upper bound trên số lượng Rows trong một request — security hardening khi cần kiểm soát tải.
+- `SubmissionService.AutosaveAnswersAsync`: QuestionNumber <= 0 không được validate — spec nói không bắt buộc; cần validate khi question bounds trở thành requirement.
+- `SubmissionsController.AutosaveAnswers`: Ownership không verify assignment còn active/chưa hết hạn — ngoài phạm vi story 4.3.
+- `SubmissionService.AutosaveAnswersAsync`: TOCTOU giữa status check và SaveChangesAsync có thể cho phép autosave sau khi submission được nộp đồng thời — MVP single-session assumption.
+- `SubmissionService.AutosaveAnswersAsync` line 278: Surrogate pair split khi truncate string > 500 chars (`row.Answer[..500]`) — chỉ xảy ra qua direct API bypass (HTML maxlength="500" che khuất normal path). Fix khi cần: dùng `StringInfo.LengthInTextElements` hoặc check `char.IsHighSurrogate`.
+
 ## Deferred from: code review round 2 of 4-1-student-assigned-tests-list (2026-06-12)
 
 - `AssignedTestService`: 14-arg positional record constructor in LINQ projection — fragile to field-order changes; extract factory method when adding more DTO fields.

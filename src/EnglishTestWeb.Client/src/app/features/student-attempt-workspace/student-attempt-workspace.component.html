@@ -22,7 +22,14 @@
         </span>
         <span class="class-name">{{ workspace()!.className }}</span>
       </div>
-      <span class="autosave-status" data-testid="autosave-status" aria-live="polite">—</span>
+      <span class="autosave-status" data-testid="autosave-status" [attr.aria-live]="'polite'">
+        @switch (autosaveStatus()) {
+          @case ('saving') { <span class="autosave-saving">Đang lưu...</span> }
+          @case ('saved') { <span class="autosave-saved">Đã lưu</span> }
+          @case ('error') { <span class="autosave-error">Lưu thất bại</span> }
+          @default { <span class="autosave-idle">—</span> }
+        }
+      </span>
     </header>
 
     <div class="workspace-body">
@@ -71,6 +78,7 @@
                   [value]="answerInputs()[qn] || ''"
                   (input)="onAnswerChange(qn, $any($event.target).value)"
                   autocomplete="off"
+                  maxlength="500"
                 />
               </div>
             }

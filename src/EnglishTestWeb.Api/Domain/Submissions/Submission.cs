@@ -26,4 +26,6 @@ public sealed class Submission
     public HomeworkAssignment? HomeworkAssignment { get; set; }
 
     public LiveExamSession? LiveExamSession { get; set; }
+
+    public ICollection<SubmissionAnswer> Answers { get; set; } = [];
 }

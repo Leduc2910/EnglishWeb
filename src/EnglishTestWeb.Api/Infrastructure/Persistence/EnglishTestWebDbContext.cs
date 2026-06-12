@@ -33,6 +33,8 @@ public sealed class EnglishTestWebDbContext(DbContextOptions<EnglishTestWebDbCon
 
     public DbSet<Submission> Submissions => Set<Submission>();
 
+    public DbSet<SubmissionAnswer> SubmissionAnswers => Set<SubmissionAnswer>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

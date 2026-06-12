@@ -110,6 +110,45 @@ public sealed class SubmissionsController(
     }
 
     [Authorize(Roles = IdentityRoleNames.Student)]
+    [HttpPut("{id:guid}/answers")]
+    public async Task<ActionResult> AutosaveAnswers(
+        Guid id,
+        [FromBody] AutosaveAnswersRequest request,
+        CancellationToken cancellationToken)
+    {
+        var studentId = currentUserContext.UserId;
+        if (string.IsNullOrWhiteSpace(studentId))
+        {
+            return hiddenResourceResponseFactory.FromCode(
+                StatusCodes.Status401Unauthorized,
+                "auth.unauthorized",
+                "Unauthorized.",
+                "Authentication is required.");
+        }
+
+        var result = await submissionService.AutosaveAnswersAsync(id, studentId, request, cancellationToken);
+
+        if (!result.Success)
+        {
+            return result.ErrorCode switch
+            {
+                "submission.notDraft" => hiddenResourceResponseFactory.FromCode(
+                    StatusCodes.Status409Conflict,
+                    "submission.notDraft",
+                    "Cannot autosave.",
+                    "The submission has already been submitted."),
+                _ => hiddenResourceResponseFactory.FromCode(
+                    StatusCodes.Status404NotFound,
+                    result.ErrorCode ?? "submission.notFound",
+                    "Submission not found.",
+                    "The requested submission could not be found."),
+            };
+        }
+
+        return NoContent();
+    }
+
+    [Authorize(Roles = IdentityRoleNames.Student)]
     [HttpGet("{id:guid}/materials/{fileId:guid}/content")]
     public async Task<ActionResult> GetMaterialContent(
         Guid id,

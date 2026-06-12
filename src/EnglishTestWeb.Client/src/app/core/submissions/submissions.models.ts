@@ -34,6 +34,11 @@ export interface CreateSubmissionRequest {
   liveExamSessionId: string | null;
 }
 
+export interface AutosaveAnswersRow {
+  questionNumber: number;
+  answer: string | null;
+}
+
 export const SUBMISSION_MODE_LABELS: Record<string, string> = {
   homework: 'Bài tập về nhà',
   'live-exam': 'Thi trực tiếp',
@@ -43,5 +48,6 @@ export const SUBMISSION_ERROR_MESSAGES: Record<string, string> = {
   'submission.invalidSource': 'Nguồn bài thi không hợp lệ.',
   'submission.sourceUnavailable': 'Bài thi này hiện không còn khả dụng.',
   'submission.notFound': 'Không tìm thấy bài làm.',
+  'submission.notDraft': 'Bài làm đã được nộp, không thể lưu thêm.',
   'files.notFound': 'File không tải được. Vui lòng thử lại.',
 };

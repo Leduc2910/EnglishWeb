@@ -1,6 +1,8 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, debounceTime } from 'rxjs';
 import { SubmissionsApiService } from '../../core/submissions/submissions-api.service';
 import {
   SUBMISSION_ERROR_MESSAGES,
@@ -9,6 +11,7 @@ import {
 } from '../../core/submissions/submissions.models';
 
 type ViewState = 'loading' | 'loaded' | 'error';
+type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 @Component({
   selector: 'app-student-attempt-workspace',
@@ -20,13 +23,16 @@ export class StudentAttemptWorkspaceComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly submissionsApi = inject(SubmissionsApiService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly destroyRef = inject(DestroyRef);
 
   private submissionId: string | null = null;
+  private readonly autosaveTrigger$ = new Subject<void>();
 
   protected readonly viewState = signal<ViewState>('loading');
   protected readonly workspace = signal<SubmissionWorkspace | null>(null);
   protected readonly errorCode = signal<string | null>(null);
   protected readonly answerInputs = signal<Record<number, string>>({});
+  protected readonly autosaveStatus = signal<AutosaveStatus>('idle');
 
   protected readonly pdfUrl = computed<SafeResourceUrl | null>(() => {
     const ws = this.workspace();
@@ -69,11 +75,17 @@ export class StudentAttemptWorkspaceComponent implements OnInit {
       return;
     }
     this.submissionId = id;
+
+    this.autosaveTrigger$
+      .pipe(debounceTime(800), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => void this.performAutosave());
+
     void this.loadWorkspace(id);
   }
 
   protected onAnswerChange(questionNumber: number, value: string): void {
     this.answerInputs.update((current) => ({ ...current, [questionNumber]: value }));
+    this.autosaveTrigger$.next();
   }
 
   protected jumpToFirstUnanswered(): void {
@@ -123,6 +135,26 @@ export class StudentAttemptWorkspaceComponent implements OnInit {
     } catch (err: unknown) {
       this.errorCode.set(this.extractErrorCode(err));
       this.viewState.set('error');
+    }
+  }
+
+  private async performAutosave(): Promise<void> {
+    const id = this.submissionId;
+    const ws = this.workspace();
+    if (!id || !ws || ws.status === 'submitted') return;
+
+    this.autosaveStatus.set('saving');
+
+    const rows = Object.entries(this.answerInputs()).map(([qn, ans]) => ({
+      questionNumber: Number(qn),
+      answer: ans || null,
+    }));
+
+    try {
+      await this.submissionsApi.autosaveAnswers(id, rows);
+      this.autosaveStatus.set('saved');
+    } catch {
+      this.autosaveStatus.set('error');
     }
   }
 

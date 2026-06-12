@@ -1120,4 +1120,39 @@ public sealed class AuthorizationMatrixTests
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
     }
+
+    // ---- PUT /api/submissions/{id}/answers ----
+
+    [Fact]
+    public async Task PutSubmissionAnswers_AsAnonymous_Returns401()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.EnsureXsrfAsync(client);
+
+        var response = await AuthTestHelper.PutJsonAsync(client, $"/api/submissions/{Guid.NewGuid()}/answers", new
+        {
+            rows = Array.Empty<object>()
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task PutSubmissionAnswers_AsTeacher_Returns403()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplates.TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await AuthTestHelper.PutJsonAsync(client, $"/api/submissions/{Guid.NewGuid()}/answers", new
+        {
+            rows = Array.Empty<object>()
+        });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
 }
