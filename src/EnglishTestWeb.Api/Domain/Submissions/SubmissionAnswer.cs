@@ -12,5 +12,9 @@ public sealed class SubmissionAnswer
 
     public DateTimeOffset UpdatedAt { get; set; }
 
+    public bool? IsCorrect { get; set; }
+
+    public decimal? Score { get; set; }
+
     public Submission? Submission { get; set; }
 }

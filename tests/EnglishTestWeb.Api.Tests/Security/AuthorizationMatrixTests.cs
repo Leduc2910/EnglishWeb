@@ -1155,4 +1155,26 @@ public sealed class AuthorizationMatrixTests
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
     }
+
+    [Fact]
+    public async Task Unauthenticated_PostSubmissionSubmit_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        var resp = await AuthTestHelper.PostJsonAsync(client, $"/api/submissions/{Guid.NewGuid()}/submit", new { });
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
+    [Fact]
+    public async Task Teacher_PostSubmissionSubmit_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplates.TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+        var resp = await AuthTestHelper.PostJsonAsync(client, $"/api/submissions/{Guid.NewGuid()}/submit", new { });
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
 }

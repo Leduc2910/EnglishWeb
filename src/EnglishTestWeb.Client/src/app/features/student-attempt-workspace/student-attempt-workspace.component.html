@@ -79,6 +79,7 @@
                   (input)="onAnswerChange(qn, $any($event.target).value)"
                   autocomplete="off"
                   maxlength="500"
+                  [disabled]="workspace()!.status !== 'draft' || !!submitResult()"
                 />
               </div>
             }
@@ -94,17 +95,90 @@
           >
             Câu chưa điền
           </button>
-          <button
-            type="button"
-            class="submit-button"
-            (click)="onSubmit()"
-            disabled
-            data-testid="submit-button"
-          >
-            Nộp bài (Chưa triển khai)
-          </button>
+          @if (!submitResult()) {
+            <button
+              type="button"
+              class="submit-button"
+              [disabled]="submitState() === 'submitting' || workspace()!.status !== 'draft'"
+              (click)="onSubmit()"
+              data-testid="submit-button"
+            >
+              @if (submitState() === 'submitting') {
+                Đang nộp bài...
+              } @else {
+                Nộp bài
+              }
+            </button>
+          }
         </div>
+
+        @if (submitState() === 'error' && submitError()) {
+          <p class="submit-error" data-testid="submit-error">{{ submitError() }}</p>
+        }
       </section>
     </div>
+
+    @if (isSubmitConfirmOpen()) {
+      <div class="submit-confirm-overlay" data-testid="submit-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="submit-confirm-dialog">
+          <h2 id="confirm-title" class="confirm-title">Xác nhận nộp bài</h2>
+          @if (missingCount() > 0) {
+            <p class="confirm-missing" data-testid="confirm-missing-count">
+              Còn {{ missingCount() }} câu chưa điền. Bạn có chắc muốn nộp bài?
+            </p>
+          } @else {
+            <p class="confirm-complete" data-testid="confirm-all-answered">
+              Bạn đã điền đủ {{ workspace()!.questionCount }} câu. Xác nhận nộp bài?
+            </p>
+          }
+          <div class="confirm-actions">
+            <button
+              type="button"
+              class="primary-button"
+              (click)="onConfirmSubmit()"
+              data-testid="confirm-submit-btn"
+            >
+              Xác nhận nộp bài
+            </button>
+            <button
+              type="button"
+              class="text-button"
+              (click)="onCancelSubmit()"
+              data-testid="cancel-submit-btn"
+            >
+              Quay lại làm bài
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (submitResult()) {
+      <div class="submit-success" data-testid="submit-success">
+        <h2 class="success-title">Đã nộp bài thành công!</h2>
+        <dl class="result-details">
+          <dt>Bài thi</dt>
+          <dd data-testid="result-template-title">{{ submitResult()!.templateTitle }}</dd>
+          <dt>Hình thức</dt>
+          <dd data-testid="result-mode">{{ modeLabels[submitResult()!.mode] }}</dd>
+          <dt>Thời gian nộp</dt>
+          <dd data-testid="result-submitted-at">{{ formatDate(submitResult()!.submittedAt) }}</dd>
+          @if (submitResult()!.autoScore !== null) {
+            <dt>Điểm</dt>
+            <dd data-testid="result-score">
+              {{ submitResult()!.autoScore }} điểm ({{ submitResult()!.correctCount }}/{{ submitResult()!.questionCount }} câu đúng)
+            </dd>
+          }
+        </dl>
+        <button
+          type="button"
+          class="primary-button"
+          (click)="backToTests()"
+          data-testid="back-to-tests-after-submit-btn"
+        >
+          Quay lại danh sách bài thi
+        </button>
+      </div>
+    }
   }
 </div>

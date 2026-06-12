@@ -23,6 +23,10 @@ public sealed class Submission
 
     public DateTimeOffset UpdatedAt { get; set; }
 
+    public DateTimeOffset? SubmittedAt { get; set; }
+
+    public decimal? AutoScore { get; set; }
+
     public HomeworkAssignment? HomeworkAssignment { get; set; }
 
     public LiveExamSession? LiveExamSession { get; set; }

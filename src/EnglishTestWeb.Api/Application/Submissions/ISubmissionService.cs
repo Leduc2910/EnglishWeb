@@ -20,6 +20,11 @@ public interface ISubmissionService
         string studentId,
         AutosaveAnswersRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<FinalSubmitResult> FinalSubmitAsync(
+        Guid submissionId,
+        string studentId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record CreateSubmissionResult(

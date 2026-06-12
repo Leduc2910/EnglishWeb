@@ -15,6 +15,7 @@ public sealed class SubmissionConfiguration : IEntityTypeConfiguration<Submissio
 
         entity.Property(s => s.StudentId).HasMaxLength(450).IsRequired();
         entity.Property(s => s.Status).HasMaxLength(50).IsRequired();
+        entity.Property(s => s.AutoScore).HasColumnType("decimal(18,2)");
         entity.Property(s => s.RowVersion).IsRowVersion();
 
         entity.HasIndex(s => new { s.StudentId, s.HomeworkAssignmentId })

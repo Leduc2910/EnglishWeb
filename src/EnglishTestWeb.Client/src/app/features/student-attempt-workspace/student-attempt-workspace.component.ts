@@ -7,6 +7,7 @@ import { SubmissionsApiService } from '../../core/submissions/submissions-api.se
 import {
   SUBMISSION_ERROR_MESSAGES,
   SUBMISSION_MODE_LABELS,
+  SubmissionResultDto,
   SubmissionWorkspace,
 } from '../../core/submissions/submissions.models';
 
@@ -33,6 +34,10 @@ export class StudentAttemptWorkspaceComponent implements OnInit {
   protected readonly errorCode = signal<string | null>(null);
   protected readonly answerInputs = signal<Record<number, string>>({});
   protected readonly autosaveStatus = signal<AutosaveStatus>('idle');
+  protected readonly isSubmitConfirmOpen = signal<boolean>(false);
+  protected readonly submitState = signal<'idle' | 'submitting' | 'error'>('idle');
+  protected readonly submitError = signal<string | null>(null);
+  protected readonly submitResult = signal<SubmissionResultDto | null>(null);
 
   protected readonly pdfUrl = computed<SafeResourceUrl | null>(() => {
     const ws = this.workspace();
@@ -53,6 +58,11 @@ export class StudentAttemptWorkspaceComponent implements OnInit {
   protected readonly answeredCount = computed(() =>
     Object.values(this.answerInputs()).filter((v) => v !== '').length,
   );
+
+  protected readonly missingCount = computed(() => {
+    const ws = this.workspace();
+    return ws ? ws.questionCount - this.answeredCount() : 0;
+  });
 
   protected readonly answerRange = computed<number[]>(() => {
     const ws = this.workspace();
@@ -102,8 +112,47 @@ export class StudentAttemptWorkspaceComponent implements OnInit {
     }
   }
 
+  protected formatDate(iso: string): string {
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(iso));
+  }
+
   protected onSubmit(): void {
-    // Placeholder — story 4.4 implements submission logic
+    const ws = this.workspace();
+    if (!ws || ws.status !== 'draft') return;
+    this.isSubmitConfirmOpen.set(true);
+  }
+
+  protected onCancelSubmit(): void {
+    this.isSubmitConfirmOpen.set(false);
+  }
+
+  protected async onConfirmSubmit(): Promise<void> {
+    const id = this.submissionId;
+    if (!id) return;
+
+    this.isSubmitConfirmOpen.set(false);
+    this.submitState.set('submitting');
+    this.submitError.set(null);
+
+    try {
+      const result = await this.submissionsApi.finalSubmit(id);
+      this.submitResult.set(result);
+      // Propagate submitted status so the autosave guard correctly blocks any debounced saves
+      this.workspace.update((ws) => (ws ? { ...ws, status: result.status } : ws));
+      this.submitState.set('idle');
+    } catch (err: unknown) {
+      const code = this.extractErrorCode(err);
+      this.submitError.set(
+        SUBMISSION_ERROR_MESSAGES[code ?? ''] ?? 'Nộp bài thất bại. Vui lòng thử lại.',
+      );
+      this.submitState.set('error');
+    }
   }
 
   protected backToTests(): void {
@@ -141,7 +190,7 @@ export class StudentAttemptWorkspaceComponent implements OnInit {
   private async performAutosave(): Promise<void> {
     const id = this.submissionId;
     const ws = this.workspace();
-    if (!id || !ws || ws.status === 'submitted') return;
+    if (!id || !ws || ws.status !== 'draft') return;
 
     this.autosaveStatus.set('saving');
 

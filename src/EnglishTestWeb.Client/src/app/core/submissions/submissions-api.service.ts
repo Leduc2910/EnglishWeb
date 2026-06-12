@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { AutosaveAnswersRow, CreateSubmissionRequest, SubmissionDto, SubmissionWorkspace } from './submissions.models';
+import { AutosaveAnswersRow, CreateSubmissionRequest, SubmissionDto, SubmissionResultDto, SubmissionWorkspace } from './submissions.models';
 
 @Injectable({ providedIn: 'root' })
 export class SubmissionsApiService {
@@ -22,6 +22,12 @@ export class SubmissionsApiService {
   autosaveAnswers(submissionId: string, rows: AutosaveAnswersRow[]): Promise<void> {
     return firstValueFrom(
       this.http.put<void>(`/api/submissions/${submissionId}/answers`, { rows }),
+    );
+  }
+
+  finalSubmit(submissionId: string): Promise<SubmissionResultDto> {
+    return firstValueFrom(
+      this.http.post<SubmissionResultDto>(`/api/submissions/${submissionId}/submit`, {}),
     );
   }
 }

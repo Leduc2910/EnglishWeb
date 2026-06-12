@@ -149,6 +149,44 @@ public sealed class SubmissionsController(
     }
 
     [Authorize(Roles = IdentityRoleNames.Student)]
+    [HttpPost("{id:guid}/submit")]
+    public async Task<ActionResult<SubmissionResultDto>> FinalSubmit(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var studentId = currentUserContext.UserId;
+        if (string.IsNullOrWhiteSpace(studentId))
+        {
+            return hiddenResourceResponseFactory.FromCode(
+                StatusCodes.Status401Unauthorized,
+                "auth.unauthorized",
+                "Unauthorized.",
+                "Authentication is required.");
+        }
+
+        var result = await submissionService.FinalSubmitAsync(id, studentId, cancellationToken);
+
+        if (!result.Success)
+        {
+            return result.ErrorCode switch
+            {
+                "submission.sourceUnavailable" => hiddenResourceResponseFactory.FromCode(
+                    StatusCodes.Status422UnprocessableEntity,
+                    "submission.sourceUnavailable",
+                    "Cannot submit.",
+                    "The submission source is no longer available (deadline passed or session closed)."),
+                _ => hiddenResourceResponseFactory.FromCode(
+                    StatusCodes.Status404NotFound,
+                    result.ErrorCode ?? "submission.notFound",
+                    "Submission not found.",
+                    "The requested submission could not be found."),
+            };
+        }
+
+        return Ok(result.Result);
+    }
+
+    [Authorize(Roles = IdentityRoleNames.Student)]
     [HttpGet("{id:guid}/materials/{fileId:guid}/content")]
     public async Task<ActionResult> GetMaterialContent(
         Guid id,

@@ -11,6 +11,7 @@ public sealed class SubmissionAnswerConfiguration : IEntityTypeConfiguration<Sub
         entity.HasKey(a => a.Id);
 
         entity.Property(a => a.Answer).HasMaxLength(500);
+        entity.Property(a => a.Score).HasColumnType("decimal(18,2)");
 
         entity.HasIndex(a => new { a.SubmissionId, a.QuestionNumber }).IsUnique();
 

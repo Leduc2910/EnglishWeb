@@ -3,10 +3,24 @@ import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { convertToParamMap } from '@angular/router';
 import { StudentAttemptWorkspaceComponent } from './student-attempt-workspace.component';
 import { SubmissionsApiService } from '../../core/submissions/submissions-api.service';
-import { SubmissionWorkspace } from '../../core/submissions/submissions.models';
+import { SubmissionResultDto, SubmissionWorkspace } from '../../core/submissions/submissions.models';
 
 async function flushPromises(): Promise<void> {
   await new Promise<void>((r) => setTimeout(r, 0));
+}
+
+function makeSubmitResult(overrides: Partial<SubmissionResultDto> = {}): SubmissionResultDto {
+  return {
+    submissionId: 'sub-1',
+    status: 'auto-graded',
+    mode: 'homework',
+    templateTitle: 'Unit 1 Reading Test',
+    submittedAt: '2026-06-12T10:00:00Z',
+    autoScore: 10,
+    questionCount: 1,
+    correctCount: 1,
+    ...overrides,
+  };
 }
 
 function makeWorkspace(overrides: Partial<SubmissionWorkspace> = {}): SubmissionWorkspace {
@@ -39,6 +53,7 @@ describe('StudentAttemptWorkspaceComponent', () => {
     getWorkspace: ReturnType<typeof vi.fn>;
     getMaterialContentUrl: ReturnType<typeof vi.fn>;
     autosaveAnswers: ReturnType<typeof vi.fn>;
+    finalSubmit: ReturnType<typeof vi.fn>;
   };
 
   async function setup(
@@ -54,6 +69,7 @@ describe('StudentAttemptWorkspaceComponent', () => {
           `/api/submissions/${subId}/materials/${fileId}/content`,
       ),
       autosaveAnswers: vi.fn().mockResolvedValue(undefined),
+      finalSubmit: vi.fn().mockResolvedValue(makeSubmitResult()),
     };
 
     await TestBed.configureTestingModule({
@@ -87,6 +103,7 @@ describe('StudentAttemptWorkspaceComponent', () => {
       getWorkspace: vi.fn().mockReturnValue(new Promise(() => {})),
       getMaterialContentUrl: vi.fn(),
       autosaveAnswers: vi.fn().mockResolvedValue(undefined),
+      finalSubmit: vi.fn().mockResolvedValue(makeSubmitResult()),
     };
 
     await TestBed.configureTestingModule({
@@ -185,13 +202,13 @@ describe('StudentAttemptWorkspaceComponent', () => {
     expect((component as any).answeredCount()).toBe(2);
   });
 
-  it('submit button hiện diện và disabled', async () => {
+  it('submit button hiện diện và enabled khi workspace status = draft', async () => {
     await setup('sub-1');
     await initAndLoad();
 
     const submitBtn = fixture.nativeElement.querySelector('[data-testid="submit-button"]');
     expect(submitBtn).toBeTruthy();
-    expect(submitBtn.disabled).toBe(true);
+    expect(submitBtn.disabled).toBe(false);
   });
 
   it('autosave-status region hiện diện với aria-live', async () => {
@@ -315,5 +332,139 @@ describe('StudentAttemptWorkspaceComponent', () => {
     await flushPromises();
 
     expect(navigateSpy).toHaveBeenCalledWith(['/student/tests']);
+  });
+
+  it('submit button enabled khi workspace status = draft', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'draft' }));
+    await initAndLoad();
+
+    const submitBtn = fixture.nativeElement.querySelector('[data-testid="submit-button"]');
+    expect(submitBtn).toBeTruthy();
+    expect(submitBtn.disabled).toBe(false);
+  });
+
+  it('onSubmit() mở confirmation modal khi status = draft', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'draft' }));
+    await initAndLoad();
+
+    (component as any).onSubmit();
+    fixture.detectChanges();
+
+    expect((component as any).isSubmitConfirmOpen()).toBe(true);
+    const modal = fixture.nativeElement.querySelector('[data-testid="submit-confirm-modal"]');
+    expect(modal).toBeTruthy();
+  });
+
+  it('confirmation modal hiển thị missing count khi có câu chưa điền', async () => {
+    await setup('sub-1', makeWorkspace({ questionCount: 3 }));
+    await initAndLoad();
+
+    (component as any).onSubmit();
+    fixture.detectChanges();
+
+    const missingEl = fixture.nativeElement.querySelector('[data-testid="confirm-missing-count"]');
+    expect(missingEl).toBeTruthy();
+    expect(missingEl.textContent).toContain('3');
+  });
+
+  it('confirmation modal hiển thị "đủ câu" khi tất cả đã điền', async () => {
+    await setup('sub-1', makeWorkspace({ questionCount: 1 }));
+    await initAndLoad();
+
+    (component as any).onAnswerChange(1, 'A');
+    (component as any).onSubmit();
+    fixture.detectChanges();
+
+    const completeEl = fixture.nativeElement.querySelector('[data-testid="confirm-all-answered"]');
+    expect(completeEl).toBeTruthy();
+  });
+
+  it('onCancelSubmit() đóng modal (isSubmitConfirmOpen = false)', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'draft' }));
+    await initAndLoad();
+
+    (component as any).onSubmit();
+    fixture.detectChanges();
+    expect((component as any).isSubmitConfirmOpen()).toBe(true);
+
+    (component as any).onCancelSubmit();
+    fixture.detectChanges();
+    expect((component as any).isSubmitConfirmOpen()).toBe(false);
+  });
+
+  it('onConfirmSubmit() gọi finalSubmit và hiển thị success state', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'draft' }));
+    await initAndLoad();
+
+    await (component as any).onConfirmSubmit();
+    fixture.detectChanges();
+
+    expect(submissionsApi.finalSubmit).toHaveBeenCalledWith('sub-1');
+    expect((component as any).submitResult()).toBeTruthy();
+    const successEl = fixture.nativeElement.querySelector('[data-testid="submit-success"]');
+    expect(successEl).toBeTruthy();
+  });
+
+  it('success state hiển thị templateTitle, mode, submittedAt', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'draft' }));
+    await initAndLoad();
+
+    await (component as any).onConfirmSubmit();
+    fixture.detectChanges();
+
+    const titleEl = fixture.nativeElement.querySelector('[data-testid="result-template-title"]');
+    expect(titleEl?.textContent).toContain('Unit 1 Reading Test');
+    const modeEl = fixture.nativeElement.querySelector('[data-testid="result-mode"]');
+    expect(modeEl).toBeTruthy();
+    const dateEl = fixture.nativeElement.querySelector('[data-testid="result-submitted-at"]');
+    expect(dateEl).toBeTruthy();
+  });
+
+  it('onConfirmSubmit() thất bại → submitState = error, submit-error hiển thị', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'draft' }));
+    await initAndLoad();
+
+    submissionsApi.finalSubmit.mockRejectedValue({ error: { extensions: { code: 'submission.sourceUnavailable' } } });
+    await (component as any).onConfirmSubmit();
+    fixture.detectChanges();
+
+    expect((component as any).submitState()).toBe('error');
+    const errEl = fixture.nativeElement.querySelector('[data-testid="submit-error"]');
+    expect(errEl).toBeTruthy();
+  });
+
+  it('inputs bị disabled khi workspace.status = submitted', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'submitted', questionCount: 1 }));
+    await initAndLoad();
+
+    const input = fixture.nativeElement.querySelector('[data-testid="answer-input-1"]');
+    expect(input?.disabled).toBe(true);
+  });
+
+  it('submit button disabled khi workspace.status = submitted', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'submitted' }));
+    await initAndLoad();
+
+    const submitBtn = fixture.nativeElement.querySelector('[data-testid="submit-button"]');
+    expect(submitBtn?.disabled).toBe(true);
+  });
+
+  it('performAutosave không gọi khi workspace.status = auto-graded', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'auto-graded' }));
+    await initAndLoad();
+
+    await (component as any).performAutosave();
+
+    expect(submissionsApi.autosaveAnswers).not.toHaveBeenCalled();
+  });
+
+  it('onSubmit() không mở modal khi workspace.status != draft', async () => {
+    await setup('sub-1', makeWorkspace({ status: 'submitted' }));
+    await initAndLoad();
+
+    (component as any).onSubmit();
+    fixture.detectChanges();
+
+    expect((component as any).isSubmitConfirmOpen()).toBe(false);
   });
 });

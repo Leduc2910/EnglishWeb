@@ -29,6 +29,17 @@ export interface SubmissionWorkspace {
   answerRows: AnswerRowDto[];
 }
 
+export interface SubmissionResultDto {
+  submissionId: string;
+  status: string;
+  mode: 'homework' | 'live-exam';
+  templateTitle: string;
+  submittedAt: string;
+  autoScore: number | null;
+  questionCount: number;
+  correctCount: number;
+}
+
 export interface CreateSubmissionRequest {
   homeworkAssignmentId: string | null;
   liveExamSessionId: string | null;

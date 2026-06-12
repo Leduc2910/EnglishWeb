@@ -1,3 +1,4 @@
+using System.Text.Json;
 using EnglishTestWeb.Api.Application.Security;
 using EnglishTestWeb.Api.Application.Submissions;
 using EnglishTestWeb.Api.Contracts.Submissions;
@@ -13,6 +14,8 @@ public sealed class SubmissionService(
     EnglishTestWebDbContext db,
     TimeProvider timeProvider) : ISubmissionService
 {
+    private static readonly JsonSerializerOptions _rowsJsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<CreateSubmissionResult> CreateOrResumeAsync(
         string studentId,
         Guid activeClassId,
@@ -297,5 +300,180 @@ public sealed class SubmissionService(
 
         await db.SaveChangesAsync(cancellationToken);
         return new AutosaveAnswersResult(true, null);
+    }
+
+    public async Task<FinalSubmitResult> FinalSubmitAsync(
+        Guid submissionId,
+        string studentId,
+        CancellationToken cancellationToken = default)
+    {
+        var submission = await db.Submissions
+            .Include(s => s.Answers)
+            .Include(s => s.HomeworkAssignment)
+            .Include(s => s.LiveExamSession)
+            .Where(s => s.Id == submissionId && s.StudentId == studentId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (submission is null)
+            return new FinalSubmitResult(false, "submission.notFound", null);
+
+        // AC4: Idempotency — already submitted → return existing result
+        if (submission.Status != SubmissionStatuses.Draft)
+        {
+            var existingResult = await BuildResultDtoAsync(submission, cancellationToken);
+            return new FinalSubmitResult(true, null, existingResult);
+        }
+
+        // AC5: Re-verify source is still open at submit time
+        var now = timeProvider.GetUtcNow();
+        if (submission.HomeworkAssignmentId.HasValue)
+        {
+            if (submission.HomeworkAssignment is null || submission.HomeworkAssignment.DeadlineAt < now)
+                return new FinalSubmitResult(false, "submission.sourceUnavailable", null);
+        }
+        else
+        {
+            if (submission.LiveExamSession is null || submission.LiveExamSession.Status != LiveExamSessionStatuses.Open)
+                return new FinalSubmitResult(false, "submission.sourceUnavailable", null);
+        }
+
+        // AC3: Auto-grade if AnswerKey version was snapped at submission creation
+        decimal? autoScore = null;
+
+        if (submission.AnswerKeyVersionId.HasValue)
+        {
+            var akv = await db.AnswerKeyVersions
+                .AsNoTracking()
+                .Where(a => a.Id == submission.AnswerKeyVersionId.Value)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (akv is not null)
+            {
+                List<AnswerKeyRow>? rows;
+                try
+                {
+                    rows = JsonSerializer.Deserialize<List<AnswerKeyRow>>(akv.RowsJson, _rowsJsonOptions);
+                }
+                catch (JsonException)
+                {
+                    rows = null;
+                }
+
+                if (rows is not null && rows.Count > 0)
+                {
+                    // Deduplicate by QuestionNumber — last row wins (mirrors autosave logic)
+                    var keyMap = rows
+                        .GroupBy(r => r.QuestionNumber)
+                        .ToDictionary(g => g.Key, g => g.Last());
+
+                    var scorePerQuestion = akv.ScoringMode == ScoringModes.Equal && akv.QuestionCount > 0
+                        ? (akv.TotalScore ?? 0m) / akv.QuestionCount
+                        : 0m;
+
+                    decimal totalEarned = 0m;
+                    foreach (var answer in submission.Answers)
+                    {
+                        if (keyMap.TryGetValue(answer.QuestionNumber, out var keyRow))
+                        {
+                            var isCorrect = string.Equals(
+                                answer.Answer?.Trim(),
+                                keyRow.CorrectAnswer?.Trim() ?? string.Empty,
+                                StringComparison.OrdinalIgnoreCase);
+
+                            answer.IsCorrect = isCorrect;
+                            answer.Score = isCorrect
+                                ? (akv.ScoringMode == ScoringModes.PerQuestion
+                                    ? keyRow.Score ?? 0m
+                                    : scorePerQuestion)
+                                : 0m;
+                            totalEarned += answer.Score.Value;
+                        }
+                        else
+                        {
+                            answer.IsCorrect = false;
+                            answer.Score = 0m;
+                        }
+                    }
+
+                    autoScore = totalEarned;
+                }
+            }
+        }
+
+        // AutoGraded only when grading actually ran; Submitted otherwise
+        submission.Status = autoScore.HasValue
+            ? SubmissionStatuses.AutoGraded
+            : SubmissionStatuses.Submitted;
+        submission.SubmittedAt = now;
+        submission.AutoScore = autoScore;
+        submission.UpdatedAt = now;
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // A concurrent request won the race — re-query and return the committed result.
+            db.ChangeTracker.Clear();
+            var committed = await db.Submissions
+                .Include(s => s.Answers)
+                .Include(s => s.HomeworkAssignment)
+                .Include(s => s.LiveExamSession)
+                .AsNoTracking()
+                .Where(s => s.Id == submissionId && s.StudentId == studentId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (committed is null)
+                return new FinalSubmitResult(false, "submission.notFound", null);
+
+            var concurrentResult = await BuildResultDtoAsync(committed, cancellationToken);
+            return new FinalSubmitResult(true, null, concurrentResult);
+        }
+
+        var result = await BuildResultDtoAsync(submission, cancellationToken);
+        return new FinalSubmitResult(true, null, result);
+    }
+
+    private async Task<SubmissionResultDto> BuildResultDtoAsync(
+        Submission submission,
+        CancellationToken cancellationToken)
+    {
+        var templateId = submission.HomeworkAssignment?.TestTemplateId
+            ?? submission.LiveExamSession?.TestTemplateId;
+
+        var templateTitle = string.Empty;
+        if (templateId.HasValue)
+        {
+            templateTitle = await db.TestTemplates
+                .AsNoTracking()
+                .Where(t => t.Id == templateId.Value)
+                .Select(t => t.Title)
+                .FirstOrDefaultAsync(cancellationToken) ?? string.Empty;
+        }
+
+        var questionCount = submission.Answers.Count;
+        if (submission.AnswerKeyVersionId.HasValue)
+        {
+            var akvCount = await db.AnswerKeyVersions
+                .AsNoTracking()
+                .Where(a => a.Id == submission.AnswerKeyVersionId.Value)
+                .Select(a => (int?)a.QuestionCount)
+                .FirstOrDefaultAsync(cancellationToken);
+            questionCount = akvCount ?? questionCount;
+        }
+
+        var mode = submission.HomeworkAssignmentId.HasValue ? "homework" : "live-exam";
+        var answeredCorrectly = submission.Answers.Count(a => a.IsCorrect == true);
+
+        return new SubmissionResultDto(
+            submission.Id,
+            submission.Status,
+            mode,
+            templateTitle,
+            submission.SubmittedAt ?? submission.UpdatedAt,
+            submission.AutoScore,
+            questionCount,
+            answeredCorrectly);
     }
 }

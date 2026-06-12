@@ -174,4 +174,20 @@ internal static class SubmissionsTestHelper
 
         return (session.Id, classId, storedFile.Id);
     }
+
+    internal static async Task<Guid> CreateSubmissionAsync(
+        HttpClient client,
+        Guid? homeworkAssignmentId,
+        Guid? liveExamSessionId)
+    {
+        var response = await Auth.AuthTestHelper.PostJsonAsync(client, "/api/submissions", new
+        {
+            homeworkAssignmentId,
+            liveExamSessionId
+        });
+        response.EnsureSuccessStatusCode();
+        await using var body = await response.Content.ReadAsStreamAsync();
+        using var doc = await System.Text.Json.JsonDocument.ParseAsync(body);
+        return doc.RootElement.GetProperty("id").GetGuid();
+    }
 }
