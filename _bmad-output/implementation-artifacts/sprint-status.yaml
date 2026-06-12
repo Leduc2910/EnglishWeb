@@ -36,9 +36,9 @@
 # - Dev moves story to 'review', then runs code-review
 
 generated: 2026-06-09
-last_updated: 2026-06-12 — 4.1 done via code review round 1 (2026-06-12)
+last_updated: 2026-06-12 — 4.2 review (2026-06-12)
 project: EnglishTestWeb
-# 3.2 done via code review (2026-06-11); 3.3 story created (2026-06-11); 4.1 story created (2026-06-12)
+# 3.2 done via code review (2026-06-11); 3.3 story created (2026-06-11); 4.1 story created (2026-06-12); 4.2 story created (2026-06-12)
 project_key: NOKEY
 tracking_system: file-system
 story_location: E:\Code\EnglishTestWeb\_bmad-output\implementation-artifacts
@@ -67,7 +67,7 @@ development_status:
 
   epic-4: in-progress
   4-1-student-assigned-tests-list: done
-  4-2-reading-listening-attempt-workspace: backlog
+  4-2-reading-listening-attempt-workspace: done
   4-3-draft-answer-autosave-and-restore: backlog
   4-4-final-submission-and-reading-listening-auto-grading: backlog
   epic-4-retrospective: optional

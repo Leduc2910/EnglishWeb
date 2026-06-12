@@ -1,0 +1,102 @@
+<div class="workspace-page">
+  @if (viewState() === 'loading') {
+    <p class="loading-state">Đang tải bài làm...</p>
+  } @else if (viewState() === 'error') {
+    <div class="error-state">
+      <p class="error-message">{{ errorMessage() }}</p>
+      <div class="error-actions">
+        <button type="button" class="primary-button" (click)="retryLoad()">Thử lại</button>
+        <button type="button" class="text-button" (click)="backToTests()">Quay lại danh sách</button>
+      </div>
+    </div>
+  } @else {
+    <header class="workspace-header" data-testid="workspace-header">
+      <button type="button" class="back-button" (click)="backToTests()">← Quay lại</button>
+      <div class="workspace-meta">
+        <h1 class="template-title">{{ workspace()!.templateTitle }}</h1>
+        <span class="skill-badge skill-{{ workspace()!.skill }}">
+          {{ workspace()!.skill === 'reading' ? 'Reading' : 'Listening' }}
+        </span>
+        <span class="mode-badge mode-{{ workspace()!.mode }}">
+          {{ modeLabels[workspace()!.mode] }}
+        </span>
+        <span class="class-name">{{ workspace()!.className }}</span>
+      </div>
+      <span class="autosave-status" data-testid="autosave-status" aria-live="polite">—</span>
+    </header>
+
+    <div class="workspace-body">
+      <section class="pdf-panel" aria-label="Đề bài">
+        @if (audioUrl()) {
+          <audio
+            class="audio-player"
+            controls
+            [src]="audioUrl()!"
+            data-testid="audio-player"
+          >
+            Trình duyệt không hỗ trợ phát âm thanh.
+          </audio>
+        }
+        <iframe
+          class="pdf-viewer"
+          [src]="pdfUrl()!"
+          title="Đề bài PDF"
+          frameborder="0"
+          allowfullscreen
+          data-testid="pdf-viewer"
+        ></iframe>
+      </section>
+
+      <section class="answer-panel" aria-label="Phần trả lời">
+        <div class="answer-panel-header">
+          <h2 class="answer-panel-title">Câu trả lời</h2>
+          <span class="answer-progress" data-testid="answer-progress">
+            Đã trả lời: {{ answeredCount() }}/{{ workspace()!.questionCount }}
+          </span>
+        </div>
+
+        @if (workspace()!.questionCount === 0) {
+          <p class="no-questions">Bài thi chưa có câu hỏi.</p>
+        } @else {
+          <form class="answer-form" data-testid="answer-form">
+            @for (qn of answerRange(); track qn) {
+              <div class="answer-row">
+                <label class="question-label" [for]="'answer-' + qn">Câu {{ qn }}</label>
+                <input
+                  class="answer-input"
+                  type="text"
+                  [id]="'answer-' + qn"
+                  [attr.data-testid]="'answer-input-' + qn"
+                  [attr.aria-label]="'Câu ' + qn"
+                  [value]="answerInputs()[qn] || ''"
+                  (input)="onAnswerChange(qn, $any($event.target).value)"
+                  autocomplete="off"
+                />
+              </div>
+            }
+          </form>
+        }
+
+        <div class="answer-actions">
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="jumpToFirstUnanswered()"
+            data-testid="jump-to-unanswered"
+          >
+            Câu chưa điền
+          </button>
+          <button
+            type="button"
+            class="submit-button"
+            (click)="onSubmit()"
+            disabled
+            data-testid="submit-button"
+          >
+            Nộp bài (Chưa triển khai)
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

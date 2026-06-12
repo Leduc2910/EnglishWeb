@@ -6,6 +6,12 @@ public interface IProtectedFileService
         Guid fileId,
         string userId,
         CancellationToken cancellationToken = default);
+
+    Task<ProtectedFileAccessResult> OpenForStudentWithSubmissionAsync(
+        Guid fileId,
+        string studentId,
+        Guid submissionId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record ProtectedFileAccessResult(

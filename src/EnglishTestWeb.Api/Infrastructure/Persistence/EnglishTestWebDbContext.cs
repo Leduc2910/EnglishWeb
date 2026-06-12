@@ -1,4 +1,5 @@
 using EnglishTestWeb.Api.Domain.Assignments;
+using EnglishTestWeb.Api.Domain.Submissions;
 using EnglishTestWeb.Api.Domain.Classes;
 using EnglishTestWeb.Api.Domain.Files;
 using EnglishTestWeb.Api.Domain.Identity;
@@ -29,6 +30,8 @@ public sealed class EnglishTestWebDbContext(DbContextOptions<EnglishTestWebDbCon
     public DbSet<HomeworkAssignment> HomeworkAssignments => Set<HomeworkAssignment>();
 
     public DbSet<LiveExamSession> LiveExamSessions => Set<LiveExamSession>();
+
+    public DbSet<Submission> Submissions => Set<Submission>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -1,4 +1,6 @@
 using EnglishTestWeb.Api.Application.AssignedTests;
+using EnglishTestWeb.Api.Application.Submissions;
+using EnglishTestWeb.Api.Infrastructure.Submissions;
 using EnglishTestWeb.Api.Application.Auth;
 using EnglishTestWeb.Api.Application.Classes;
 using EnglishTestWeb.Api.Application.HomeworkAssignments;
@@ -182,6 +184,7 @@ builder.Services.AddScoped<IXsrfTokenService, XsrfTokenService>();
 builder.Services.AddScoped<IHomeworkAssignmentService, HomeworkAssignmentService>();
 builder.Services.AddScoped<ILiveExamSessionService, LiveExamSessionService>();
 builder.Services.AddScoped<IAssignedTestService, AssignedTestService>();
+builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 
 var app = builder.Build();
 

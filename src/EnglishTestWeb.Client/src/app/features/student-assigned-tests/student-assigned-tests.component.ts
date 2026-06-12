@@ -9,6 +9,7 @@ import {
 } from '../../core/assigned-tests/assigned-tests.models';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { ClassContextService } from '../../core/classes/class-context.service';
+import { SubmissionsApiService } from '../../core/submissions/submissions-api.service';
 
 @Component({
   selector: 'app-student-assigned-tests',
@@ -19,6 +20,7 @@ import { ClassContextService } from '../../core/classes/class-context.service';
 export class StudentAssignedTestsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly assignedTestsApi = inject(AssignedTestsApiService);
+  private readonly submissionsApi = inject(SubmissionsApiService);
   protected readonly auth = inject(AuthSessionService);
   protected readonly classContext = inject(ClassContextService);
 
@@ -82,7 +84,7 @@ export class StudentAssignedTestsComponent implements OnInit {
     this.statusFilter.set(status);
   }
 
-  protected onStartItem(item: AssignedTestItem): void {
+  protected async onStartItem(item: AssignedTestItem): Promise<void> {
     if (item.studentStatus === 'not-open') {
       this.blockedItemMessage.set(ASSIGNED_TEST_ERROR_MESSAGES['ERR_LIVE_EXAM_NOT_OPEN']);
       return;
@@ -96,8 +98,18 @@ export class StudentAssignedTestsComponent implements OnInit {
       return;
     }
     this.blockedItemMessage.set(null);
-    // Story 4.2 sẽ thêm navigate to workspace
-    // void this.router.navigate(['/student/workspace', item.id]);
+
+    const request =
+      item.mode === 'homework'
+        ? { homeworkAssignmentId: item.id, liveExamSessionId: null }
+        : { homeworkAssignmentId: null, liveExamSessionId: item.id };
+
+    try {
+      const submission = await this.submissionsApi.createOrResume(request);
+      await this.router.navigate(['/student/workspace', submission.id]);
+    } catch {
+      this.blockedItemMessage.set('Không thể mở bài làm. Vui lòng thử lại.');
+    }
   }
 
   protected async logout(): Promise<void> {

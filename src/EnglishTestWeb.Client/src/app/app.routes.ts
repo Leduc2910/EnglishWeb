@@ -32,6 +32,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'student/workspace/:submissionId',
+    canActivate: [studentGuard],
+    loadComponent: () =>
+      import('./features/student-attempt-workspace/student-attempt-workspace.component').then(
+        (module) => module.StudentAttemptWorkspaceComponent,
+      ),
+  },
+  {
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () =>

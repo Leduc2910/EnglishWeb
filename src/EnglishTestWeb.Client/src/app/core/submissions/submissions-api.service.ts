@@ -1,0 +1,21 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { CreateSubmissionRequest, SubmissionDto, SubmissionWorkspace } from './submissions.models';
+
+@Injectable({ providedIn: 'root' })
+export class SubmissionsApiService {
+  private readonly http = inject(HttpClient);
+
+  createOrResume(request: CreateSubmissionRequest): Promise<SubmissionDto> {
+    return firstValueFrom(this.http.post<SubmissionDto>('/api/submissions', request));
+  }
+
+  getWorkspace(submissionId: string): Promise<SubmissionWorkspace> {
+    return firstValueFrom(this.http.get<SubmissionWorkspace>(`/api/submissions/${submissionId}/workspace`));
+  }
+
+  getMaterialContentUrl(submissionId: string, fileId: string): string {
+    return `/api/submissions/${submissionId}/materials/${fileId}/content`;
+  }
+}

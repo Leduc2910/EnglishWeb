@@ -1031,4 +1031,93 @@ public sealed class AuthorizationMatrixTests
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    // --- Submissions ---
+
+    [Fact]
+    public async Task Unauthenticated_PostSubmission_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.EnsureXsrfAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/submissions", new
+        {
+            homeworkAssignmentId = Guid.NewGuid(),
+            liveExamSessionId = (Guid?)null
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Teacher_PostSubmission_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await AuthTestHelper.PostJsonAsync(client, "/api/submissions", new
+        {
+            homeworkAssignmentId = Guid.NewGuid(),
+            liveExamSessionId = (Guid?)null
+        });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Unauthenticated_GetSubmissionWorkspace_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/submissions/{Guid.NewGuid()}/workspace");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Teacher_GetSubmissionWorkspace_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await client.GetAsync($"/api/submissions/{Guid.NewGuid()}/workspace");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Unauthenticated_GetSubmissionMaterialContent_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/submissions/{Guid.NewGuid()}/materials/{Guid.NewGuid()}/content");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Teacher_GetSubmissionMaterialContent_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await client.GetAsync($"/api/submissions/{Guid.NewGuid()}/materials/{Guid.NewGuid()}/content");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
 }
