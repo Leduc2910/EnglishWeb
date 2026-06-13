@@ -159,6 +159,13 @@ export const routes: Routes = [
           description: 'Epic 6 sẽ triển khai Results & Grading.',
         },
       },
+      {
+        path: 'speaking/:speakingSubmissionId/grade',
+        loadComponent: () =>
+          import(
+            './features/teacher-speaking-grading/teacher-speaking-grading.component'
+          ).then((module) => module.TeacherSpeakingGradingComponent),
+      },
     ],
   },
   {

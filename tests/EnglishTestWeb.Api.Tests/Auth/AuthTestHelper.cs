@@ -79,6 +79,15 @@ internal static class AuthTestHelper
         response.EnsureSuccessStatusCode();
     }
 
+    internal static async Task<string> GetCurrentUserIdAsync(HttpClient client)
+    {
+        var resp = await client.GetAsync("/api/auth/me");
+        resp.EnsureSuccessStatusCode();
+        await using var body = await resp.Content.ReadAsStreamAsync();
+        using var doc = await JsonDocument.ParseAsync(body);
+        return doc.RootElement.GetProperty("userId").GetString()!;
+    }
+
     internal static Task SignInTeacherAsync(HttpClient client) =>
         SignInUserAsync(client, TeacherEmail, TeacherPassword);
 

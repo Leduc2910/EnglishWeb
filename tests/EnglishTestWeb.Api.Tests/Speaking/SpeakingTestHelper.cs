@@ -153,6 +153,48 @@ internal static class SpeakingTestHelper
         return content;
     }
 
+    internal static async Task<Guid> SeedSubmittedSpeakingSubmissionAsync(
+        TestApiFactory factory,
+        Guid homeworkAssignmentId,
+        string studentId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+
+        var now = DateTimeOffset.UtcNow;
+
+        var draftFile = new StoredFile
+        {
+            Id = Guid.NewGuid(),
+            StorageKey = $"submitted-{Guid.NewGuid()}.webm",
+            OriginalFileName = "recording.webm",
+            ContentType = "audio/webm",
+            SizeBytes = 2048,
+            OwnerUserId = studentId,
+            Status = StoredFileStatuses.Active,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.StoredFiles.Add(draftFile);
+
+        var submission = new SpeakingSubmission
+        {
+            Id = Guid.NewGuid(),
+            StudentId = studentId,
+            HomeworkAssignmentId = homeworkAssignmentId,
+            LiveExamSessionId = null,
+            DraftStoredFileId = draftFile.Id,
+            Status = SpeakingSubmissionStatuses.Submitted,
+            SubmittedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.SpeakingSubmissions.Add(submission);
+        await db.SaveChangesAsync();
+
+        return submission.Id;
+    }
+
     /// <summary>
     /// Seeds a SpeakingSubmission with a DraftStoredFileId directly via DbContext.
     /// Used for tests that need to control source state independently of the upload endpoint.

@@ -1,7 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { CreateSpeakingSubmissionRequest, SpeakingSubmissionDto } from './speaking.models';
+import {
+  CreateSpeakingSubmissionRequest,
+  GradeSpeakingRequest,
+  SpeakingSubmissionDto,
+  TeacherSpeakingSubmissionDto,
+} from './speaking.models';
 
 @Injectable({ providedIn: 'root' })
 export class SpeakingApiService {
@@ -37,6 +42,27 @@ export class SpeakingApiService {
         {},
       ),
     );
+  }
+
+  getForTeacher(speakingSubmissionId: string): Promise<TeacherSpeakingSubmissionDto> {
+    return firstValueFrom(
+      this.http.get<TeacherSpeakingSubmissionDto>(
+        `/api/teacher/speaking-submissions/${speakingSubmissionId}`,
+      ),
+    );
+  }
+
+  grade(speakingSubmissionId: string, request: GradeSpeakingRequest): Promise<TeacherSpeakingSubmissionDto> {
+    return firstValueFrom(
+      this.http.post<TeacherSpeakingSubmissionDto>(
+        `/api/teacher/speaking-submissions/${speakingSubmissionId}/grade`,
+        request,
+      ),
+    );
+  }
+
+  getTeacherSubmissionFileUrl(speakingSubmissionId: string): string {
+    return `/api/teacher/speaking-submissions/${speakingSubmissionId}/file`;
   }
 
 }

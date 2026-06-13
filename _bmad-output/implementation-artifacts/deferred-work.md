@@ -178,3 +178,8 @@ _Patched in this pass: inactive class guard (`homework.classNotActive` 400) — 
 - Angular: datetime-local input parsed qua `new Date(rawString)` không có explicit timezone — browser behavior; low practical risk cho single-timezone MVP; standardize khi có i18n story.
 - Angular: Session signals không refresh sau transition error (alreadyOpen/alreadyClosed) → Open button vẫn hiện mặc dù server đã chuyển trạng thái; add re-fetch on conflict error khi có UX polish pass.
 - Angular: `scheduledEndAt < scheduledStartAt` không được validate client hoặc server — spec không yêu cầu temporal ordering cho MVP; add validation khi có scheduling story.
+
+## Deferred from: code review of 5-3-teacher-speaking-playback-and-manual-grading (2026-06-13)
+
+- `TeacherSpeakingGradingService`: `Feedback` và `GraderId` không có `HasMaxLength` trong EF config — không nhất quán với project convention (`nvarchar(max)`); thêm khi có input validation middleware story.
+- `TeacherSpeakingGradingService.GradeAsync`: Re-grade bởi teacher khác (cùng template ownership) ghi đè `GraderId` gốc mà không có audit trail — `UpdatedAt` được cập nhật nhưng original grader bị mất; thêm grading history hoặc immutable grade record khi có audit story.

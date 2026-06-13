@@ -1,0 +1,146 @@
+<div class="grading-page">
+  @if (viewState() === 'loading') {
+    <p class="loading-state">Đang tải bài làm nói...</p>
+  } @else if (viewState() === 'error') {
+    <div class="error-state">
+      <p class="error-message" data-testid="load-error">{{ errorMessage() }}</p>
+    </div>
+  } @else {
+    <header class="grading-header">
+      <div class="grading-meta">
+        <h1 class="template-title" data-testid="template-title">{{ dto()!.templateTitle }}</h1>
+        <span class="mode-badge" data-testid="mode-badge">{{ modeLabel() }}</span>
+        <span class="class-name" data-testid="class-name">{{ dto()!.className }}</span>
+      </div>
+      <span class="status-badge status-{{ dto()!.status }}" data-testid="status-badge">
+        {{ statusLabel() }}
+      </span>
+    </header>
+
+    <div class="grading-body">
+      <section class="student-info-card" data-testid="student-info">
+        <h2 class="section-title">Thông tin học sinh</h2>
+        <dl class="info-list">
+          <dt>Học sinh</dt>
+          <dd data-testid="student-name">{{ dto()!.studentName }}</dd>
+          <dt>Lớp</dt>
+          <dd data-testid="student-class">{{ dto()!.className }}</dd>
+          <dt>Loại bài</dt>
+          <dd data-testid="submission-mode">{{ modeLabel() }}</dd>
+          @if (dto()!.submittedAt) {
+            <dt>Thời gian nộp</dt>
+            <dd data-testid="submitted-at">{{ formatDate(dto()!.submittedAt!) }}</dd>
+          }
+        </dl>
+      </section>
+
+      <section class="audio-card" data-testid="audio-section">
+        <h2 class="section-title">Bài ghi âm của học sinh</h2>
+        @if (dto()!.submittedFileId && !dto()!.isFileMissing) {
+          <div class="audio-player" data-testid="audio-player">
+            <p class="file-info" data-testid="file-name">
+              {{ dto()!.submittedFileName }}
+              @if (dto()!.submittedFileSizeBytes) {
+                <span class="file-size">({{ formatFileSize(dto()!.submittedFileSizeBytes!) }})</span>
+              }
+            </p>
+            <audio
+              controls
+              [src]="audioUrl()!"
+              data-testid="audio-element"
+              class="audio-element"
+            ></audio>
+          </div>
+        } @else if (dto()!.isFileMissing) {
+          <p class="file-missing" data-testid="file-missing">File ghi âm không tìm thấy trong hệ thống.</p>
+        } @else {
+          <p class="no-file" data-testid="no-file">Học sinh chưa nộp file ghi âm.</p>
+        }
+      </section>
+
+      <section class="grading-card" data-testid="grading-section">
+        <h2 class="section-title">Chấm điểm</h2>
+
+        @if (!canGrade()) {
+          <p class="cannot-grade" data-testid="cannot-grade">
+            Bài làm chưa được nộp. Không thể chấm điểm.
+          </p>
+        } @else {
+          @if (gradeState() === 'success') {
+            <p class="grade-success" data-testid="grade-success" role="status">
+              Chấm điểm thành công!
+            </p>
+          }
+
+          <form class="grade-form" (submit)="onGradeSubmit()" data-testid="grade-form">
+            <div class="form-group">
+              <label class="form-label" for="score-input">
+                Điểm số (0–10)
+                <span class="required">*</span>
+              </label>
+              <input
+                id="score-input"
+                type="number"
+                class="score-input"
+                min="0"
+                max="10"
+                step="1"
+                [value]="scoreInput()"
+                (input)="scoreInput.set($any($event.target).value)"
+                data-testid="score-input"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="feedback-input">Nhận xét (tuỳ chọn)</label>
+              <textarea
+                id="feedback-input"
+                class="feedback-input"
+                rows="4"
+                [value]="feedbackInput()"
+                (input)="feedbackInput.set($any($event.target).value)"
+                data-testid="feedback-input"
+                placeholder="Nhận xét của giáo viên..."
+              ></textarea>
+            </div>
+
+            @if (gradeErrorMessage()) {
+              <p class="grade-error" data-testid="grade-error" role="alert">
+                {{ gradeErrorMessage() }}
+              </p>
+            }
+
+            <button
+              type="submit"
+              class="primary-button"
+              [disabled]="gradeState() === 'submitting'"
+              data-testid="grade-submit-btn"
+            >
+              @if (gradeState() === 'submitting') {
+                Đang lưu...
+              } @else if (dto()!.status === 'graded') {
+                Cập nhật điểm
+              } @else {
+                Lưu điểm
+              }
+            </button>
+          </form>
+
+          @if (dto()!.status === 'graded') {
+            <div class="existing-grade" data-testid="existing-grade">
+              <p class="grade-info">
+                Điểm hiện tại: <strong data-testid="current-score">{{ dto()!.score }}</strong>/10
+              </p>
+              @if (dto()!.gradedAt) {
+                <p class="grade-date" data-testid="graded-at">
+                  Chấm lúc {{ formatDate(dto()!.gradedAt!) }}
+                </p>
+              }
+            </div>
+          }
+        }
+      </section>
+    </div>
+  }
+</div>

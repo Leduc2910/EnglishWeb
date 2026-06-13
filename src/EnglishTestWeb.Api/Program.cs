@@ -188,6 +188,7 @@ builder.Services.AddScoped<ILiveExamSessionService, LiveExamSessionService>();
 builder.Services.AddScoped<IAssignedTestService, AssignedTestService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ISpeakingSubmissionService, SpeakingSubmissionService>();
+builder.Services.AddScoped<ITeacherSpeakingGradingService, TeacherSpeakingGradingService>();
 
 var app = builder.Build();
 

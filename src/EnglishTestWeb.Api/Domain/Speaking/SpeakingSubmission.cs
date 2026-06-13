@@ -26,6 +26,14 @@ public sealed class SpeakingSubmission
 
     public DateTimeOffset? SubmittedAt { get; set; }
 
+    public int? Score { get; set; }
+
+    public string? Feedback { get; set; }
+
+    public string? GraderId { get; set; }
+
+    public DateTimeOffset? GradedAt { get; set; }
+
     public HomeworkAssignment? HomeworkAssignment { get; set; }
 
     public LiveExamSession? LiveExamSession { get; set; }

@@ -1178,6 +1178,82 @@ public sealed class AuthorizationMatrixTests
         Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
     }
 
+    // ---- Teacher speaking: GET /api/teacher/speaking-submissions/{id} ----
+
+    [Fact]
+    public async Task Unauthenticated_GetTeacherSpeakingSubmission_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        var resp = await client.GetAsync($"/api/teacher/speaking-submissions/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
+    [Fact]
+    public async Task Student_GetTeacherSpeakingSubmission_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplates.TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+        var resp = await client.GetAsync($"/api/teacher/speaking-submissions/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
+    // ---- Teacher speaking: POST /api/teacher/speaking-submissions/{id}/grade ----
+
+    [Fact]
+    public async Task Unauthenticated_PostTeacherSpeakingGrade_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        var resp = await AuthTestHelper.PostJsonAsync(client,
+            $"/api/teacher/speaking-submissions/{Guid.NewGuid()}/grade",
+            new { score = 5 });
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
+    [Fact]
+    public async Task Student_PostTeacherSpeakingGrade_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplates.TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+        var resp = await AuthTestHelper.PostJsonAsync(client,
+            $"/api/teacher/speaking-submissions/{Guid.NewGuid()}/grade",
+            new { score = 5 });
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
+    // ---- Teacher speaking: GET /api/teacher/speaking-submissions/{id}/file ----
+
+    [Fact]
+    public async Task Unauthenticated_GetTeacherSpeakingFile_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        var resp = await client.GetAsync($"/api/teacher/speaking-submissions/{Guid.NewGuid()}/file");
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
+    [Fact]
+    public async Task Student_GetTeacherSpeakingFile_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplates.TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentAsync(client);
+        var resp = await client.GetAsync($"/api/teacher/speaking-submissions/{Guid.NewGuid()}/file");
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
     // ---- Speaking: POST /api/speaking-submissions/{id}/final-submit ----
 
     [Fact]
@@ -1185,9 +1261,10 @@ public sealed class AuthorizationMatrixTests
     {
         await using var factory = new TestApiFactory();
         using var client = factory.CreateClient();
-        var resp = await client.PostAsync(
+        var resp = await AuthTestHelper.PostJsonAsync(
+            client,
             $"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
-            new StringContent(string.Empty));
+            new { });
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
         Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(resp));
     }
@@ -1199,9 +1276,10 @@ public sealed class AuthorizationMatrixTests
         await TestTemplates.TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
         using var client = factory.CreateClient();
         await AuthTestHelper.SignInTeacherAsync(client);
-        var resp = await client.PostAsync(
+        var resp = await AuthTestHelper.PostJsonAsync(
+            client,
             $"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
-            new StringContent(string.Empty));
+            new { });
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
         Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
     }

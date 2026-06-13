@@ -670,8 +670,10 @@ public sealed class SpeakingSubmissionsTests
         await using var factory = new TestApiFactory();
         using var client = factory.CreateClient();
 
-        var response = await client.PostAsync($"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
-            new StringContent(string.Empty));
+        var response = await AuthTestHelper.PostJsonAsync(
+            client,
+            $"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
+            new { });
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
@@ -685,8 +687,10 @@ public sealed class SpeakingSubmissionsTests
         using var client = factory.CreateClient();
         await AuthTestHelper.SignInTeacherAsync(client);
 
-        var response = await client.PostAsync($"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
-            new StringContent(string.Empty));
+        var response = await AuthTestHelper.PostJsonAsync(
+            client,
+            $"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
+            new { });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));

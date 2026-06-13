@@ -19,6 +19,29 @@ export interface SpeakingSubmissionDto {
   submittedAt: string | null;
 }
 
+export interface TeacherSpeakingSubmissionDto {
+  id: string;
+  studentName: string;
+  className: string;
+  templateTitle: string;
+  mode: 'homework' | 'live-exam';
+  status: 'draft' | 'submitted' | 'graded';
+  submittedAt: string | null;
+  submittedFileName: string | null;
+  submittedFileSizeBytes: number | null;
+  submittedFileId: string | null;
+  isFileMissing: boolean;
+  score: number | null;
+  feedback: string | null;
+  graderId: string | null;
+  gradedAt: string | null;
+}
+
+export interface GradeSpeakingRequest {
+  score: number;
+  feedback: string | null;
+}
+
 export interface CreateSpeakingSubmissionRequest {
   homeworkAssignmentId: string | null;
   liveExamSessionId: string | null;
@@ -33,6 +56,8 @@ export const SPEAKING_ERROR_MESSAGES: Record<string, string> = {
   'speaking.fileTooLarge': 'File vượt quá giới hạn 100MB.',
   'speaking.alreadySubmitted': 'Bài làm đã được nộp.',
   'speaking.fileRequired': 'Vui lòng tải lên file ghi âm trước khi nộp bài.',
+  'speaking.scoreInvalid': 'Điểm không hợp lệ. Vui lòng nhập số nguyên từ 0 đến 10.',
+  'speaking.notSubmitted': 'Bài chưa được nộp, không thể chấm điểm.',
 };
 
 export const ALLOWED_SPEAKING_MIME_TYPES = [
