@@ -183,3 +183,24 @@ _Patched in this pass: inactive class guard (`homework.classNotActive` 400) — 
 
 - `TeacherSpeakingGradingService`: `Feedback` và `GraderId` không có `HasMaxLength` trong EF config — không nhất quán với project convention (`nvarchar(max)`); thêm khi có input validation middleware story.
 - `TeacherSpeakingGradingService.GradeAsync`: Re-grade bởi teacher khác (cùng template ownership) ghi đè `GraderId` gốc mà không có audit trail — `UpdatedAt` được cập nhật nhưng original grader bị mất; thêm grading history hoặc immutable grade record khi có audit story.
+
+## Deferred from: code review of 6-1-results-filtering-table (2026-06-13)
+
+- `ResultsService`: Full result set loaded into memory trước khi sort/paginate — cả hai queries dùng `ToListAsync()` không có DB-level Skip/Take. MVP trade-off đã ghi nhận; optimize khi profiling cho thấy latency.
+- `ResultsService.GetResultsForTeacherAsync` Step 0: `studentIdFilter` IN clause không có upper bound — large Q match có thể tạo IN(thousands). Cùng scope với in-memory pagination; thêm limit khi có performance story.
+- `ResultsService.GetResultsForTeacherAsync` Step 0: Q search queries `db.Users` (all users, not scoped to teacher's students) — teacher scope vẫn apply ở Step 1/2, không leak data nhưng chậm hơn cần thiết; thêm JOIN về teacher's classes khi có performance story.
+- `ResultsService.cs` Step 1/2: Skill `""` (empty string) asymmetry — `filter.Skill=""` không thỏa `null || "speaking"` → speaking rows bị bỏ; Angular gửi `undefined` nên masked in practice; thêm backend normalization khi mở rộng API clients.
+- `ResultsService.cs`: Status "graded" trả 0 RL results — RL không có "graded" status; by design; thêm documentation trong filter bar khi có UX polish.
+- `ResultsService.cs` line 80: `Guid.Empty` sentinel khi cả hai navigations null → hiển thị `"00000000-0000-..."` làm class name; chỉ xảy ra khi data corrupt; add null-class guard khi có data integrity story.
+- `ResultsService.cs` line 199: Sort tiebreaker dùng `Guid` order (random v4) — inconsistent pagination khi nhiều rows có cùng `submittedAt`; thêm `CreatedAt` tiebreaker khi có sort stability requirement.
+- `ResultsService.cs`: Template navigation null → `TemplateTitle=""`, `TemplateId=Guid.Empty` — chỉ khi template bị orphan/xóa; thêm null-template guard khi có data integrity story.
+- `teacher-results.component.ts` line 83: `selectedRowId` cleared unconditionally trên mỗi load — spec nói "nếu không còn khớp"; Story 6.2 sẽ implement fine-grained selection với detail panel.
+- **AC1 Missing class filter (lớp):** Angular component không có class filter; backend hỗ trợ `classId` Guid. Dropdown cần populate từ `/api/teacher/classes` — out of scope 6.1; defer sang Story 6.2 khi redesign filter bar.
+- **AC1 Missing template filter (template/đề):** Angular component không có template filter; backend hỗ trợ `templateId` Guid. Cần `/api/teacher/library` dropdown — defer sang Story 6.2.
+
+## Deferred from: code review pass 2 of 6-1-results-filtering-table (2026-06-13)
+
+- `ResultsService`: `needsGrading` là filter-dependent count — khi `status=graded` active, badge hiện `0 cần chấm` mặc dù có ungraded submissions ngoài filter. By design MVP; thay đổi khi có global pending-work dashboard (Story 6.3+).
+- `ResultsService` Step 0: `.ToLower()` trên EF query có thể trigger client-side eval trên non-SQL providers (in-memory tests mask this). Production SQL Server dịch sang LOWER() nên OK; fix khi standardize collation-aware search hoặc dùng `EF.Functions.Like`.
+- `ResultsService` Step 4: `SubmittedAt` nullable sort — drafts (null SubmittedAt) có unstable relative order cross-page. Thêm secondary sort by `CreatedAt` khi cần stable pagination.
+- `teacher-results.component.spec.ts`: thiếu assertion verify filter signals = '' trong onClearFilters test; thiếu `onPageChange` test. Thêm khi có test expansion story.

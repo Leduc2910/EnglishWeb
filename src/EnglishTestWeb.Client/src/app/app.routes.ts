@@ -151,13 +151,9 @@ export const routes: Routes = [
       {
         path: 'results',
         loadComponent: () =>
-          import('./features/teacher-placeholder/teacher-placeholder.component').then(
-            (module) => module.TeacherPlaceholderComponent,
+          import('./features/teacher-results/teacher-results.component').then(
+            (module) => module.TeacherResultsComponent,
           ),
-        data: {
-          title: 'Kết quả',
-          description: 'Epic 6 sẽ triển khai Results & Grading.',
-        },
       },
       {
         path: 'speaking/:speakingSubmissionId/grade',

@@ -1,6 +1,8 @@
 using EnglishTestWeb.Api.Application.AssignedTests;
+using EnglishTestWeb.Api.Application.Results;
 using EnglishTestWeb.Api.Application.Speaking;
 using EnglishTestWeb.Api.Application.Submissions;
+using EnglishTestWeb.Api.Infrastructure.Results;
 using EnglishTestWeb.Api.Infrastructure.Speaking;
 using EnglishTestWeb.Api.Infrastructure.Submissions;
 using EnglishTestWeb.Api.Application.Auth;
@@ -189,6 +191,7 @@ builder.Services.AddScoped<IAssignedTestService, AssignedTestService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ISpeakingSubmissionService, SpeakingSubmissionService>();
 builder.Services.AddScoped<ITeacherSpeakingGradingService, TeacherSpeakingGradingService>();
+builder.Services.AddScoped<IResultsService, ResultsService>();
 
 var app = builder.Build();
 
