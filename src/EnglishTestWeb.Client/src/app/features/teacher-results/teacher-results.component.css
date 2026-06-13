@@ -138,6 +138,18 @@
   outline-offset: -2px;
 }
 
+.filter-bar select:focus-visible,
+.filter-bar input:focus-visible,
+.filter-bar button:focus-visible,
+.pagination button:focus-visible,
+.close-btn:focus-visible,
+.save-btn:focus-visible,
+.next-btn:focus-visible,
+.empty-state button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .status-badge {
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
@@ -147,7 +159,7 @@
 
 .status-draft {
   background: #f3f4f6;
-  color: #6b7280;
+  color: #4b5563;
 }
 
 .status-submitted {
@@ -351,6 +363,12 @@
   font-family: inherit;
 }
 
+.grade-form input[type='number']:focus-visible,
+.grade-form textarea:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
 .grade-error {
   color: #dc2626;
   font-size: 0.85rem;
@@ -395,4 +413,22 @@
 
 .next-btn:hover {
   background: #f3f4f6;
+}
+
+@media (max-width: 768px) {
+  .workspace.has-detail {
+    flex-direction: column;
+  }
+  .workspace.has-detail .list-panel {
+    max-width: 100%;
+  }
+  .detail-panel {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
 }

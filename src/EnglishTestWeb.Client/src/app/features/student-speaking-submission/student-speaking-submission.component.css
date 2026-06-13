@@ -68,13 +68,13 @@
 }
 
 .mode-homework {
-  background: #cce5ff;
-  color: #004085;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .mode-live-exam {
-  background: #fff3cd;
-  color: #856404;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .class-name {
@@ -257,6 +257,14 @@
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+.back-button:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.text-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .final-submit-section {

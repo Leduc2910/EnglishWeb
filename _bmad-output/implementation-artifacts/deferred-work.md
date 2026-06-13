@@ -205,6 +205,18 @@ _Patched in this pass: inactive class guard (`homework.classNotActive` 400) — 
 - `ResultsService` Step 4: `SubmittedAt` nullable sort — drafts (null SubmittedAt) có unstable relative order cross-page. Thêm secondary sort by `CreatedAt` khi cần stable pagination.
 - `teacher-results.component.spec.ts`: thiếu assertion verify filter signals = '' trong onClearFilters test; thiếu `onPageChange` test. Thêm khi có test expansion story.
 
+## Deferred from: code review round 2 of 6-4-stitch-informed-visual-and-accessibility-hardening (2026-06-13)
+
+- `teacher-results.component.html` line 232: inline status badge trong speaking detail panel không có `data-testid` attribute — test-surface gap; add khi có test expansion story.
+
+## Deferred from: code review of 6-4-stitch-informed-visual-and-accessibility-hardening (2026-06-13)
+
+- `RESULT_STATUS_LABELS` trong teacher-results không có entry `needs-grading` — AC3 liệt kê state này; pre-existing gap; thêm khi có badge label refactor story.
+- Focus color `#2563eb` hardcoded trong nhiều file (teacher-results, student-attempt-workspace, teacher-speaking-grading) — không có CSS custom property; pre-existing pattern; extract `--focus-ring-color` khi có design token story.
+- `.skill-badge` trong `student-attempt-workspace.component.css` không có `background`/`color` default — chỉ có `.skill-reading` và `.skill-listening` variants; `.skill-speaking` unthemed trong component này; pre-existing.
+- `.skill-speaking` không có rule trong `student-attempt-workspace.component.css` — speaking attempt workspace sẽ render uncolored badge nếu ever used; pre-existing.
+- `student-speaking-submission.component.css` `.skill-badge` không có standalone `background`/`color` — chỉ colored qua `.skill-speaking` sibling; pre-existing pattern.
+
 ## Deferred from: code review of 6-2-master-detail-results-and-grading-workspace (2026-06-13)
 
 - `TeacherSubmissionDetailService.cs`: `Guid.Empty` classId fallback — unreachable in practice because the sourceTeacherId null check returns notFound first; latent concern if ownership check is ever refactored.

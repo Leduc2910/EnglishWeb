@@ -139,4 +139,12 @@ describe('TeacherSpeakingGradingComponent', () => {
     expect(speakingApi.grade).toHaveBeenCalledWith('spk-1', { score: 8, feedback: null });
     expect(el.querySelector('[data-testid="grade-success"]')).toBeTruthy();
   });
+
+  it('status-submitted badge uses status-submitted CSS class (blue, not amber)', async () => {
+    await setup('spk-1', makeDto({ status: 'submitted' }));
+    const el = fixture.nativeElement as HTMLElement;
+    const badge = el.querySelector('[data-testid="status-badge"]');
+    expect(badge).toBeTruthy();
+    expect(badge?.classList.contains('status-submitted')).toBe(true);
+  });
 });

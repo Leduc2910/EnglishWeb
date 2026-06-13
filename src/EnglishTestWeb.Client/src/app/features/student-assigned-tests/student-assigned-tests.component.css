@@ -96,6 +96,11 @@
   cursor: pointer;
 }
 
+.filter-select:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .blocked-message {
   margin: 0 0 0.75rem;
   padding: 0.625rem 1rem;
@@ -145,8 +150,8 @@
 .skill-badge {
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
-  background: #f3f4f6;
-  color: #374151;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-size: 0.75rem;
   font-weight: 500;
   text-transform: capitalize;

@@ -268,4 +268,22 @@ describe('TeacherResultsComponent', () => {
     expect(component.filterClass()).toBe('');
     expect(component.filterTemplate()).toBe('');
   });
+
+  it('status-submitted badge uses status-submitted CSS class (blue, not amber)', async () => {
+    const { fixture } = await createComponent(mockPageWithRLItem);
+    const el: HTMLElement = fixture.nativeElement;
+    const badge = el.querySelector('.status-badge');
+    expect(badge).toBeTruthy();
+    expect(badge?.classList.contains('status-submitted')).toBe(true);
+    expect(badge?.classList.contains('status-amber')).toBe(false);
+  });
+
+  it('filter bar select elements exist for keyboard focus accessibility', async () => {
+    const { fixture } = await createComponent(mockEmptyPage);
+    const el: HTMLElement = fixture.nativeElement;
+    const filterBar = el.querySelector('.filter-bar');
+    expect(filterBar).toBeTruthy();
+    const selects = filterBar?.querySelectorAll('select');
+    expect(selects?.length).toBeGreaterThan(0);
+  });
 });
