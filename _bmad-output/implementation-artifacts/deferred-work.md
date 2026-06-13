@@ -204,3 +204,19 @@ _Patched in this pass: inactive class guard (`homework.classNotActive` 400) — 
 - `ResultsService` Step 0: `.ToLower()` trên EF query có thể trigger client-side eval trên non-SQL providers (in-memory tests mask this). Production SQL Server dịch sang LOWER() nên OK; fix khi standardize collation-aware search hoặc dùng `EF.Functions.Like`.
 - `ResultsService` Step 4: `SubmittedAt` nullable sort — drafts (null SubmittedAt) có unstable relative order cross-page. Thêm secondary sort by `CreatedAt` khi cần stable pagination.
 - `teacher-results.component.spec.ts`: thiếu assertion verify filter signals = '' trong onClearFilters test; thiếu `onPageChange` test. Thêm khi có test expansion story.
+
+## Deferred from: code review of 6-2-master-detail-results-and-grading-workspace (2026-06-13)
+
+- `TeacherSubmissionDetailService.cs`: `Guid.Empty` classId fallback — unreachable in practice because the sourceTeacherId null check returns notFound first; latent concern if ownership check is ever refactored.
+- `teacher-results.component.ts` `updateResultRow`: no-ops silently if row not present (e.g., user changed filter/page while grade API was in-flight). Acceptable MVP tradeoff; show toast notification when full notification system is built.
+- `teacher-results.component.ts` `onGradeSubmit`: in-flight grade can leave `gradeState` at 'success' in a closed panel if `loadResults()` fires before the grade resolves. No data corruption; cosmetic artifact. Fix when adding request cancellation tokens to async workflows.
+- `teacher-results.component.ts` `audioUrl` computed: briefly returns null when `results()` is replaced by a filter reload while the speaking panel is still open. Cosmetic flash only; fix by storing the file URL in a dedicated signal at `loadDetail` time.
+- `teacher-results.component.ts` `loadFilterDropdowns`: class/template load failures silently produce empty dropdowns (`.catch(() => [])`). By design — dropdowns are non-critical auxiliary UI. Add error indicator when designing global error-notification system.
+
+## Deferred from: code review round 2 of 6-2-master-detail-results-and-grading-workspace (2026-06-13)
+
+- `TeacherSubmissionDetailService.cs`: silent `catch (JsonException) { }` leaves correct-answer column blank with no user-visible indicator. Add structured log when logging infrastructure is in place.
+- `teacher-results.component.ts` `loadFilterDropdowns`: `listTemplates({ skill: '', status: '', q: '' })` returns Archived templates in the filter dropdown. Product decision needed — filter to `status: 'ready'` only, or keep all for historical data access.
+- `TeacherSubmissionDetailService.cs`: `mode` defaults to `"live-exam"` when both HomeworkAssignmentId and LiveExamSessionId are null — unreachable due to prior ownership check; pre-existing.
+- `teacher-results.component.spec.ts`: no test for non-null feedback path through `onGradeSubmit`; acceptable coverage gap for MVP.
+- `teacher-results.component.spec.ts`: no test verifying `onSelectRow` retry triggers `loadDetail` when `detailState === 'error'`; add when expanding test coverage.

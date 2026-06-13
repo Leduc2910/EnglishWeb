@@ -36,6 +36,27 @@ export interface ResultsFilter {
   direction: 'asc' | 'desc';
 }
 
+export interface TeacherAnswerRowDto {
+  questionNumber: number;
+  studentAnswer: string | null;
+  correctAnswer: string;
+  isCorrect: boolean | null;
+  score: number | null;
+}
+
+export interface TeacherSubmissionDetailDto {
+  id: string;
+  studentName: string;
+  className: string;
+  templateTitle: string;
+  skill: string;
+  mode: 'homework' | 'live-exam';
+  status: string;
+  autoScore: number | null;
+  submittedAt: string | null;
+  answers: TeacherAnswerRowDto[];
+}
+
 export const RESULT_STATUS_LABELS: Record<string, string> = {
   draft: 'Nháp',
   submitted: 'Đã nộp',

@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ResultsFilter, ResultsPageDto } from './results.models';
+import { ResultsFilter, ResultsPageDto, TeacherSubmissionDetailDto } from './results.models';
 
 @Injectable({ providedIn: 'root' })
 export class ResultsApiService {
@@ -23,6 +23,14 @@ export class ResultsApiService {
 
     return firstValueFrom(
       this.http.get<ResultsPageDto>('/api/teacher/results', { params }),
+    );
+  }
+
+  getSubmissionDetail(submissionId: string): Promise<TeacherSubmissionDetailDto> {
+    return firstValueFrom(
+      this.http.get<TeacherSubmissionDetailDto>(
+        `/api/teacher/results/submissions/${submissionId}`,
+      ),
     );
   }
 }

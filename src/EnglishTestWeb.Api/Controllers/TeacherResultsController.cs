@@ -12,6 +12,7 @@ namespace EnglishTestWeb.Api.Controllers;
 [Authorize(Roles = IdentityRoleNames.Teacher)]
 public sealed class TeacherResultsController(
     IResultsService resultsService,
+    ITeacherSubmissionDetailService submissionDetailService,
     ICurrentUserContext currentUserContext,
     IHiddenResourceResponseFactory hiddenResourceResponseFactory) : ControllerBase
 {
@@ -48,5 +49,25 @@ public sealed class TeacherResultsController(
 
         var result = await resultsService.GetResultsForTeacherAsync(teacherId, filter, cancellationToken);
         return Ok(result);
+    }
+
+    [HttpGet("submissions/{submissionId:guid}")]
+    public async Task<ActionResult<TeacherSubmissionDetailDto>> GetSubmissionDetail(
+        Guid submissionId,
+        CancellationToken cancellationToken = default)
+    {
+        var teacherId = currentUserContext.UserId;
+        if (string.IsNullOrWhiteSpace(teacherId))
+            return hiddenResourceResponseFactory.FromCode(StatusCodes.Status401Unauthorized,
+                "auth.unauthorized", "Unauthorized.", "Authentication required.");
+
+        var (success, errorCode, dto) = await submissionDetailService.GetForTeacherAsync(
+            submissionId, teacherId, cancellationToken);
+
+        if (!success)
+            return hiddenResourceResponseFactory.FromCode(StatusCodes.Status404NotFound,
+                errorCode!, "Not found.", "Submission not found or out of scope.");
+
+        return Ok(dto);
     }
 }

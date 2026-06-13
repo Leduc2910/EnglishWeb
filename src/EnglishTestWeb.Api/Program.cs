@@ -192,6 +192,7 @@ builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ISpeakingSubmissionService, SpeakingSubmissionService>();
 builder.Services.AddScoped<ITeacherSpeakingGradingService, TeacherSpeakingGradingService>();
 builder.Services.AddScoped<IResultsService, ResultsService>();
+builder.Services.AddScoped<ITeacherSubmissionDetailService, TeacherSubmissionDetailService>();
 
 var app = builder.Build();
 

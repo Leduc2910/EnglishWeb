@@ -87,6 +87,56 @@ internal static class ResultsTestHelper
     }
 
     /// <summary>
+    /// Seeds a Submission with Status=Submitted and 2 SubmissionAnswer rows.
+    /// </summary>
+    internal static async Task<Guid> SeedSubmittedReadingSubmissionWithAnswersAsync(
+        TestApiFactory factory,
+        Guid homeworkAssignmentId,
+        string studentId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+
+        var now = DateTimeOffset.UtcNow;
+        var submissionId = Guid.NewGuid();
+        db.Submissions.Add(new Submission
+        {
+            Id = submissionId,
+            StudentId = studentId,
+            HomeworkAssignmentId = homeworkAssignmentId,
+            LiveExamSessionId = null,
+            AnswerKeyVersionId = null,
+            Status = SubmissionStatuses.Submitted,
+            SubmittedAt = now,
+            AutoScore = 8.0m,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        db.SubmissionAnswers.Add(new EnglishTestWeb.Api.Domain.Submissions.SubmissionAnswer
+        {
+            Id = Guid.NewGuid(),
+            SubmissionId = submissionId,
+            QuestionNumber = 1,
+            Answer = "A",
+            IsCorrect = true,
+            Score = 1m,
+            UpdatedAt = now,
+        });
+        db.SubmissionAnswers.Add(new EnglishTestWeb.Api.Domain.Submissions.SubmissionAnswer
+        {
+            Id = Guid.NewGuid(),
+            SubmissionId = submissionId,
+            QuestionNumber = 2,
+            Answer = "B",
+            IsCorrect = false,
+            Score = 0m,
+            UpdatedAt = now,
+        });
+        await db.SaveChangesAsync();
+        return submissionId;
+    }
+
+    /// <summary>
     /// Gets the "other teacher" id (seeded by ClassesTestHelper.SeedDemoClassAsync).
     /// </summary>
     internal static async Task<string> GetOtherTeacherIdAsync(TestApiFactory factory)

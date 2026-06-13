@@ -15,6 +15,28 @@
   <!-- Filter bar -->
   <div class="filter-bar">
     <select
+      [ngModel]="filterClass()"
+      (ngModelChange)="filterClass.set($event); onFilterChange()"
+      aria-label="Lọc theo lớp"
+    >
+      <option value="">Tất cả lớp</option>
+      @for (cls of availableClasses(); track cls.classId) {
+        <option [value]="cls.classId">{{ cls.className }}</option>
+      }
+    </select>
+
+    <select
+      [ngModel]="filterTemplate()"
+      (ngModelChange)="filterTemplate.set($event); onFilterChange()"
+      aria-label="Lọc theo đề"
+    >
+      <option value="">Tất cả đề</option>
+      @for (tmpl of availableTemplates(); track tmpl.templateId) {
+        <option [value]="tmpl.templateId">{{ tmpl.title }}</option>
+      }
+    </select>
+
+    <select
       [ngModel]="filterMode()"
       (ngModelChange)="filterMode.set($event); onFilterChange()"
       aria-label="Lọc theo mode"
@@ -70,67 +92,220 @@
     <div class="error-state" role="alert">{{ errorMessage() }}</div>
   }
 
-  <!-- Results table -->
+  <!-- Workspace: split panel when detail open -->
   @if (loadState() === 'loaded' && results(); as r) {
-    @if (r.items.length === 0) {
-      <div class="empty-state">
-        <p>Không có kết quả nào khớp bộ lọc.</p>
-        <button type="button" (click)="onClearFilters()">Xóa bộ lọc</button>
-      </div>
-    } @else {
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th scope="col">Học sinh</th>
-            <th scope="col">Lớp</th>
-            <th scope="col">Đề</th>
-            <th scope="col">Kỹ năng</th>
-            <th scope="col">Mode</th>
-            <th scope="col">Trạng thái</th>
-            <th scope="col">Điểm</th>
-            <th scope="col">Thời gian nộp</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of r.items; track row.id) {
-            <tr
-              [class.selected]="selectedRowId() === row.id"
-              (click)="onSelectRow(row)"
-              tabindex="0"
-              (keyup.enter)="onSelectRow(row)"
-            >
-              <td>{{ row.studentName }}</td>
-              <td>{{ row.className }}</td>
-              <td>{{ row.templateTitle }}</td>
-              <td>{{ skillLabelMap[row.skill] ?? row.skill }}</td>
-              <td>{{ modeLabelMap[row.mode] ?? row.mode }}</td>
-              <td>
-                <span [class]="'status-badge status-' + row.status">
-                  {{ statusLabelMap[row.status] ?? row.status }}
-                </span>
-              </td>
-              <td>{{ formatScore(row.score, row.type) }}</td>
-              <td>{{ row.submittedAt ? formatDate(row.submittedAt) : '—' }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <div class="workspace" [class.has-detail]="detailState() !== 'closed'">
 
-      @if (r.totalCount > r.pageSize) {
-        <div class="pagination">
-          <button
-            type="button"
-            [disabled]="currentPage() <= 1"
-            (click)="onPageChange(currentPage() - 1)"
-          >Trước</button>
-          <span>Trang {{ currentPage() }} / {{ Math.ceil(r.totalCount / r.pageSize) }}</span>
-          <button
-            type="button"
-            [disabled]="currentPage() * r.pageSize >= r.totalCount"
-            (click)="onPageChange(currentPage() + 1)"
-          >Sau</button>
+      <!-- List panel -->
+      <div class="list-panel">
+        @if (r.items.length === 0) {
+          <div class="empty-state">
+            <p>Không có kết quả nào khớp bộ lọc.</p>
+            <button type="button" (click)="onClearFilters()">Xóa bộ lọc</button>
+          </div>
+        } @else {
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th scope="col">Học sinh</th>
+                <th scope="col">Lớp</th>
+                <th scope="col">Đề</th>
+                <th scope="col">Kỹ năng</th>
+                <th scope="col">Mode</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col">Điểm</th>
+                <th scope="col">Thời gian nộp</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of r.items; track row.id) {
+                <tr
+                  [class.selected]="selectedRowId() === row.id"
+                  (click)="onSelectRow(row)"
+                  tabindex="0"
+                  (keyup.enter)="onSelectRow(row)"
+                  [attr.aria-selected]="selectedRowId() === row.id"
+                >
+                  <td>{{ row.studentName }}</td>
+                  <td>{{ row.className }}</td>
+                  <td>{{ row.templateTitle }}</td>
+                  <td>{{ skillLabelMap[row.skill] ?? row.skill }}</td>
+                  <td>{{ modeLabelMap[row.mode] ?? row.mode }}</td>
+                  <td>
+                    <span [class]="'status-badge status-' + row.status">
+                      {{ statusLabelMap[row.status] ?? row.status }}
+                    </span>
+                  </td>
+                  <td>{{ formatScore(row.score, row.type) }}</td>
+                  <td>{{ row.submittedAt ? formatDate(row.submittedAt) : '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          @if (r.totalCount > r.pageSize) {
+            <div class="pagination">
+              <button
+                type="button"
+                [disabled]="currentPage() <= 1"
+                (click)="onPageChange(currentPage() - 1)"
+              >Trước</button>
+              <span>Trang {{ currentPage() }} / {{ Math.ceil(r.totalCount / r.pageSize) }}</span>
+              <button
+                type="button"
+                [disabled]="currentPage() * r.pageSize >= r.totalCount"
+                (click)="onPageChange(currentPage() + 1)"
+              >Sau</button>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Detail panel -->
+      @if (detailState() !== 'closed') {
+        <div class="detail-panel" role="complementary" aria-label="Chi tiết bài nộp">
+          <div class="detail-header">
+            <h2 class="detail-title">Chi tiết bài nộp</h2>
+            <button
+              type="button"
+              class="close-btn"
+              (click)="onCloseDetail()"
+              aria-label="Đóng chi tiết"
+            >Đóng</button>
+          </div>
+
+          @if (detailState() === 'loading') {
+            <div class="detail-loading" aria-live="polite">Đang tải...</div>
+          }
+
+          @if (detailState() === 'error') {
+            <div class="detail-error" role="alert">{{ detailErrorMessage() }}</div>
+          }
+
+          <!-- Reading/Listening detail -->
+          @if (detailState() === 'rl-loaded' && rlDetail(); as detail) {
+            <div class="rl-detail">
+              <div class="detail-meta">
+                <span>{{ detail.studentName }}</span> · <span>{{ detail.className }}</span> · <span>{{ detail.templateTitle }}</span>
+              </div>
+              @if (detail.autoScore !== null) {
+                <div class="auto-score">
+                  Tổng điểm: <strong>{{ detail.autoScore.toFixed(1) }}</strong>
+                </div>
+              }
+              @if (detail.answers.length > 0) {
+                <table class="answers-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Câu</th>
+                      <th scope="col">Học sinh</th>
+                      <th scope="col">Đáp án đúng</th>
+                      <th scope="col">Kết quả</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (ans of detail.answers; track ans.questionNumber) {
+                      <tr [class.correct]="ans.isCorrect === true" [class.incorrect]="ans.isCorrect === false">
+                        <td>{{ ans.questionNumber }}</td>
+                        <td>{{ ans.studentAnswer ?? '—' }}</td>
+                        <td>{{ ans.correctAnswer || '—' }}</td>
+                        <td>
+                          @if (ans.isCorrect === true) { <span class="correct-badge" aria-label="Đúng">✓</span> }
+                          @if (ans.isCorrect === false) { <span class="incorrect-badge" aria-label="Sai">✗</span> }
+                          @if (ans.isCorrect === null) { <span>—</span> }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <p class="no-answers">Chưa có câu trả lời.</p>
+              }
+            </div>
+          }
+
+          <!-- Speaking detail -->
+          @if (detailState() === 'speaking-loaded' && speakingDetail(); as speaking) {
+            <div class="speaking-detail">
+              <div class="detail-meta">
+                <span>{{ speaking.studentName }}</span> · <span>{{ speaking.className }}</span> · <span>{{ speaking.templateTitle }}</span>
+                <span [class]="'status-badge status-' + speaking.status">{{ statusLabelMap[speaking.status] ?? speaking.status }}</span>
+              </div>
+
+              @if (speaking.submittedFileId && !speaking.isFileMissing) {
+                <div class="audio-section">
+                  <p class="file-info">
+                    {{ speaking.submittedFileName }}
+                    @if (speaking.submittedFileSizeBytes) {
+                      ({{ formatFileSize(speaking.submittedFileSizeBytes) }})
+                    }
+                  </p>
+                  <audio
+                    [src]="audioUrl()"
+                    controls
+                    class="audio-player"
+                    aria-label="File nói của học sinh"
+                  ></audio>
+                </div>
+              }
+              @if (speaking.isFileMissing) {
+                <div class="file-missing" role="alert">File không tìm thấy.</div>
+              }
+
+              @if (speaking.status !== 'draft') {
+                <div class="grade-form">
+                  <label for="scoreInput">Điểm (0–10)</label>
+                  <input
+                    id="scoreInput"
+                    type="number"
+                    min="0"
+                    max="10"
+                    step="1"
+                    [ngModel]="scoreInput()"
+                    (ngModelChange)="scoreInput.set($event)"
+                    [disabled]="gradeState() === 'submitting'"
+                  />
+
+                  <label for="feedbackInput">Nhận xét</label>
+                  <textarea
+                    id="feedbackInput"
+                    rows="3"
+                    [ngModel]="feedbackInput()"
+                    (ngModelChange)="feedbackInput.set($event)"
+                    [disabled]="gradeState() === 'submitting'"
+                    placeholder="Nhận xét cho học sinh (tuỳ chọn)"
+                  ></textarea>
+
+                  @if (gradeErrorMessage()) {
+                    <div class="grade-error" role="alert">{{ gradeErrorMessage() }}</div>
+                  }
+                  @if (gradeState() === 'success') {
+                    <div class="grade-success" aria-live="polite">Đã lưu chấm điểm</div>
+                  }
+
+                  <button
+                    type="button"
+                    class="save-btn"
+                    (click)="onGradeSubmit()"
+                    [disabled]="gradeState() === 'submitting'"
+                  >
+                    {{ gradeState() === 'submitting' ? 'Đang lưu...' : 'Lưu chấm điểm' }}
+                  </button>
+                </div>
+              }
+
+              @if (nextPendingSpeakingRow()) {
+                <button
+                  type="button"
+                  class="next-btn"
+                  (click)="onNextPending()"
+                >Chấm tiếp →</button>
+              }
+            </div>
+          }
         </div>
       }
-    }
+
+    </div>
   }
 </div>
