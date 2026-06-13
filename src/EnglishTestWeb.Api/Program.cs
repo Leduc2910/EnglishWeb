@@ -1,5 +1,7 @@
 using EnglishTestWeb.Api.Application.AssignedTests;
+using EnglishTestWeb.Api.Application.Dashboard;
 using EnglishTestWeb.Api.Application.Results;
+using EnglishTestWeb.Api.Infrastructure.Dashboard;
 using EnglishTestWeb.Api.Application.Speaking;
 using EnglishTestWeb.Api.Application.Submissions;
 using EnglishTestWeb.Api.Infrastructure.Results;
@@ -193,6 +195,7 @@ builder.Services.AddScoped<ISpeakingSubmissionService, SpeakingSubmissionService
 builder.Services.AddScoped<ITeacherSpeakingGradingService, TeacherSpeakingGradingService>();
 builder.Services.AddScoped<IResultsService, ResultsService>();
 builder.Services.AddScoped<ITeacherSubmissionDetailService, TeacherSubmissionDetailService>();
+builder.Services.AddScoped<ITeacherDashboardService, TeacherDashboardService>();
 
 var app = builder.Build();
 

@@ -1,24 +1,107 @@
 <section id="teacher-dashboard-overview-header" class="dashboard-header">
-  <h1 id="teacher-dashboard-title">Tổng quan giáo viên</h1>
-  <p>Dashboard là bề mặt scan. Tạo đề bắt đầu từ Thư viện đề.</p>
+  <h1 id="teacher-dashboard-title">Tổng quan</h1>
+
+  <div class="filter-bar">
+    <label for="classFilter">Lớp:</label>
+    <select
+      id="classFilter"
+      [ngModel]="filterClass()"
+      (ngModelChange)="filterClass.set($event); onClassFilterChange()"
+    >
+      <option value="">Tất cả lớp</option>
+      @for (cls of availableClasses(); track cls.classId) {
+        <option [value]="cls.classId">{{ cls.className }}</option>
+      }
+    </select>
+  </div>
 </section>
 
-<section id="teacher-dashboard-summary-grid" class="summary-grid" aria-label="Tóm tắt">
-  <article id="teacher-dashboard-templates-card" class="summary-card">
-    <h2>Đề gốc</h2>
-    <p>Metrics sẽ có trong story dashboard sau.</p>
-  </article>
-  <article id="teacher-dashboard-submissions-card" class="summary-card">
-    <h2>Lượt nộp gần đây</h2>
-    <p>Chưa có dữ liệu.</p>
-  </article>
-  <article id="teacher-dashboard-speaking-card" class="summary-card">
-    <h2>Speaking cần chấm</h2>
-    <p>Chưa có dữ liệu.</p>
-  </article>
-</section>
+@if (loadState() === 'loading') {
+  <div id="teacher-dashboard-loading" class="loading-state" aria-busy="true">Đang tải...</div>
+}
 
-<section id="teacher-dashboard-recent-work" class="recent-work">
-  <h2>Hoạt động gần đây</h2>
-  <p>Recent work sẽ được bổ sung ở Epic 6.</p>
-</section>
+@if (loadState() === 'error') {
+  <div id="teacher-dashboard-error" class="error-state" role="alert">{{ loadError() }}</div>
+}
+
+@if (loadState() === 'loaded' && dashboard(); as data) {
+  <section id="teacher-dashboard-summary-grid" class="summary-grid" aria-label="Tóm tắt">
+    <article id="teacher-dashboard-templates-card" class="summary-card">
+      <h2>Đề gốc</h2>
+      <span class="metric">{{ data.summary.templateCount }}</span>
+      <a routerLink="/teacher/library" class="card-link">Thư viện đề →</a>
+    </article>
+
+    <article id="teacher-dashboard-homework-card" class="summary-card">
+      <h2>Homework đang mở</h2>
+      <span class="metric">{{ data.summary.activeHomeworkCount }}</span>
+      <a [routerLink]="['/teacher/results']" [queryParams]="{ mode: 'homework' }" class="card-link">Xem kết quả →</a>
+    </article>
+
+    <article id="teacher-dashboard-live-exam-card" class="summary-card">
+      <h2>Live Exam đang mở</h2>
+      <span class="metric">{{ data.summary.openLiveExamCount }}</span>
+    </article>
+
+    <article id="teacher-dashboard-submissions-card" class="summary-card">
+      <h2>Lượt nộp (7 ngày)</h2>
+      <span class="metric">{{ data.summary.recentSubmissionCount }}</span>
+      <a routerLink="/teacher/results" class="card-link">Xem kết quả →</a>
+    </article>
+
+    <article
+      id="teacher-dashboard-speaking-card"
+      class="summary-card"
+      [class.has-pending]="data.summary.pendingSpeakingCount > 0"
+    >
+      <h2>Speaking cần chấm</h2>
+      <span class="metric">{{ data.summary.pendingSpeakingCount }}</span>
+      @if (data.summary.pendingSpeakingCount > 0) {
+        <a
+          [routerLink]="['/teacher/results']"
+          [queryParams]="{ skill: 'speaking', status: 'submitted' }"
+          class="card-link urgent"
+        >Chấm ngay →</a>
+      }
+    </article>
+  </section>
+
+  <section id="teacher-dashboard-recent-work" class="recent-work">
+    <h2>Hoạt động gần đây</h2>
+
+    @if (data.recentWork.length === 0) {
+      <p id="teacher-dashboard-empty-state" class="empty-state">
+        Chưa có bài nộp nào. Giao bài từ <a routerLink="/teacher/library">Thư viện đề</a>.
+      </p>
+    } @else {
+      <table class="recent-table" aria-label="Hoạt động gần đây">
+        <thead>
+          <tr>
+            <th>Đề</th>
+            <th>Lớp</th>
+            <th>Loại</th>
+            <th>Trạng thái</th>
+            <th>Thời gian</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of data.recentWork; track item.id) {
+            <tr class="recent-row" [attr.aria-label]="item.title + ' - ' + item.className">
+              <td>
+                <a
+                  [routerLink]="getRouterLink(item)"
+                  [queryParams]="getQueryParams(item)"
+                  class="row-link"
+                >{{ item.title || '—' }}</a>
+              </td>
+              <td>{{ item.className || '—' }}</td>
+              <td>{{ modeLabelMap[item.mode] || item.mode || '—' }}</td>
+              <td>{{ statusLabelMap[item.status] || item.status || '—' }}</td>
+              <td>{{ item.timestamp | date: 'dd/MM/yyyy HH:mm' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+}
