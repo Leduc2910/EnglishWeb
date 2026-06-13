@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using EnglishTestWeb.Api.Tests.Auth;
+using EnglishTestWeb.Api.Tests.Classes;
 using EnglishTestWeb.Api.Tests.TestTemplates;
 
 namespace EnglishTestWeb.Api.Tests.Files;
@@ -85,5 +86,43 @@ public sealed class ProtectedFileAccessTests
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("files.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task GetContent_Unauthenticated_Returns401()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var resp = await client.GetAsync($"/api/files/{Guid.NewGuid()}/content");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
+    [Fact]
+    public async Task GetContent_Student_WrongRole_Returns403()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        var classId = await ClassesTestHelper.GetDemoClassIdAsync(factory);
+
+        using var teacherClient = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(teacherClient);
+        var templateId = await TestTemplatesTestHelper.GetDemoDraftTemplateIdAsync(factory);
+        var uploadResp = await TestTemplateMaterialsTestHelper.UploadPdfAsync(teacherClient, templateId);
+        uploadResp.EnsureSuccessStatusCode();
+        await using var uploadBody = await uploadResp.Content.ReadAsStreamAsync();
+        using var uploadDoc = await JsonDocument.ParseAsync(uploadBody);
+        var fileId = uploadDoc.RootElement.GetProperty("fileId").GetGuid();
+
+        using var studentClient = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(studentClient, classId);
+
+        var resp = await studentClient.GetAsync($"/api/files/{fileId}/content");
+
+        // Student role cannot access teacher file endpoint — wrong role → 403
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
     }
 }

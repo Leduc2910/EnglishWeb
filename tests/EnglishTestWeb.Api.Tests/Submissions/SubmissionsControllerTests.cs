@@ -1,9 +1,12 @@
 using System.Net;
 using System.Text.Json;
 using EnglishTestWeb.Api.Domain.LiveExams;
+using EnglishTestWeb.Api.Domain.Submissions;
+using EnglishTestWeb.Api.Infrastructure.Persistence;
 using EnglishTestWeb.Api.Tests.Auth;
 using EnglishTestWeb.Api.Tests.Classes;
 using EnglishTestWeb.Api.Tests.TestTemplates;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EnglishTestWeb.Api.Tests.Submissions;
 
@@ -304,5 +307,41 @@ public sealed class SubmissionsControllerTests
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("files.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task GetWorkspace_OtherStudentsSubmission_Returns404()
+    {
+        await using var factory = new TestApiFactory();
+        var (homeworkId, classId, _) = await SubmissionsTestHelper.SeedHomeworkWithReadyTemplateAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        Guid otherSubmissionId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            var otherSubmission = new Submission
+            {
+                Id = Guid.NewGuid(),
+                StudentId = "other-student-workspace-" + Guid.NewGuid().ToString("N")[..8],
+                HomeworkAssignmentId = homeworkId,
+                Status = SubmissionStatuses.Draft,
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+            db.Submissions.Add(otherSubmission);
+            await db.SaveChangesAsync();
+            otherSubmissionId = otherSubmission.Id;
+        }
+
+        var response = await client.GetAsync($"/api/submissions/{otherSubmissionId}/workspace");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("submission.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("material", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("answerRow", body, StringComparison.OrdinalIgnoreCase);
     }
 }

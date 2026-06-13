@@ -225,6 +225,13 @@ _Patched in this pass: inactive class guard (`homework.classNotActive` 400) — 
 - `teacher-results.component.ts` `audioUrl` computed: briefly returns null when `results()` is replaced by a filter reload while the speaking panel is still open. Cosmetic flash only; fix by storing the file URL in a dedicated signal at `loadDetail` time.
 - `teacher-results.component.ts` `loadFilterDropdowns`: class/template load failures silently produce empty dropdowns (`.catch(() => [])`). By design — dropdowns are non-critical auxiliary UI. Add error indicator when designing global error-notification system.
 
+## Deferred from: code review of 6-5-api-security-and-contract-test-coverage (2026-06-14)
+
+- AC4 homework creation duplicate action: no test in `CreateHomeworkAssignmentControllerTests.cs` verifies retry behavior — dev notes claim pre-existing coverage but auditor found none; add `Create_CalledTwice_SamePayload_*` test when expanding AC4 coverage.
+- Grading GET tests use fake storage key: `SeedSubmittedSpeakingSubmissionAsync` stores fake `StorageKey` with no physical file — grading/GET tests verify auth but cannot confirm audio file URL in DTO is resolvable; convert to real-upload setup when hardening streaming contracts.
+- `ErrorResponse_Never_ExposesStorageKeys` scope: only `/api/files/{id}/content` checked for storage path leaks — speaking and submission material 404 responses not covered; extend test to those endpoints in a future test hardening story.
+- AC1 DTO shape: `ProblemDetailsContractTests` verifies content-type and `extensions.code` but not field presence (`title`, `status`, `detail`, `type`) — pre-existing coverage claimed in dev notes but unverified; add explicit field assertions in future contract test pass.
+
 ## Deferred from: code review round 2 of 6-2-master-detail-results-and-grading-workspace (2026-06-13)
 
 - `TeacherSubmissionDetailService.cs`: silent `catch (JsonException) { }` leaves correct-answer column blank with no user-visible indicator. Add structured log when logging infrastructure is in place.
