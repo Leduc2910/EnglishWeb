@@ -141,4 +141,43 @@ public sealed class SpeakingSubmissionsController(
 
         return Ok(result.Dto);
     }
+
+    [Authorize(Roles = IdentityRoleNames.Student)]
+    [HttpPost("{id:guid}/final-submit")]
+    public async Task<ActionResult<SpeakingSubmissionDto>> FinalSubmit(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var studentId = currentUserContext.UserId;
+        if (string.IsNullOrWhiteSpace(studentId))
+        {
+            return hiddenResourceResponseFactory.FromCode(
+                StatusCodes.Status401Unauthorized,
+                "auth.unauthorized",
+                "Unauthorized.",
+                "Authentication is required.");
+        }
+
+        var result = await speakingSubmissionService.FinalSubmitAsync(id, studentId, cancellationToken);
+
+        if (!result.Success || result.Dto is null)
+        {
+            var statusCode = result.ErrorCode switch
+            {
+                "speaking.notFound" => StatusCodes.Status404NotFound,
+                "speaking.fileRequired" => StatusCodes.Status422UnprocessableEntity,
+                "speaking.sourceUnavailable" => StatusCodes.Status422UnprocessableEntity,
+                "speaking.alreadySubmitted" => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status422UnprocessableEntity,
+            };
+
+            return hiddenResourceResponseFactory.FromCode(
+                statusCode,
+                result.ErrorCode ?? "speaking.invalidState",
+                "Final submit failed.",
+                "Cannot finalize this speaking submission.");
+        }
+
+        return Ok(result.Dto);
+    }
 }

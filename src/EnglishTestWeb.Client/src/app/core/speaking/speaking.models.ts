@@ -16,6 +16,7 @@ export interface SpeakingSubmissionDto {
   cueMaterialFileId: string | null;
   cueMaterialFileName: string | null;
   draftFile: DraftFileDto | null;
+  submittedAt: string | null;
 }
 
 export interface CreateSpeakingSubmissionRequest {
@@ -31,6 +32,7 @@ export const SPEAKING_ERROR_MESSAGES: Record<string, string> = {
   'speaking.invalidFileType': 'Loại file không được hỗ trợ. Vui lòng tải lên file âm thanh hoặc video.',
   'speaking.fileTooLarge': 'File vượt quá giới hạn 100MB.',
   'speaking.alreadySubmitted': 'Bài làm đã được nộp.',
+  'speaking.fileRequired': 'Vui lòng tải lên file ghi âm trước khi nộp bài.',
 };
 
 export const ALLOWED_SPEAKING_MIME_TYPES = [

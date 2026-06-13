@@ -10,7 +10,8 @@ public sealed record SpeakingSubmissionDto(
     bool IsSourceOpen,
     string? CueMaterialFileId,
     string? CueMaterialFileName,
-    DraftFileDto? DraftFile);
+    DraftFileDto? DraftFile,
+    DateTimeOffset? SubmittedAt);
 
 public sealed record DraftFileDto(
     Guid FileId,

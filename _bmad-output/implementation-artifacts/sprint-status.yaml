@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review
 
 generated: 2026-06-09
-last_updated: 2026-06-12 — 5.1 done via 2 code reviews (2026-06-12)
+last_updated: 2026-06-13 — 5.2 done via 2 code review rounds (2026-06-13)
 project: EnglishTestWeb
 # 3.2 done via code review (2026-06-11); 3.3 story created (2026-06-11); 4.1 story created (2026-06-12); 4.2 story created (2026-06-12); 4.4 story created (2026-06-12)
 project_key: NOKEY
@@ -74,7 +74,7 @@ development_status:
 
   epic-5: in-progress
   5-1-student-speaking-prompt-and-upload-draft: done
-  5-2-final-speaking-submission-lock-and-confirmation: backlog
+  5-2-final-speaking-submission-lock-and-confirmation: done
   5-3-teacher-speaking-playback-and-manual-grading: backlog
   epic-5-retrospective: optional
 

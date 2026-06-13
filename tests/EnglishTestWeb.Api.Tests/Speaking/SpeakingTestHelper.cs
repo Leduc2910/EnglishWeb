@@ -2,6 +2,7 @@ using System.Text.Json;
 using EnglishTestWeb.Api.Domain.Assignments;
 using EnglishTestWeb.Api.Domain.Files;
 using EnglishTestWeb.Api.Domain.LiveExams;
+using EnglishTestWeb.Api.Domain.Speaking;
 using EnglishTestWeb.Api.Domain.TestTemplates;
 using EnglishTestWeb.Api.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
@@ -150,5 +151,50 @@ internal static class SpeakingTestHelper
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
         content.Add(fileContent, "file", fileName);
         return content;
+    }
+
+    /// <summary>
+    /// Seeds a SpeakingSubmission with a DraftStoredFileId directly via DbContext.
+    /// Used for tests that need to control source state independently of the upload endpoint.
+    /// </summary>
+    internal static async Task<Guid> SeedSubmissionWithDraftAsync(
+        TestApiFactory factory,
+        Guid homeworkAssignmentId,
+        string studentId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+
+        var now = DateTimeOffset.UtcNow;
+
+        var draftFile = new StoredFile
+        {
+            Id = Guid.NewGuid(),
+            StorageKey = $"draft-{Guid.NewGuid()}.webm",
+            OriginalFileName = "recording.webm",
+            ContentType = "audio/webm",
+            SizeBytes = 2048,
+            OwnerUserId = studentId,
+            Status = StoredFileStatuses.Active,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.StoredFiles.Add(draftFile);
+
+        var submission = new SpeakingSubmission
+        {
+            Id = Guid.NewGuid(),
+            StudentId = studentId,
+            HomeworkAssignmentId = homeworkAssignmentId,
+            LiveExamSessionId = null,
+            DraftStoredFileId = draftFile.Id,
+            Status = SpeakingSubmissionStatuses.Draft,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.SpeakingSubmissions.Add(submission);
+        await db.SaveChangesAsync();
+
+        return submission.Id;
     }
 }

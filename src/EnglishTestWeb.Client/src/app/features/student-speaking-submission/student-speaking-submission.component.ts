@@ -10,6 +10,7 @@ import {
 
 type ViewState = 'loading' | 'loaded' | 'error';
 type UploadState = 'idle' | 'uploading' | 'error';
+type FinalSubmitState = 'idle' | 'submitting' | 'error';
 
 @Component({
   selector: 'app-student-speaking-submission',
@@ -30,6 +31,9 @@ export class StudentSpeakingSubmissionComponent implements OnInit {
   protected readonly uploadErrorCode = signal<string | null>(null);
   protected readonly selectedFile = signal<File | null>(null);
   protected readonly clientValidationError = signal<string | null>(null);
+  protected readonly showConfirmModal = signal<boolean>(false);
+  protected readonly finalSubmitState = signal<FinalSubmitState>('idle');
+  protected readonly finalSubmitErrorCode = signal<string | null>(null);
 
   protected readonly errorMessage = computed(() => {
     const code = this.errorCode();
@@ -46,6 +50,23 @@ export class StudentSpeakingSubmissionComponent implements OnInit {
   protected readonly canUpload = computed(() => {
     const d = this.dto();
     return d !== null && d.status === 'draft' && d.isSourceOpen;
+  });
+
+  protected readonly canFinalSubmit = computed(() => {
+    const d = this.dto();
+    return (
+      d !== null &&
+      d.status === 'draft' &&
+      d.isSourceOpen &&
+      d.draftFile !== null &&
+      this.uploadState() !== 'uploading'
+    );
+  });
+
+  protected readonly finalSubmitErrorMessage = computed(() => {
+    const code = this.finalSubmitErrorCode();
+    if (!code) return 'Nộp bài thất bại. Vui lòng thử lại.';
+    return SPEAKING_ERROR_MESSAGES[code] ?? 'Nộp bài thất bại. Vui lòng thử lại.';
   });
 
   protected readonly modeLabel = computed(() => {
@@ -122,6 +143,32 @@ export class StudentSpeakingSubmissionComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     }).format(new Date(iso));
+  }
+
+  protected onFinalSubmitClick(): void {
+    if (!this.canFinalSubmit()) return;
+    this.finalSubmitErrorCode.set(null);
+    this.showConfirmModal.set(true);
+  }
+
+  protected onCancelSubmit(): void {
+    this.showConfirmModal.set(false);
+  }
+
+  protected async onConfirmSubmit(): Promise<void> {
+    const id = this.submissionId;
+    if (!id) return;
+    this.finalSubmitState.set('submitting');
+    this.showConfirmModal.set(false);
+    try {
+      const updated = await this.speakingApi.finalSubmit(id);
+      this.dto.set(updated);
+      this.finalSubmitState.set('idle');
+    } catch (err: unknown) {
+      const code = this.extractErrorCode(err);
+      this.finalSubmitErrorCode.set(code);
+      this.finalSubmitState.set('error');
+    }
   }
 
   protected backToTests(): void {

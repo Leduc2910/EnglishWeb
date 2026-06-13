@@ -9,6 +9,15 @@ async function flushPromises(): Promise<void> {
   await new Promise<void>((r) => setTimeout(r, 0));
 }
 
+function makeDraftFile() {
+  return {
+    fileId: 'file-1',
+    originalFileName: 'recording.webm',
+    sizeBytes: 2048,
+    uploadedAt: '2026-06-13T09:00:00Z',
+  };
+}
+
 function makeDto(overrides: Partial<SpeakingSubmissionDto> = {}): SpeakingSubmissionDto {
   return {
     id: 'spk-1',
@@ -21,6 +30,7 @@ function makeDto(overrides: Partial<SpeakingSubmissionDto> = {}): SpeakingSubmis
     cueMaterialFileId: null,
     cueMaterialFileName: null,
     draftFile: null,
+    submittedAt: null,
     ...overrides,
   };
 }
@@ -32,18 +42,21 @@ describe('StudentSpeakingSubmissionComponent', () => {
     get: ReturnType<typeof vi.fn>;
     uploadDraft: ReturnType<typeof vi.fn>;
     createOrResume: ReturnType<typeof vi.fn>;
+    finalSubmit: ReturnType<typeof vi.fn>;
   };
 
   async function setup(
     speakingSubmissionId: string | null,
     dto: SpeakingSubmissionDto | null = makeDto(),
   ): Promise<void> {
+    const submittedDto = makeDto({ status: 'submitted', submittedAt: '2026-06-13T10:00:00Z', draftFile: makeDraftFile() });
     speakingApi = {
       get: dto
         ? vi.fn().mockResolvedValue(dto)
         : vi.fn().mockRejectedValue({ error: { extensions: { code: 'speaking.notFound' } } }),
       uploadDraft: vi.fn().mockResolvedValue(dto ?? makeDto()),
       createOrResume: vi.fn().mockResolvedValue(dto ?? makeDto()),
+      finalSubmit: vi.fn().mockResolvedValue(submittedDto),
     };
 
     await TestBed.configureTestingModule({
@@ -76,6 +89,7 @@ describe('StudentSpeakingSubmissionComponent', () => {
       get: vi.fn().mockReturnValue(new Promise(() => {})), // never resolves
       uploadDraft: vi.fn(),
       createOrResume: vi.fn(),
+      finalSubmit: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -161,10 +175,17 @@ describe('StudentSpeakingSubmissionComponent', () => {
   });
 
   it('hides upload section when already submitted', async () => {
-    await setup('spk-1', makeDto({ status: 'submitted', isSourceOpen: true }));
+    await setup('spk-1', makeDto({ status: 'submitted', isSourceOpen: true, draftFile: makeDraftFile(), submittedAt: '2026-06-13T10:00:00Z' }));
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('[data-testid="upload-section"]')).toBeNull();
-    expect(el.querySelector('[data-testid="submitted-notice"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="success-panel"]')).not.toBeNull();
+  });
+
+  it('does not show closed-notice when already submitted', async () => {
+    await setup('spk-1', makeDto({ status: 'submitted', isSourceOpen: false, draftFile: makeDraftFile(), submittedAt: '2026-06-13T10:00:00Z' }));
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="closed-notice"]')).toBeNull();
+    expect(el.querySelector('[data-testid="success-panel"]')).not.toBeNull();
   });
 
   it('shows cue material filename when present', async () => {
@@ -227,5 +248,132 @@ describe('StudentSpeakingSubmissionComponent', () => {
 
     expect(speakingApi.uploadDraft).toHaveBeenCalledWith('spk-1', file);
     expect(el.querySelector('[data-testid="draft-filename"]')?.textContent?.trim()).toBe('new.webm');
+  });
+
+  // ---- Final Submit ----
+
+  it('shows final-submit-btn when status=draft', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true }));
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="final-submit-btn"]')).not.toBeNull();
+  });
+
+  it('disables final-submit-btn when no draftFile', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: null }));
+    const el: HTMLElement = fixture.nativeElement;
+    const btn = el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]');
+    expect(btn?.disabled).toBe(true);
+  });
+
+  it('shows no-file-hint when draftFile is null and status=draft', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: null }));
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="no-file-hint"]')).not.toBeNull();
+  });
+
+  it('disables final-submit-btn when upload is in progress', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: makeDraftFile() }));
+    // Simulate upload in progress
+    component['uploadState'].set('uploading');
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    const btn = el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]');
+    expect(btn?.disabled).toBe(true);
+  });
+
+  it('disables final-submit-btn when source is closed', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: false, draftFile: makeDraftFile() }));
+    const el: HTMLElement = fixture.nativeElement;
+    const btn = el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]');
+    expect(btn?.disabled).toBe(true);
+  });
+
+  it('hides final-submit-btn when status=submitted', async () => {
+    await setup('spk-1', makeDto({ status: 'submitted', draftFile: makeDraftFile(), submittedAt: '2026-06-13T10:00:00Z' }));
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="final-submit-btn"]')).toBeNull();
+  });
+
+  it('clicking final-submit-btn opens confirm-modal', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: makeDraftFile() }));
+    const el: HTMLElement = fixture.nativeElement;
+    const btn = el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]');
+    btn?.click();
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="confirm-modal"]')).not.toBeNull();
+  });
+
+  it('confirm-modal shows filename, templateTitle, className, mode', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: makeDraftFile(), templateTitle: 'Test Title' }));
+    const el: HTMLElement = fixture.nativeElement;
+    el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]')?.click();
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="modal-filename"]')?.textContent?.trim()).toBe('recording.webm');
+    expect(el.querySelector('[data-testid="modal-template-title"]')?.textContent?.trim()).toBe('Test Title');
+    expect(el.querySelector('[data-testid="modal-class"]')?.textContent?.trim()).toBe('Lớp 7A');
+    expect(el.querySelector('[data-testid="modal-mode"]')?.textContent).toContain('Bài tập');
+  });
+
+  it('clicking cancel-submit-btn closes confirm-modal', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: makeDraftFile() }));
+    const el: HTMLElement = fixture.nativeElement;
+    el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]')?.click();
+    fixture.detectChanges();
+    el.querySelector<HTMLButtonElement>('[data-testid="cancel-submit-btn"]')?.click();
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="confirm-modal"]')).toBeNull();
+  });
+
+  it('clicking confirm-submit-btn calls finalSubmit and shows success panel', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: makeDraftFile() }));
+    const el: HTMLElement = fixture.nativeElement;
+    el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]')?.click();
+    fixture.detectChanges();
+    el.querySelector<HTMLButtonElement>('[data-testid="confirm-submit-btn"]')?.click();
+    await flushPromises();
+    fixture.detectChanges();
+
+    expect(speakingApi.finalSubmit).toHaveBeenCalledWith('spk-1');
+    expect(el.querySelector('[data-testid="success-panel"]')).not.toBeNull();
+  });
+
+  it('success panel shows filename, submittedAt, className, mode', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: makeDraftFile() }));
+    const el: HTMLElement = fixture.nativeElement;
+    el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]')?.click();
+    fixture.detectChanges();
+    el.querySelector<HTMLButtonElement>('[data-testid="confirm-submit-btn"]')?.click();
+    await flushPromises();
+    fixture.detectChanges();
+
+    expect(el.querySelector('[data-testid="success-filename"]')?.textContent?.trim()).toBe('recording.webm');
+    const submittedAtText = el.querySelector('[data-testid="success-submitted-at"]')?.textContent?.trim() ?? '';
+    expect(submittedAtText).not.toBe('—');
+    expect(submittedAtText.length).toBeGreaterThan(0);
+    expect(el.querySelector('[data-testid="success-class"]')?.textContent?.trim()).toBe('Lớp 7A');
+    expect(el.querySelector('[data-testid="success-mode"]')?.textContent).toContain('Bài tập');
+    expect(el.querySelector('[data-testid="back-to-tests-btn"]')).not.toBeNull();
+  });
+
+  it('shows success panel when dto loaded with status=submitted', async () => {
+    await setup('spk-1', makeDto({ status: 'submitted', draftFile: makeDraftFile(), submittedAt: '2026-06-13T10:00:00Z' }));
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="success-panel"]')).not.toBeNull();
+  });
+
+  it('shows submit-error when finalSubmit fails', async () => {
+    await setup('spk-1', makeDto({ status: 'draft', isSourceOpen: true, draftFile: makeDraftFile() }));
+    speakingApi.finalSubmit.mockRejectedValue({ error: { extensions: { code: 'speaking.sourceUnavailable' } } });
+
+    const el: HTMLElement = fixture.nativeElement;
+    el.querySelector<HTMLButtonElement>('[data-testid="final-submit-btn"]')?.click();
+    fixture.detectChanges();
+    el.querySelector<HTMLButtonElement>('[data-testid="confirm-submit-btn"]')?.click();
+    await flushPromises();
+    fixture.detectChanges();
+
+    const submitError = el.querySelector('[data-testid="submit-error"]');
+    expect(submitError).not.toBeNull();
+    expect(submitError?.textContent).toContain('khả dụng');
   });
 });

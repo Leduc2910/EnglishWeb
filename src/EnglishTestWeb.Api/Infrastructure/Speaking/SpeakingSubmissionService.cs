@@ -277,6 +277,68 @@ public sealed class SpeakingSubmissionService(
         }
     }
 
+    public async Task<(bool Success, string? ErrorCode, SpeakingSubmissionDto? Dto)> FinalSubmitAsync(
+        Guid speakingSubmissionId,
+        string studentId,
+        CancellationToken cancellationToken = default)
+    {
+        var submission = await db.SpeakingSubmissions
+            .Include(s => s.HomeworkAssignment)
+            .Include(s => s.LiveExamSession)
+            .Include(s => s.DraftStoredFile)
+            .Where(s => s.Id == speakingSubmissionId && s.StudentId == studentId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (submission is null)
+            return (false, "speaking.notFound", null);
+
+        // Idempotent: already submitted → return existing DTO
+        if (submission.Status == SpeakingSubmissionStatuses.Submitted)
+        {
+            var (tId, cId, isOpen) = await GetSourceInfoAsync(submission, cancellationToken);
+            var existingDto = await BuildDtoAsync(submission, tId, cId, isOpen, cancellationToken);
+            return (true, null, existingDto);
+        }
+
+        if (submission.Status != SpeakingSubmissionStatuses.Draft)
+            return (false, "speaking.alreadySubmitted", null);
+
+        // AC1: must have a draft file
+        if (!submission.DraftStoredFileId.HasValue)
+            return (false, "speaking.fileRequired", null);
+
+        // AC6: source must still be open
+        var (templateId, sourceClassId, isSourceOpen) = await GetSourceInfoAsync(submission, cancellationToken);
+        if (!isSourceOpen)
+            return (false, "speaking.sourceUnavailable", null);
+
+        var now = timeProvider.GetUtcNow();
+        submission.Status = SpeakingSubmissionStatuses.Submitted;
+        submission.SubmittedAt = now;
+        submission.UpdatedAt = now;
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Concurrent double-submit — reload and return winner's state
+            await db.Entry(submission).ReloadAsync(cancellationToken);
+            if (submission.Status == SpeakingSubmissionStatuses.Submitted)
+            {
+                // Re-include DraftStoredFile after reload
+                await db.Entry(submission).Reference(s => s.DraftStoredFile).LoadAsync(cancellationToken);
+                var dto2 = await BuildDtoAsync(submission, templateId, sourceClassId, false, cancellationToken);
+                return (true, null, dto2);
+            }
+            throw;
+        }
+
+        var finalDto = await BuildDtoAsync(submission, templateId, sourceClassId, false, cancellationToken);
+        return (true, null, finalDto);
+    }
+
     private async Task<(Guid TemplateId, Guid SourceClassId, bool IsSourceOpen)> GetSourceInfoAsync(
         SpeakingSubmission submission,
         CancellationToken cancellationToken)
@@ -378,6 +440,7 @@ public sealed class SpeakingSubmissionService(
             IsSourceOpen: isSourceOpen,
             CueMaterialFileId: cueMaterial?.StoredFileId.ToString(),
             CueMaterialFileName: cueMaterial?.StoredFile?.OriginalFileName,
-            DraftFile: draftFile);
+            DraftFile: draftFile,
+            SubmittedAt: submission.SubmittedAt);
     }
 }

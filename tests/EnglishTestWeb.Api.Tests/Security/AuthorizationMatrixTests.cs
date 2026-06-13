@@ -1177,4 +1177,32 @@ public sealed class AuthorizationMatrixTests
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
         Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
     }
+
+    // ---- Speaking: POST /api/speaking-submissions/{id}/final-submit ----
+
+    [Fact]
+    public async Task Unauthenticated_PostSpeakingFinalSubmit_ReturnsUnauthorized()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+        var resp = await client.PostAsync(
+            $"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
+            new StringContent(string.Empty));
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
+
+    [Fact]
+    public async Task Teacher_PostSpeakingFinalSubmit_ReturnsForbidden()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplates.TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+        var resp = await client.PostAsync(
+            $"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
+            new StringContent(string.Empty));
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(resp));
+    }
 }

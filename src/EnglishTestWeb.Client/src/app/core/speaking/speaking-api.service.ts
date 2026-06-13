@@ -30,4 +30,13 @@ export class SpeakingApiService {
     );
   }
 
+  finalSubmit(speakingSubmissionId: string): Promise<SpeakingSubmissionDto> {
+    return firstValueFrom(
+      this.http.post<SpeakingSubmissionDto>(
+        `/api/speaking-submissions/${speakingSubmissionId}/final-submit`,
+        {},
+      ),
+    );
+  }
+
 }

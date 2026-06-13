@@ -661,4 +661,210 @@ public sealed class SpeakingSubmissionsTests
         Assert.NotNull(archivedFile);
         Assert.Equal(StoredFileStatuses.Archived, archivedFile!.Status);
     }
+
+    // ---- POST /api/speaking-submissions/{id}/final-submit ----
+
+    [Fact]
+    public async Task FinalSubmit_AsAnonymous_Returns401()
+    {
+        await using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsync($"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
+            new StringContent(string.Empty));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.unauthorized", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task FinalSubmit_AsTeacher_Returns403()
+    {
+        await using var factory = new TestApiFactory();
+        await TestTemplatesTestHelper.SeedDemoTemplatesAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInTeacherAsync(client);
+
+        var response = await client.PostAsync($"/api/speaking-submissions/{Guid.NewGuid()}/final-submit",
+            new StringContent(string.Empty));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("auth.forbidden", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task FinalSubmit_NoDraftFile_Returns422()
+    {
+        await using var factory = new TestApiFactory();
+        var (homeworkId, classId) = await SpeakingTestHelper.SeedSpeakingHomeworkAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        // Create submission but do NOT upload a draft file
+        var submissionId = await SpeakingTestHelper.CreateSpeakingSubmissionAsync(client, homeworkId, null);
+
+        var response = await client.PostAsync($"/api/speaking-submissions/{submissionId}/final-submit",
+            new StringContent(string.Empty));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("speaking.fileRequired", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task FinalSubmit_WithDraftFile_Returns200WithSubmittedStatus()
+    {
+        await using var factory = new TestApiFactory();
+        var (homeworkId, classId) = await SpeakingTestHelper.SeedSpeakingHomeworkAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        var submissionId = await SpeakingTestHelper.CreateSpeakingSubmissionAsync(client, homeworkId, null);
+
+        // Upload draft file
+        var uploadContent = SpeakingTestHelper.CreateAudioFormFile();
+        var uploadResponse = await client.PostAsync(
+            $"/api/speaking-submissions/{submissionId}/upload-draft", uploadContent);
+        uploadResponse.EnsureSuccessStatusCode();
+
+        // Final submit
+        var response = await client.PostAsync(
+            $"/api/speaking-submissions/{submissionId}/final-submit", new StringContent(string.Empty));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var body = await response.Content.ReadAsStreamAsync();
+        using var doc = await JsonDocument.ParseAsync(body);
+        var root = doc.RootElement;
+
+        Assert.Equal("submitted", root.GetProperty("status").GetString());
+        Assert.False(root.GetProperty("submittedAt").ValueKind == JsonValueKind.Null,
+            "submittedAt should be set after final submit");
+        Assert.NotEqual(JsonValueKind.Null, root.GetProperty("draftFile").ValueKind);
+    }
+
+    [Fact]
+    public async Task FinalSubmit_Idempotent_ReturnsSameSubmittedAt()
+    {
+        await using var factory = new TestApiFactory();
+        var (homeworkId, classId) = await SpeakingTestHelper.SeedSpeakingHomeworkAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        var submissionId = await SpeakingTestHelper.CreateSpeakingSubmissionAsync(client, homeworkId, null);
+        var uploadContent = SpeakingTestHelper.CreateAudioFormFile();
+        (await client.PostAsync($"/api/speaking-submissions/{submissionId}/upload-draft", uploadContent))
+            .EnsureSuccessStatusCode();
+
+        // First submit
+        var resp1 = await client.PostAsync(
+            $"/api/speaking-submissions/{submissionId}/final-submit", new StringContent(string.Empty));
+        resp1.EnsureSuccessStatusCode();
+        await using var body1 = await resp1.Content.ReadAsStreamAsync();
+        using var doc1 = await JsonDocument.ParseAsync(body1);
+        var submittedAt1 = doc1.RootElement.GetProperty("submittedAt").GetString();
+
+        // Second submit (idempotent)
+        var resp2 = await client.PostAsync(
+            $"/api/speaking-submissions/{submissionId}/final-submit", new StringContent(string.Empty));
+        Assert.Equal(HttpStatusCode.OK, resp2.StatusCode);
+        await using var body2 = await resp2.Content.ReadAsStreamAsync();
+        using var doc2 = await JsonDocument.ParseAsync(body2);
+        var submittedAt2 = doc2.RootElement.GetProperty("submittedAt").GetString();
+
+        Assert.Equal("submitted", doc2.RootElement.GetProperty("status").GetString());
+        Assert.Equal(submittedAt1, submittedAt2);
+    }
+
+    [Fact]
+    public async Task FinalSubmit_OtherStudent_Returns404()
+    {
+        await using var factory = new TestApiFactory();
+        var (homeworkId, classId) = await SpeakingTestHelper.SeedSpeakingHomeworkAsync(factory);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        // Seed a submission owned by a different student directly
+        var otherStudentId = "other-student-" + Guid.NewGuid().ToString("N");
+        var submissionId = await SpeakingTestHelper.SeedSubmissionWithDraftAsync(
+            factory, homeworkId, otherStudentId);
+
+        var response = await client.PostAsync(
+            $"/api/speaking-submissions/{submissionId}/final-submit", new StringContent(string.Empty));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("speaking.notFound", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task FinalSubmit_SourceClosed_Returns422()
+    {
+        await using var factory = new TestApiFactory();
+        // Seed homework with deadline already passed
+        var (homeworkId, classId) = await SpeakingTestHelper.SeedSpeakingHomeworkAsync(
+            factory, deadlineAt: DateTimeOffset.UtcNow.AddDays(-1));
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        // Seed submission with draft file directly (can't upload because source is closed)
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+        var studentId = db.Users.First(u => u.Email == AuthTestHelper.StudentEmail).Id;
+        var submissionId = await SpeakingTestHelper.SeedSubmissionWithDraftAsync(
+            factory, homeworkId, studentId);
+
+        var response = await client.PostAsync(
+            $"/api/speaking-submissions/{submissionId}/final-submit", new StringContent(string.Empty));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("speaking.sourceUnavailable", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task FinalSubmit_LiveExamClosed_Returns422()
+    {
+        await using var factory = new TestApiFactory();
+        var (sessionId, classId) = await SpeakingTestHelper.SeedSpeakingLiveExamAsync(
+            factory, status: LiveExamSessionStatuses.Closed);
+        using var client = factory.CreateClient();
+        await AuthTestHelper.SignInStudentWithClassAsync(client, classId);
+
+        // Seed submission with draft directly since source is closed
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnglishTestWebDbContext>();
+        var studentId = db.Users.First(u => u.Email == AuthTestHelper.StudentEmail).Id;
+
+        // Seed SpeakingSubmission with LiveExamSessionId
+        var now = DateTimeOffset.UtcNow;
+        var draftFile = new EnglishTestWeb.Api.Domain.Files.StoredFile
+        {
+            Id = Guid.NewGuid(),
+            StorageKey = $"draft-{Guid.NewGuid()}.webm",
+            OriginalFileName = "recording.webm",
+            ContentType = "audio/webm",
+            SizeBytes = 1024,
+            OwnerUserId = studentId,
+            Status = StoredFileStatuses.Active,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.StoredFiles.Add(draftFile);
+        var submission = new SpeakingSubmission
+        {
+            Id = Guid.NewGuid(),
+            StudentId = studentId,
+            HomeworkAssignmentId = null,
+            LiveExamSessionId = sessionId,
+            DraftStoredFileId = draftFile.Id,
+            Status = SpeakingSubmissionStatuses.Draft,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.SpeakingSubmissions.Add(submission);
+        await db.SaveChangesAsync();
+
+        var response = await client.PostAsync(
+            $"/api/speaking-submissions/{submission.Id}/final-submit", new StringContent(string.Empty));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("speaking.sourceUnavailable", await AuthTestHelper.ReadProblemCodeAsync(response));
+    }
 }

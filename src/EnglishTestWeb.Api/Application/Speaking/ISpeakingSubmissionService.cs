@@ -21,4 +21,9 @@ public interface ISpeakingSubmissionService
         string studentId,
         IFormFile file,
         CancellationToken cancellationToken = default);
+
+    Task<(bool Success, string? ErrorCode, SpeakingSubmissionDto? Dto)> FinalSubmitAsync(
+        Guid speakingSubmissionId,
+        string studentId,
+        CancellationToken cancellationToken = default);
 }

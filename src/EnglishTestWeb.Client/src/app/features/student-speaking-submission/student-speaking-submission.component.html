@@ -115,16 +115,105 @@
               Chấp nhận file âm thanh (MP3, WAV, OGG, WebM, MP4) và video (MP4, WebM). Tối đa 100MB.
             </p>
           </div>
-        } @else if (dto()!.status !== 'draft') {
-          <p class="submitted-notice" data-testid="submitted-notice">
-            Bài đã được nộp.
-          </p>
-        } @else {
+        } @else if (dto()!.status === 'draft') {
           <p class="closed-notice" data-testid="closed-notice">
             Nguồn bài thi đã đóng, không thể tải lên thêm.
           </p>
         }
+
+        @if (dto()!.status === 'draft') {
+          <div class="final-submit-section" data-testid="final-submit-section">
+            <button
+              type="button"
+              class="primary-button final-submit-btn"
+              [disabled]="!canFinalSubmit() || finalSubmitState() === 'submitting'"
+              (click)="onFinalSubmitClick()"
+              data-testid="final-submit-btn"
+            >
+              @if (finalSubmitState() === 'submitting') {
+                Đang nộp bài...
+              } @else {
+                Nộp bài chính thức
+              }
+            </button>
+            @if (!dto()!.draftFile) {
+              <p class="submit-hint" data-testid="no-file-hint">
+                Vui lòng tải lên file ghi âm trước khi nộp bài.
+              </p>
+            }
+            @if (finalSubmitState() === 'error') {
+              <p class="submit-error" data-testid="submit-error" role="alert">
+                {{ finalSubmitErrorMessage() }}
+              </p>
+            }
+          </div>
+        }
+
+        @if (dto()!.status === 'submitted' || dto()!.status === 'graded') {
+          <div class="success-panel" data-testid="success-panel">
+            <div class="success-icon">✅</div>
+            <h2 class="success-title">Đã nộp bài thành công!</h2>
+            <dl class="success-details">
+              <dt>File đã nộp</dt>
+              <dd data-testid="success-filename">{{ dto()!.draftFile?.originalFileName ?? '—' }}</dd>
+              <dt>Thời gian nộp</dt>
+              <dd data-testid="success-submitted-at">
+                {{ dto()!.submittedAt ? formatDate(dto()!.submittedAt!) : '—' }}
+              </dd>
+              <dt>Lớp học</dt>
+              <dd data-testid="success-class">{{ dto()!.className }}</dd>
+              <dt>Loại bài</dt>
+              <dd data-testid="success-mode">{{ modeLabel() }}</dd>
+            </dl>
+            <button
+              type="button"
+              class="primary-button"
+              (click)="backToTests()"
+              data-testid="back-to-tests-btn"
+            >
+              Quay lại danh sách bài thi
+            </button>
+          </div>
+        }
       </section>
+    </div>
+  }
+
+  @if (showConfirmModal()) {
+    <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+      <div class="modal-card" data-testid="confirm-modal">
+        <h2 id="confirm-modal-title" class="modal-title">Xác nhận nộp bài Speaking</h2>
+        <dl class="modal-details">
+          <dt>File</dt>
+          <dd data-testid="modal-filename">{{ dto()!.draftFile?.originalFileName }}</dd>
+          <dt>Bài thi</dt>
+          <dd data-testid="modal-template-title">{{ dto()!.templateTitle }}</dd>
+          <dt>Lớp</dt>
+          <dd data-testid="modal-class">{{ dto()!.className }}</dd>
+          <dt>Loại</dt>
+          <dd data-testid="modal-mode">{{ modeLabel() }}</dd>
+        </dl>
+        <p class="modal-warning">Sau khi nộp, bạn không thể thay đổi file ghi âm.</p>
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="onCancelSubmit()"
+            data-testid="cancel-submit-btn"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            class="primary-button"
+            [disabled]="finalSubmitState() === 'submitting'"
+            (click)="onConfirmSubmit()"
+            data-testid="confirm-submit-btn"
+          >
+            Xác nhận nộp bài
+          </button>
+        </div>
+      </div>
     </div>
   }
 </div>
