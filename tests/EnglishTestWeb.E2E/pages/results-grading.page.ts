@@ -54,4 +54,34 @@ export class ResultsGradingPage {
   getGradeSuccess() {
     return this.page.locator('.grade-success');
   }
+
+  getEmptyState() {
+    return this.page.locator('.empty-state');
+  }
+
+  getClearFiltersButton() {
+    return this.page.locator('.empty-state').getByRole('button', { name: 'Xóa bộ lọc' });
+  }
+
+  async fillStudentSearch(searchTerm: string): Promise<void> {
+    await this.page.locator('[aria-label="Tìm học sinh"]').fill(searchTerm);
+    await this.page.getByRole('button', { name: 'Tìm' }).click();
+    await this.page.waitForSelector('.results-table, .empty-state');
+  }
+
+  getScoreInput() {
+    return this.page.locator('#scoreInput');
+  }
+
+  getGradeError() {
+    return this.page.locator('.grade-error');
+  }
+
+  getMissingFileError() {
+    return this.page.locator('.file-missing');
+  }
+
+  getSaveButton() {
+    return this.page.locator('.save-btn');
+  }
 }

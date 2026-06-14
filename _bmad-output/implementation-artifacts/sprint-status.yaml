@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review
 
 generated: 2026-06-09
-last_updated: 2026-06-14 — 6.6 done via code review (2026-06-14)
+last_updated: 2026-06-14 — 6.7 done post-review-2 (2026-06-14)
 project: EnglishTestWeb
 # 3.2 done via code review (2026-06-11); 3.3 story created (2026-06-11); 4.1 story created (2026-06-12); 4.2 story created (2026-06-12); 4.4 story created (2026-06-12)
 project_key: NOKEY
@@ -85,7 +85,7 @@ development_status:
   6-4-stitch-informed-visual-and-accessibility-hardening: done
   6-5-api-security-and-contract-test-coverage: done
   6-6-playwright-happy-path-e2e-coverage: done
-  6-7-blocking-error-and-edge-case-test-coverage: backlog
+  6-7-blocking-error-and-edge-case-test-coverage: done
   6-8-accessibility-and-visual-qa-pass: backlog
   6-9-final-fr-and-ts-evidence-matrix: backlog
   epic-6-retrospective: optional

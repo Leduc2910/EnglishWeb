@@ -56,4 +56,20 @@ export class SpeakingSubmissionPage {
   getModeBadge() {
     return this.page.locator('[data-testid="mode-badge"]');
   }
+
+  getNoFileHint() {
+    return this.page.locator('[data-testid="no-file-hint"]');
+  }
+
+  getSubmitError() {
+    return this.page.locator('[data-testid="submit-error"]');
+  }
+
+  getClosedNotice() {
+    return this.page.locator('[data-testid="closed-notice"]');
+  }
+
+  getFinalSubmitButton() {
+    return this.page.locator('[data-testid="final-submit-btn"]');
+  }
 }

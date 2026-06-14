@@ -22,4 +22,8 @@ export class StudentClassEntryPage {
   getClassCard() {
     return this.page.locator('#student-class-entry-class-card');
   }
+
+  getErrorMessage() {
+    return this.page.locator('#student-class-entry-error-alert');
+  }
 }

@@ -82,4 +82,38 @@ export class CreateTemplatePage {
   getLiveExamButton() {
     return this.page.locator('#review-create-live-exam-button');
   }
+
+  // Error state helpers
+  getSetupNameError() {
+    return this.page.locator('#create-setup-form .field-error').first();
+  }
+
+  async uploadInvalidFileForPdf(): Promise<void> {
+    await this.page.waitForSelector('#create-materials-file-picker');
+    const [fileChooser] = await Promise.all([
+      this.page.waitForEvent('filechooser'),
+      this.page.locator('#create-materials-file-picker').click(),
+    ]);
+    await fileChooser.setFiles({
+      name: 'invalid.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('not a pdf'),
+    });
+  }
+
+  getUploadError() {
+    return this.page.locator('.upload-slot .field-error').first();
+  }
+
+  getAnswerKeyMissingCount() {
+    return this.page.locator('#answer-key-missing-count');
+  }
+
+  getAnswerKeyErrorList() {
+    return this.page.locator('.error-list[role="alert"]');
+  }
+
+  getMarkReadyButton() {
+    return this.page.locator('#review-publish-button');
+  }
 }

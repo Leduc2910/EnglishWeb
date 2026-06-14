@@ -199,6 +199,92 @@ export async function finalSubmitSpeaking(
   if (!res.ok()) throw new Error(`Final submit speaking failed: ${res.status()} ${await res.text()}`);
 }
 
+export async function createExpiredHomeworkAssignment(
+  api: APIRequestContext,
+  xsrfToken: string,
+  templateId: string,
+  classId: string,
+): Promise<string> {
+  const deadlineAt = new Date(Date.now() - 5 * 60 * 1000).toISOString(); // 5 minutes in the past
+  const res = await api.post('/api/homework-assignments', {
+    data: { templateId, classId, deadlineAt },
+    headers: { 'X-XSRF-TOKEN': xsrfToken },
+  });
+  if (!res.ok()) throw new Error(`Create expired homework failed: ${res.status()} ${await res.text()}`);
+  const body = await res.json();
+  return body.id as string;
+}
+
+export async function openLiveExamSession(
+  api: APIRequestContext,
+  xsrfToken: string,
+  sessionId: string,
+): Promise<void> {
+  const res = await api.post(`/api/live-exam-sessions/${sessionId}/open`, {
+    data: {},
+    headers: { 'X-XSRF-TOKEN': xsrfToken },
+  });
+  if (!res.ok()) throw new Error(`Open live exam session failed: ${res.status()} ${await res.text()}`);
+}
+
+export async function createReadingAttempt(
+  api: APIRequestContext,
+  xsrfToken: string,
+  homeworkAssignmentId: string,
+): Promise<string> {
+  const res = await api.post('/api/submissions', {
+    data: { homeworkAssignmentId, liveExamSessionId: null },
+    headers: { 'X-XSRF-TOKEN': xsrfToken },
+  });
+  if (!res.ok()) throw new Error(`Create reading attempt failed: ${res.status()} ${await res.text()}`);
+  const body = await res.json();
+  return body.id as string;
+}
+
+export async function saveAnswerDraft(
+  api: APIRequestContext,
+  xsrfToken: string,
+  submissionId: string,
+  rows: Array<{ questionNumber: number; answer: string }>,
+): Promise<void> {
+  const res = await api.put(`/api/submissions/${submissionId}/answers`, {
+    data: { rows },
+    headers: { 'X-XSRF-TOKEN': xsrfToken },
+  });
+  if (!res.ok()) throw new Error(`Save answer draft failed: ${res.status()} ${await res.text()}`);
+}
+
+export async function seedExpiredHomeworkChain(api: APIRequestContext): Promise<{
+  templateId: string;
+  homeworkId: string;
+}> {
+  const xsrfToken = await loginTeacher(api);
+  const classId = await getClassIdByCode(api, CLASS_CODE);
+  const templateId = await createReadyReadingTemplate(api, xsrfToken);
+  const homeworkId = await createExpiredHomeworkAssignment(api, xsrfToken, templateId, classId);
+  return { templateId, homeworkId };
+}
+
+export async function seedNotSubmittedReadingChain(api: APIRequestContext): Promise<{
+  submissionId: string;
+  homeworkId: string;
+}> {
+  const teacherXsrf = await loginTeacher(api);
+  const classId = await getClassIdByCode(api, CLASS_CODE);
+  const templateId = await createReadyReadingTemplate(api, teacherXsrf);
+  const homeworkId = await createHomeworkAssignment(api, teacherXsrf, templateId, classId);
+
+  const studentXsrf = await loginStudentWithClass(api, CLASS_CODE);
+  const submissionId = await createReadingAttempt(api, studentXsrf, homeworkId);
+  // Save 2 of 3 answers so answers can be verified as restored on reload
+  await saveAnswerDraft(api, studentXsrf, submissionId, [
+    { questionNumber: 1, answer: 'A' },
+    { questionNumber: 2, answer: 'B' },
+  ]);
+
+  return { submissionId, homeworkId };
+}
+
 export async function seedSubmittedSpeakingChain(api: APIRequestContext): Promise<{
   templateId: string;
   homeworkId: string;

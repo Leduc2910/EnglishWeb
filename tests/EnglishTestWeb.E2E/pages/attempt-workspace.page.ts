@@ -45,4 +45,16 @@ export class AttemptWorkspacePage {
   getResultSubmittedAt() {
     return this.page.locator('[data-testid="result-submitted-at"]');
   }
+
+  getMissingAnswerWarningModal() {
+    return this.page.locator('[data-testid="submit-confirm-modal"]');
+  }
+
+  getMissingAnswerCount() {
+    return this.page.locator('[data-testid="confirm-missing-count"]');
+  }
+
+  getBackFromModalButton() {
+    return this.page.locator('[data-testid="cancel-submit-btn"]');
+  }
 }
