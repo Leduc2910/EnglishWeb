@@ -74,34 +74,36 @@
         Chưa có bài nộp nào. Giao bài từ <a routerLink="/teacher/library">Thư viện đề</a>.
       </p>
     } @else {
-      <table class="recent-table" aria-label="Hoạt động gần đây">
-        <thead>
-          <tr>
-            <th>Đề</th>
-            <th>Lớp</th>
-            <th>Loại</th>
-            <th>Trạng thái</th>
-            <th>Thời gian</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of data.recentWork; track item.id) {
-            <tr class="recent-row" [attr.aria-label]="item.title + ' - ' + item.className">
-              <td>
-                <a
-                  [routerLink]="getRouterLink(item)"
-                  [queryParams]="getQueryParams(item)"
-                  class="row-link"
-                >{{ item.title || '—' }}</a>
-              </td>
-              <td>{{ item.className || '—' }}</td>
-              <td>{{ modeLabelMap[item.mode] || item.mode || '—' }}</td>
-              <td>{{ statusLabelMap[item.status] || item.status || '—' }}</td>
-              <td>{{ item.timestamp | date: 'dd/MM/yyyy HH:mm' }}</td>
+      <div class="recent-table-wrapper">
+        <table class="recent-table" aria-label="Hoạt động gần đây">
+          <thead>
+            <tr>
+              <th>Đề</th>
+              <th>Lớp</th>
+              <th>Loại</th>
+              <th>Trạng thái</th>
+              <th>Thời gian</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (item of data.recentWork; track item.id) {
+              <tr class="recent-row" [attr.aria-label]="item.title + ' - ' + item.className">
+                <td>
+                  <a
+                    [routerLink]="getRouterLink(item)"
+                    [queryParams]="getQueryParams(item)"
+                    class="row-link"
+                  >{{ item.title || '—' }}</a>
+                </td>
+                <td>{{ item.className || '—' }}</td>
+                <td>{{ modeLabelMap[item.mode] || item.mode || '—' }}</td>
+                <td>{{ statusLabelMap[item.status] || item.status || '—' }}</td>
+                <td>{{ item.timestamp | date: 'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </section>
 }

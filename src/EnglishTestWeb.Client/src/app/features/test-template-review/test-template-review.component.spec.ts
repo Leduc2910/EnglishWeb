@@ -225,6 +225,22 @@ describe('TestTemplateReviewComponent', () => {
     });
   });
 
+  it('Mark Ready button is a button element (keyboard accessible)', async () => {
+    await setup();
+
+    const btn = document.querySelector('#review-publish-button');
+    expect(btn).not.toBeNull();
+    expect(btn?.tagName.toLowerCase()).toBe('button');
+  });
+
+  it('readiness panel has aria-live for dynamic updates', async () => {
+    await setup();
+
+    const panel = document.querySelector('#review-publish-readiness-panel');
+    expect(panel).not.toBeNull();
+    expect(panel?.getAttribute('aria-live')).toBe('polite');
+  });
+
   it('navigates to library when no templateId in route', async () => {
     api = {
       getTemplate: vi.fn(),

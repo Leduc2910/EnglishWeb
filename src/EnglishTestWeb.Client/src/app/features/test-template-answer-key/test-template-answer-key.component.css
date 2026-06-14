@@ -243,6 +243,24 @@
   cursor: not-allowed;
 }
 
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.segment:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -3px;
+}
+
+.answer-key-answer-input:focus-visible,
+.answer-key-score-input:focus-visible,
+.field input:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
 .error-banner,
 .field-error {
   color: #b91c1c;

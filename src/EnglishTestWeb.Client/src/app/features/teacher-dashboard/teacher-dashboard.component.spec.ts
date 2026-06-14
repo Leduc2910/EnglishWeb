@@ -110,4 +110,29 @@ describe('TeacherDashboardComponent', () => {
     await (component as unknown as { onClassFilterChange: () => Promise<void> }).onClassFilterChange();
     expect(mockDashboardApi.getDashboard).toHaveBeenCalledTimes(1);
   });
+
+  it('recent-table is wrapped in recent-table-wrapper for responsive overflow', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const wrapper = el.querySelector('.recent-table-wrapper');
+    expect(wrapper).not.toBeNull();
+    const table = wrapper?.querySelector('.recent-table');
+    expect(table).not.toBeNull();
+  });
+
+  it('filter-bar select has label association', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const select = el.querySelector('.filter-bar select') as HTMLSelectElement;
+    expect(select).not.toBeNull();
+    const id = select?.id;
+    const label = el.querySelector(`label[for="${id}"]`);
+    expect(label).not.toBeNull();
+  });
 });

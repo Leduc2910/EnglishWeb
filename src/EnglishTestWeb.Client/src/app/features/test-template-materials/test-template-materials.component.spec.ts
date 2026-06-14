@@ -164,6 +164,29 @@ describe('TestTemplateMaterialsComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/teacher/library', 'tpl-1', 'review']);
   });
 
+  it('preview modal has role="dialog" and aria-modal="true" when open', async () => {
+    api.uploadMaterial.mockResolvedValue({
+      materialId: 'mat-1',
+      fileId: 'file-1',
+      role: 'pdf',
+      originalFileName: 'sample.pdf',
+      sizeBytes: 100,
+      contentType: 'application/pdf',
+      uploadedAt: '2026-06-10T00:00:00Z',
+    });
+
+    await fixture.whenStable();
+    const file = new File(['%PDF-1.4'], 'sample.pdf', { type: 'application/pdf' });
+    await fixture.componentInstance['uploadFile']('pdf', file);
+    const material = fixture.componentInstance['slots']().find((item) => item.role === 'pdf')?.material;
+    await fixture.componentInstance['onPreview'](material!);
+    fixture.detectChanges();
+
+    const modal = fixture.nativeElement.querySelector('[role="dialog"]');
+    expect(modal).not.toBeNull();
+    expect(modal?.getAttribute('aria-modal')).toBe('true');
+  });
+
   it('opens preview only after successful upload', async () => {
     api.uploadMaterial.mockResolvedValue({
       materialId: 'mat-1',

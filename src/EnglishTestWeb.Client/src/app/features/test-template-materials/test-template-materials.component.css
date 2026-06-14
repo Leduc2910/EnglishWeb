@@ -172,6 +172,13 @@
   font: inherit;
 }
 
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .btn-primary,
 .btn-secondary {
   padding: 0.5rem 1rem;

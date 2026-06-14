@@ -57,5 +57,13 @@
 
 .btn-primary { padding: var(--space-sm) var(--space-md); background: var(--color-primary); color: var(--color-on-primary); border: none; border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600; cursor: pointer; }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 .btn-secondary { padding: var(--space-sm) var(--space-md); background: transparent; color: var(--color-primary); border: 1px solid var(--color-primary); border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
 .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.edit-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 2px; }
+
+@media (max-width: 768px) {
+  .wizard-body { grid-template-columns: 1fr; }
+  .readiness-panel { position: static; }
+}

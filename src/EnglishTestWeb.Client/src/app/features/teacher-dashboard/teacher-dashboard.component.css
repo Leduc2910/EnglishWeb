@@ -42,3 +42,11 @@
 .recent-row:hover td { background: #f9fafb; }
 .row-link { color: #1d4ed8; text-decoration: none; }
 .row-link:hover { text-decoration: underline; }
+.filter-bar select:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.card-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 2px; }
+.row-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 2px; }
+.empty-state a:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 2px; }
+
+@media (max-width: 768px) {
+  .recent-table-wrapper { overflow-x: auto; }
+}
