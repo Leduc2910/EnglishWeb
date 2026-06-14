@@ -130,3 +130,19 @@ Enabled by default in `appsettings.Development.json` via `Identity:SeedDevTeache
 - **Angular proxy**: `proxy.conf.json` forwards `/api/*` to `http://localhost:5124`. Do not call the API port directly from the browser during development.
 - API tests use a **separate in-memory database per `TestApiFactory` instance** — parallelism is safe.
 - Angular tests use **Vitest** (not Karma/Jasmine). Test files are `*.spec.ts`.
+
+### E2E Tests (Playwright)
+
+**Prerequisites:** API must be running on :5124 and Angular dev server on :4200. SQL Server must be running with seed data applied.
+
+```powershell
+cd tests\EnglishTestWeb.E2E
+npm install
+npx playwright install chromium
+npm test                  # run all E2E tests (headless)
+npm run test:headed       # run with browser visible
+npm run test:debug        # Playwright inspector
+npm run test:ui           # Playwright UI mode
+```
+
+E2E tests require a running SQL Server database with seed data. Run `--seed-mvp-demo` once before testing. Tests create new data via API on each run (unique names) and do not clean up afterwards.

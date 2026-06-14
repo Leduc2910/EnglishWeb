@@ -1,0 +1,16 @@
+{
+  "name": "englishtestweb-e2e",
+  "version": "1.0.0",
+  "description": "Playwright E2E tests for EnglishTestWeb MVP happy paths",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^6.0.3"
+  }
+}

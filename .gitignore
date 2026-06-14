@@ -6,6 +6,12 @@ dist/
 
 # Node
 node_modules/
+
+# Playwright E2E
+tests/EnglishTestWeb.E2E/node_modules/
+tests/EnglishTestWeb.E2E/test-results/
+tests/EnglishTestWeb.E2E/playwright-report/
+tests/EnglishTestWeb.E2E/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
